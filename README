@@ -1,1 +1,49 @@
-# pr-to-requirements
+# PR-to-Requirements
+
+Automatic Requirement Extraction from PRs using LLM-based Agents.
+
+## Descrizione
+
+Il progetto sviluppa una pipeline basata su LLM e AI agents per
+ricostruire automaticamente requisiti software funzionali a partire
+dal titolo e dal corpo di una pull request.
+
+Il sistema prevede due agenti:
+- **Requirement Generation Agent**: genera una descrizione del requisito
+  a partire dalla PR.
+- **Requirement Assessment Agent**: valuta qualità, chiarezza e
+  conformità allo stile richiesto. Se il requisito non supera la
+  valutazione, la generazione viene ripetuta.
+
+I requisiti validati vengono salvati in un database persistente
+accessibile dagli agenti tramite MCP (Model Context Protocol), che
+funge da memoria a lungo termine e consente di verificare duplicazioni
+o incoerenze con i requisiti già generati.
+
+## Autori
+
+- **Andrea Saverino** — Matricola: [914388]
+- **Marco Saverino Salvatore** — Matricola: [847000]
+
+## Supervisione
+
+- **Tutor**: Benedetta Donato
+- **Università**: Università degli studi di Milano Bicocca
+
+## Stato del progetto
+
+In fase di sviluppo. Stage avviato a luglio 2026,
+laurea prevista per settembre 2026.
+
+## Struttura del repository
+
+| Cartella       | Contenuto                                      |
+|----------------|-------------------------------------------------|
+| `src/`         | Codice sorgente della pipeline                  |
+| `prompts/`     | Prompt degli agenti (versionati)                |
+| `tests/`       | Test automatici                                 |
+| `experiments/` | Script e dati degli esperimenti                 |
+| `docs/`        | Documentazione (stato dell'arte, design, verbali) |
+| `thesis/`      | Materiale per le tesi di laurea                 |
+| `worklog/`     | Diario di lavoro giornaliero                    |
+
