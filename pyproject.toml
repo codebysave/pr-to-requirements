@@ -8,8 +8,8 @@ authors = [
     { name = "Marco [Cognome]" },
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "ruff>=0.5.0",
     "pytest>=8.0.0",
     "mypy>=1.10.0",
