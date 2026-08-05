@@ -1,0 +1,16 @@
+[project]
+name = "pr-to-requirements"
+version = "0.1.0"
+description = "Automatic Requirement Extraction from PRs using LLM-based Agents"
+requires-python = ">=3.11"
+authors = [
+    { name = "Andrea [Cognome]" },
+    { name = "Marco [Cognome]" },
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.5.0",
+    "pytest>=8.0.0",
+    "mypy>=1.10.0",
+]

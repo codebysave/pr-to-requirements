@@ -47,3 +47,12 @@ laurea prevista per settembre 2026.
 | `thesis/`      | Materiale per le tesi di laurea                 |
 | `worklog/`     | Diario di lavoro giornaliero                    |
 
+## Installazione
+
+Requisiti: Python >= 3.11, [uv](https://docs.astral.sh/uv/)
+
+```bash
+git clone https://github.com/codebysave/pr-to-requirements.git
+cd pr-to-requirements
+uv sync
+```
