@@ -187,6 +187,110 @@ In particolare, vogliamo discutere:
 
 ---
 
+
+## 2. Gestione delle PR con contenuto testuale limitato
+
+### Questione aperta
+
+PR4Requirements utilizza, nella configurazione corrente, **titolo e body della Pull Request** come evidenza primaria per ricostruire un requisito funzionale.
+
+Resta da stabilire come gestire le Pull Request che contengono una quantità di testo molto ridotta e che, di conseguenza, potrebbero non fornire informazioni sufficienti per ricostruire un requisito funzionale in modo affidabile.
+
+La questione non riguarda soltanto il numero assoluto di caratteri, ma soprattutto la **quantità di informazione utile** presente nell'input.
+
+Ad esempio, una PR molto breve può comunque esprimere chiaramente un comportamento funzionale, mentre una PR più lunga può risultare vaga, prevalentemente tecnica o dipendente da riferimenti esterni.
+
+---
+
+### Policy provvisoria
+
+Per il momento non fissiamo una soglia minima rigida di caratteri per determinare automaticamente l'estraibilità.
+
+La regola provvisoria è:
+
+> Una Pull Request dovrebbe essere classificata come `EXTRACTABLE` soltanto quando titolo e body contengono evidenza sufficiente per ricostruire almeno un requisito funzionale senza introdurre informazioni non supportate.
+
+Di conseguenza, la sola lunghezza testuale non dovrebbe determinare direttamente la classificazione:
+
+```text
+PR con pochi caratteri
+        ↓
+L'informazione disponibile è sufficiente
+per ricostruire un requisito funzionale?
+        ↓
+    ┌───┴───┐
+   YES      NO
+    ↓        ↓
+EXTRACTABLE  NOT_EXTRACTABLE
+```
+
+---
+
+### Esempio di PR breve ma potenzialmente estraibile
+
+Pull Request:
+
+> Allow users to export invoices as PDF.
+
+Anche se il testo è molto breve, il comportamento richiesto è chiaramente identificabile.
+
+In questo caso la PR potrebbe essere classificata come:
+
+> `EXTRACTABLE`
+
+con un requisito funzionale del tipo:
+
+> **The system shall allow users to export invoices in PDF format.**
+
+---
+
+### Esempio di PR con informazione insufficiente
+
+Pull Request:
+
+> Fix export issue.
+
+In questo caso il testo non specifica quale comportamento debba essere garantito, quale operazione sia interessata o quale risultato sia atteso.
+
+La classificazione più prudente sarebbe quindi:
+
+> `NOT_EXTRACTABLE`
+
+poiché la generazione di un requisito funzionale richiederebbe di introdurre informazioni non presenti nell'evidenza disponibile.
+
+---
+
+### Possibile uso di una soglia minima
+
+Un punto da chiarire con la tutor è se sia opportuno introdurre anche una **soglia quantitativa minima**, ad esempio basata sul numero complessivo di caratteri o token di `title + body`.
+
+Una soglia di questo tipo potrebbe essere utilizzata:
+
+- come filtro preliminare del dataset;
+- come indicatore di possibile insufficienza informativa;
+- come variabile da registrare per l'analisi sperimentale;
+- oppure non essere utilizzata affatto, lasciando la decisione di estraibilità a una valutazione semantica del contenuto.
+
+È importante evitare che una soglia puramente quantitativa produca errori nei casi in cui una PR molto breve sia comunque sufficientemente informativa.
+
+---
+
+### Da discutere con la tutor
+
+Occorre stabilire:
+
+- se debba esistere una soglia minima di caratteri o token per considerare una PR potenzialmente estraibile;
+- se tale soglia debba essere un **hard filter** oppure soltanto un'indicazione preliminare;
+- se la classificazione `EXTRACTABLE` / `NOT_EXTRACTABLE` debba dipendere principalmente dalla **sufficienza informativa** anziché dalla lunghezza del testo;
+- come trattare PR brevi ma semanticamente molto chiare;
+- come trattare PR lunghe ma vaghe, tecniche o dipendenti da riferimenti esterni;
+- se la lunghezza di `title + body` debba essere registrata come metadato per successive analisi sperimentali;
+- se sia utile confrontare le prestazioni del sistema su fasce di lunghezza differenti.
+
+**Decisione definitiva:** _da definire con la tutor._
+
+---
+
 ## Nuovi punti da aggiungere
 
 Le successive questioni progettuali ancora aperte verranno aggiunte a questo documento mantenendo, quando applicabile, la stessa struttura:
