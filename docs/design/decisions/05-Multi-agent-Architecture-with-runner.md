@@ -45,7 +45,7 @@ L'architettura deve garantire che:
 - gli effetti permanenti sulla memoria avvengano esclusivamente dopo `ACCEPT`;
 - il comportamento della pipeline sia riproducibile e osservabile;
 - le decisioni di routing siano centralizzate e non lasciate implicitamente agli agenti;
-- il workflow possa essere eseguito sia con memoria attiva sia con memoria disattivata per gli esperimenti.
+- il workflow possa essere eseguito sia con memoria attiva sia con memoria disattivata.
 
 ---
 
@@ -421,7 +421,7 @@ Il retrieval viene eseguito dal workflow in modo deterministico, invece di lasci
 - ogni candidato venga valutato nelle stesse condizioni;
 - il numero di chiamate alla memoria sia controllabile;
 - il comportamento sia più riproducibile;
-- sia possibile confrontare configurazioni con memoria attiva e disattivata.
+- sia possibile eseguire il workflow con memoria attiva o disattivata in modo controllato.
 
 Il retrieval viene ripetuto dopo ogni nuova generazione, perché una revisione del requisito può modificare anche i requisiti semanticamente più affini.
 
@@ -830,12 +830,15 @@ generator_model
 assessment_model
 ```
 
-Questa scelta consente di eseguire configurazioni sperimentali diverse senza modificare il codice del workflow.
+Questa scelta consente di eseguire il workflow in configurazioni diverse senza modificare il codice.
 
-In particolare permette di confrontare versioni con:
+In particolare permette di:
 
-- assessment attivo o disattivato;
-- memoria attiva o disattivata.
+- sviluppare e testare la pipeline in modo incrementale, mentre i componenti vengono realizzati progressivamente e la memoria persistente non è ancora disponibile;
+- eseguire in modo controllato le prove progressive descritte nella Decisione 3.7 (solo Generation, Generation + Assessment, workflow completo);
+- isolare il comportamento di un singolo componente durante il debug.
+
+La configurazione di riferimento per la valutazione finale resta il workflow completo, come stabilito nella Decisione 3.7.
 
 ---
 

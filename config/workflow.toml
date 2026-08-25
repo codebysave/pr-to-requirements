@@ -1,0 +1,18 @@
+# Configurazione del workflow di PR4Requirements (Decisione 3.5, §20).
+#
+# Questi parametri permettono di eseguire il workflow in configurazioni
+# diverse senza modificare il codice: sviluppo incrementale, prove
+# progressive (Decisione 3.7, §2) e debug di un singolo componente. La
+# configurazione di riferimento per la valutazione finale è il workflow
+# completo.
+#
+# `max_generation_attempts = 3` consente una generazione iniziale e fino a
+# due revisioni; il valore verrà verificato empiricamente.
+#
+# `memory_enabled` resta false finché la memoria persistente (Decisioni
+# 3.3/3.4) non sarà implementata.
+
+[workflow]
+assessment_enabled = true
+memory_enabled = false
+max_generation_attempts = 3

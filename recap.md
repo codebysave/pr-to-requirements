@@ -13,6 +13,154 @@ soltanto lo stato delle caselle — `[✔]` fatto, `[ ]` da fare — e la frecci
 
 ---
 
+## 2026-08-25 — Allineamento delle Decisioni 3.2 e 3.5 al piano di valutazione 3.7
+
+**Branch:** `feat/workflow-skeleton`
+
+### 1. Il problema rilevato
+
+La Decisione 3.7 è stata rivista in corso d'opera: il piano di valutazione non
+prevede più un **disegno fattoriale 2×2** (valutatore × memoria), ma un
+approccio diverso — le prove progressive (solo Generation, Generation +
+Assessment, workflow completo) risultano già svolte durante lo sviluppo e
+hanno portato ad adottare il **workflow completo come configurazione di
+riferimento**; la valutazione formale riguarda la qualità dei requisiti
+prodotti da quella configurazione, tramite gold standard, rubrica PASS/FAIL,
+hard gate e valutazione umana.
+
+Le Decisioni 3.2 e 3.5, però, facevano ancora riferimento al vecchio impianto.
+In particolare la 3.2 (§6) prometteva esplicitamente un "disegno fattoriale
+2×2" che la 3.7 attuale non definisce più: una tutor che legge i documenti in
+sequenza avrebbe trovato una contraddizione.
+
+### 2. Cosa è stato modificato
+
+- **Decisione 3.2, §6** — il paragrafo sulla fase sperimentale non cita più il
+  2×2: ora dichiara il workflow completo come configurazione di riferimento e
+  rimanda alla 3.7 per la valutazione. Resta il principio di controllo dei
+  confondenti (modello costante all'interno di una campagna di valutazione;
+  un eventuale confronto tra modelli è un'analisi separata).
+- **Decisione 3.5, §20** — la configurabilità non viene più motivata come
+  confronto sperimentale tra configurazioni, ma con le tre ragioni reali:
+  sviluppo incrementale, esecuzione controllata delle prove progressive della
+  3.7 e debug di un singolo componente. Aggiunta la precisazione che la
+  configurazione di riferimento per la valutazione è il workflow completo.
+- **Decisione 3.5, §2 e §8** — riformulati due passaggi minori che parlavano
+  di "confrontare configurazioni" e di esecuzione "per gli esperimenti".
+- **Codice e commenti** — rimossi i riferimenti al 2×2 da
+  `config/workflow.toml`, dal docstring di `are/agents/config.py`, da quello
+  di `route_after_retrieval` e dalla voce di recap del workflow skeleton.
+
+### 3. Cosa NON è cambiato
+
+I flag `assessment_enabled` e `memory_enabled` restano invariati: sono
+richiesti dalla Decisione 3.5 §20, servono alle prove progressive della 3.7 e
+sono comunque necessari finché la memoria persistente non esiste. È cambiata
+soltanto la motivazione dichiarata, non il comportamento del sistema — infatti
+nessun test è stato modificato e tutti continuano a passare.
+
+### 4. Stato del sistema dopo questa modifica
+
+```text
+[✔] Preprocessing del dataset       (script esterno al sistema)
+[✔] Input Loader                    are.input
+[✔] Configurazione + client LLM     are.llm
+[ ] Workflow LangGraph (agenti)     are.agents
+[ ] Pipeline Runner
+[ ] Memoria persistente (SQLite)    are.db
+[ ] Server MCP                      are.mcp_server
+[ ] Valutazione sperimentale
+```
+
+Voce di sola documentazione: nessuna casella cambia stato.
+
+---
+
+## 2026-08-25 — Scheletro del workflow LangGraph (Decisione 3.5)
+
+**Branch:** `feat/workflow-skeleton`
+
+### 1. Cosa è stato costruito
+
+La macchina a stati che governa l'elaborazione di una singola Pull Request:
+il "passo 2" della roadmap. Tutto vive nel package `are.agents` (il nome
+riprende il titolo della Decisione 3.5, "Architettura degli agenti"):
+
+1. **Stato condiviso** (`state.py`) — `RequirementState` con le sezioni
+   previste dal design: Pull Request, estraibilità, generazione (candidato e
+   numero tentativo), memoria recuperata, assessment, stato finale e storico
+   delle iterazioni. Più i tipi strutturati: `AssessmentFeedback` (issues,
+   unsupported claims, missing information, revision instructions),
+   `IterationRecord`, gli enum `ACCEPT/REVISE/REJECT`,
+   `EXTRACTABLE/NOT_EXTRACTABLE` e i 4 stati finali
+   (`ACCEPTED`, `NOT_EXTRACTABLE`, `REJECTED`, `FAILED_VALIDATION`).
+2. **Porte** (`ports.py`) — le interfacce (Protocol) che il grafo usa senza
+   conoscere le implementazioni: `ExtractabilityChecker`,
+   `RequirementGenerator`, `RequirementAssessor`, `MemoryRetriever`,
+   `AcceptedRequirementStore`. Gli agenti LLM reali (passo 3) e la memoria
+   (passi 5-6) implementeranno queste interfacce senza toccare il workflow.
+3. **Routing centralizzato** (`routing.py`) — funzioni pure e testabili senza
+   LLM: estraibilità → generazione o terminazione; dopo il retrieval →
+   assessment (o accettazione diretta se il valutatore è disattivato); dopo
+   l'assessment → `ACCEPT`/`REVISE`/`REJECT` con il limite di tentativi
+   (`REVISE` oltre il limite → `FAILED_VALIDATION`, mai promozione automatica
+   del miglior candidato).
+4. **Grafo LangGraph** (`graph.py`) — nodi sottili che delegano alle porte:
+   `check_extractability → generate → retrieve_memory → assess → accept` più
+   i nodi terminali. Il retrieval viene ripetuto dopo ogni generazione e la
+   persistenza avviene solo nel nodo `accept`, fuori dagli agenti, come da
+   design.
+5. **Configurazione del workflow** — `config/workflow.toml` con
+   `assessment_enabled`, `memory_enabled`, `max_generation_attempts = 3`,
+   validati rigorosamente come le altre config. Servono a eseguire il
+   workflow in configurazioni diverse senza toccare il codice: sviluppo
+   incrementale (la memoria non esiste ancora), prove progressive della
+   Decisione 3.7 §2 e debug di un singolo componente.
+
+### 2. Scelte fatte e motivazioni
+
+- **Dependency injection ovunque**: il grafo riceve le implementazioni via
+  `WorkflowDependencies`. Oggi sono stub nei test; al passo 3 diventeranno
+  gli agenti LLM veri. Questo permette di testare l'intera macchina a stati
+  senza chiamare la rete, come richiede la Decisione 3.5 (§21).
+- **`memory_enabled = false` di default**: la memoria non esiste ancora
+  (passi 5-6); il grafo la salta e usa un retriever/store inerte
+  (`NullMemoryRetriever`, `NullRequirementStore`).
+- **Parametro di routing rinominato** `workflow_config`: LangGraph riserva
+  il nome `config` per il proprio `RunnableConfig`.
+- **Dipendenza aggiunta**: `langgraph` 1.2.11.
+
+### 3. Verifiche eseguite
+
+- `uv run ruff check .` e `ruff format` — puliti, nessun warning;
+- `uv run pytest` — **82 test passati** (34 nuovi: 12 sul routing puro,
+  11 sulla config, 11 end-to-end sul grafo con agenti finti). Coperti tutti
+  i percorsi della Decisione 3.5: NOT_EXTRACTABLE senza generazione, ACCEPT
+  al primo colpo con persistenza, REVISE con feedback e candidato precedente
+  passati al generatore, tre REVISE → FAILED_VALIDATION senza persistenza,
+  REJECT terminale, limite tentativi configurabile, workflow senza
+  valutatore, retrieval ripetuto a ogni generazione.
+
+### 4. Stato del sistema dopo questa modifica
+
+```text
+[✔] Preprocessing del dataset       (script esterno al sistema)
+[✔] Input Loader                    are.input
+[✔] Configurazione + client LLM     are.llm
+[ ] Workflow LangGraph (agenti)     are.agents
+[ ] Pipeline Runner
+[ ] Memoria persistente (SQLite)    are.db
+[ ] Server MCP                      are.mcp_server
+[ ] Valutazione sperimentale
+```
+
+Nessuna casella nuova in questa voce: lo scheletro del workflow è completo e
+testato, ma la casella "Workflow LangGraph (agenti)" verrà spuntata al passo
+successivo, quando gli agenti stub saranno sostituiti da quelli reali con i
+prompt (passo 3).
+
+---
+
 ## 2026-08-25 — Configurazione e astrazione LLM (Decisione 3.2)
 
 **Branch:** `feat/llm-config`

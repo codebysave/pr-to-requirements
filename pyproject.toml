@@ -13,6 +13,7 @@ authors = [
 ]
 dependencies = [
     "anthropic>=1.0.0",
+    "langgraph>=1.2.11",
     "python-dotenv>=1.2.3",
 ]
 
