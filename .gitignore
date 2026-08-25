@@ -1,0 +1,29 @@
+# Credenziali e configurazione locale
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Ambienti virtuali
+.venv/
+venv/
+
+# Tool di sviluppo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Database e artefatti locali degli esperimenti
+*.sqlite3
+*.db
+
+# IDE e sistema operativo
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,74 @@
+[
+  {
+    "id": "scrapy-scrapy-pr-6869",
+    "repository": "scrapy/scrapy",
+    "pr_number": 6869,
+    "timestamp": "2025-06-06T13:17:48Z",
+    "title": "Fix: Dangerous Code Execution Function Could Allow External Attacks in scrapy/shell.py",
+    "body": "**Context and Purpose:**\n\nThis PR automatically remediates a security vulnerability:\n- **Description:** Detected the use of eval(). eval() can be dangerous if used to evaluate dynamic content. If this content can be input from outside the program, this may be a code injection vulnerability. Ensure evaluated content is not definable by external sources.\n- **Rule ID:** python.lang.security.audit.eval-detected.eval-detected\n- **Severity:** HIGH\n- **File:** scrapy/shell.py\n- **Lines Affected:** 76 - 76\n\nThis change is necessary to protect the application from potential security risks associated with this vulnerability.\n\n**Solution Implemented:**\n\nThe automated remediation process has applied the necessary changes to the affected code in `scrapy/shell.py` to resolve the identified issue.\n\nPlease review the changes to ensure they are correct and integrate as expected."
+  },
+  {
+    "id": "scrapy-scrapy-pr-6870",
+    "repository": "scrapy/scrapy",
+    "pr_number": 6870,
+    "timestamp": "2025-06-06T13:19:55Z",
+    "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+    "body": "**Context and Purpose:**\n\nThis PR automatically remediates a security vulnerability:\n- **Description:** Untrusted user input in `importlib.import_module()` function allows an attacker to load arbitrary code. Avoid dynamic values in `importlib.import_module()` or use a whitelist to prevent running untrusted code.\n- **Rule ID:** python.lang.security.audit.non-literal-import.non-literal-import\n- **Severity:** MEDIUM\n- **File:** scrapy/commands/genspider.py\n- **Lines Affected:** 156 - 156\n\nThis change is necessary to protect the application from potential security risks associated with this vulnerability.\n\n**Solution Implemented:**\n\nThe automated remediation process has applied the necessary changes to the affected code in `scrapy/commands/genspider.py` to resolve the identified issue.\n\nPlease review the changes to ensure they are correct and integrate as expected."
+  },
+  {
+    "id": "scrapy-scrapy-pr-6875",
+    "repository": "scrapy/scrapy",
+    "pr_number": 6875,
+    "timestamp": "2025-06-07T03:44:46Z",
+    "title": "Fix typo in cmdline.py comment: 'a argument' -> 'an argument'",
+    "body": "Description:\r\nThis pull request fixes a minor typo in a comment in scrapy/cmdline.py:\r\nChanges \"a argument\" to \"an argument\" for correct English usage.\r\nAlso improves the comment's clarity by changing \"that is\" to \"that it is\" for better English grammar.\r\nNo code logic or functionality is affected by this change.\r\n\r\nChecklist:\r\n[x] My change is as small as possible and focused on a single issue (typo fix).\r\n[x] No tests are needed as this is a comment-only change.\r\n[x] I have followed the contribution guidelines."
+  },
+  {
+    "id": "scrapy-scrapy-pr-6879",
+    "repository": "scrapy/scrapy",
+    "pr_number": 6879,
+    "timestamp": "2025-06-09T02:36:45Z",
+    "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+    "body": "**Context and Purpose:**\n\nThis PR automatically remediates a security vulnerability:\n- **Description:** Untrusted user input in `importlib.import_module()` function allows an attacker to load arbitrary code. Avoid dynamic values in `importlib.import_module()` or use a whitelist to prevent running untrusted code.\n- **Rule ID:** python.lang.security.audit.non-literal-import.non-literal-import\n- **Severity:** MEDIUM\n- **File:** scrapy/commands/genspider.py\n- **Lines Affected:** 156 - 156\n\nThis change is necessary to protect the application from potential security risks associated with this vulnerability.\n\n**Solution Implemented:**\n\nThe automated remediation process has applied the necessary changes to the affected code in `scrapy/commands/genspider.py` to resolve the identified issue.\n\nPlease review the changes to ensure they are correct and integrate as expected."
+  },
+  {
+    "id": "scrapy-scrapy-pr-6880",
+    "repository": "scrapy/scrapy",
+    "pr_number": 6880,
+    "timestamp": "2025-06-09T02:45:09Z",
+    "title": "Fix: Unsafe Data Processing Method Allows Malicious Code Execution in scrapy/exporters.py",
+    "body": "**Context and Purpose:**\n\nThis PR automatically remediates a security vulnerability:\n- **Description:** Avoid using `pickle`, which is known to lead to code execution vulnerabilities. When unpickling, the serialized data could be manipulated to run arbitrary code. Instead, consider serializing the relevant data as JSON or a similar text-based serialization format.\n- **Rule ID:** python.lang.security.deserialization.pickle.avoid-pickle\n- **Severity:** MEDIUM\n- **File:** scrapy/exporters.py\n- **Lines Affected:** 303 - 303\n\nThis change is necessary to protect the application from potential security risks associated with this vulnerability.\n\n**Solution Implemented:**\n\nThe automated remediation process has applied the necessary changes to the affected code in `scrapy/exporters.py` to resolve the identified issue.\n\nPlease review the changes to ensure they are correct and integrate as expected."
+  },
+  {
+    "id": "scrapy-scrapy-pr-6881",
+    "repository": "scrapy/scrapy",
+    "pr_number": 6881,
+    "timestamp": "2025-06-09T02:51:14Z",
+    "title": "Fix: Unsafe XML Processing Library Could Allow Malicious Attacks in scrapy/http/request/rpc.py",
+    "body": "**Context and Purpose:**\n\nThis PR automatically remediates a security vulnerability:\n- **Description:** Detected use of xmlrpc. xmlrpc is not inherently safe from vulnerabilities. Use defusedxml.xmlrpc instead.\n- **Rule ID:** python.lang.security.use-defused-xmlrpc.use-defused-xmlrpc\n- **Severity:** MEDIUM\n- **File:** scrapy/http/request/rpc.py\n- **Lines Affected:** 10 - 10\n\nThis change is necessary to protect the application from potential security risks associated with this vulnerability.\n\n**Solution Implemented:**\n\nThe automated remediation process has applied the necessary changes to the affected code in `scrapy/http/request/rpc.py` to resolve the identified issue.\n\nPlease review the changes to ensure they are correct and integrate as expected."
+  },
+  {
+    "id": "scrapy-scrapy-pr-6899",
+    "repository": "scrapy/scrapy",
+    "pr_number": 6899,
+    "timestamp": "2025-06-21T01:51:04Z",
+    "title": "Fix typing of dynamic `request` attribute on `Failure` with a cast subclass",
+    "body": "This PR addresses a longstanding `TODO` in the `call_spider_async` method regarding the typing of the dynamically added `request` attribute on `twisted.python.failure.Failure` objects.\r\n\r\nSince `Failure` does not originally define the `request` attribute, adding it dynamically causes static type checkers (e.g., mypy) to raise errors.\r\n\r\nTo resolve this without changing runtime behavior or introducing new `Failure` instances, this PR introduces a lightweight subclass `FailureWithRequest` used solely for static typing purposes via `cast()`. This approach:\r\n\r\n- Provides type safety and clarity for static analysis tools  \r\n- Avoids creating new `Failure` instances, preserving error context and traceback  \r\n- Keeps runtime behavior unchanged  \r\n- Offers a balanced solution (middle ground) between ignoring type checks and a full refactor of `Failure` usage\r\n"
+  },
+  {
+    "id": "scrapy-scrapy-pr-6936",
+    "repository": "scrapy/scrapy",
+    "pr_number": 6936,
+    "timestamp": "2025-07-03T00:58:14Z",
+    "title": "feat(settings): Change default SCHEDULER_PRIORITY_QUEUE (closes #6924)",
+    "body": "## Description\r\nChanges default `SCHEDULER_PRIORITY_QUEUE` to `DownloaderAwarePriorityQueue` (closes #6924).\r\n\r\nDepends on #6921 (merged) where the new queue was implemented.\r\n\r\n## Changes\r\n- Updated `SCHEDULER_PRIORITY_QUEUE` default in `default_settings.py`\r\n- Updated documentation in `docs/topics/settings.rst`\r\n\r\n## Verification\r\n- Ran tests with `pytest`\r\n- Confirmed backward compatibility\r\n\r\n## Testing\r\n- Ran priority queue tests (`test_pqueues.py`) - 11 passed, 2 skipped\r\n- Verified with `scrapy bench` (manual testing)"
+  },
+  {
+    "id": "scrapy-scrapy-pr-6947",
+    "repository": "scrapy/scrapy",
+    "pr_number": 6947,
+    "timestamp": "2025-07-10T15:21:39Z",
+    "title": "Ban more imports that import twisted.internet.reactor.",
+    "body": "This partially rolls back the import changes in #6941 but not all of these were correct before that PR."
+  }
+]
