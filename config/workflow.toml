@@ -1,0 +1,14 @@
+# Configurazione del workflow di PR4Requirements (Decisione 3.5, §20).
+#
+# Questi parametri permettono le configurazioni del disegno sperimentale 2×2
+# (valutatore attivo/disattivo × memoria attiva/disattiva) senza modificare
+# il codice. `max_generation_attempts = 3` consente una generazione iniziale
+# e fino a due revisioni; il valore verrà verificato empiricamente.
+#
+# `memory_enabled` resta false finché la memoria persistente (Decisioni
+# 3.3/3.4) non sarà implementata.
+
+[workflow]
+assessment_enabled = true
+memory_enabled = false
+max_generation_attempts = 3

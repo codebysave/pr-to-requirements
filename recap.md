@@ -13,6 +13,89 @@ soltanto lo stato delle caselle — `[✔]` fatto, `[ ]` da fare — e la frecci
 
 ---
 
+## 2026-08-25 — Scheletro del workflow LangGraph (Decisione 3.5)
+
+**Branch:** `feat/workflow-skeleton`
+
+### 1. Cosa è stato costruito
+
+La macchina a stati che governa l'elaborazione di una singola Pull Request:
+il "passo 2" della roadmap. Tutto vive nel package `are.agents` (il nome
+riprende il titolo della Decisione 3.5, "Architettura degli agenti"):
+
+1. **Stato condiviso** (`state.py`) — `RequirementState` con le sezioni
+   previste dal design: Pull Request, estraibilità, generazione (candidato e
+   numero tentativo), memoria recuperata, assessment, stato finale e storico
+   delle iterazioni. Più i tipi strutturati: `AssessmentFeedback` (issues,
+   unsupported claims, missing information, revision instructions),
+   `IterationRecord`, gli enum `ACCEPT/REVISE/REJECT`,
+   `EXTRACTABLE/NOT_EXTRACTABLE` e i 4 stati finali
+   (`ACCEPTED`, `NOT_EXTRACTABLE`, `REJECTED`, `FAILED_VALIDATION`).
+2. **Porte** (`ports.py`) — le interfacce (Protocol) che il grafo usa senza
+   conoscere le implementazioni: `ExtractabilityChecker`,
+   `RequirementGenerator`, `RequirementAssessor`, `MemoryRetriever`,
+   `AcceptedRequirementStore`. Gli agenti LLM reali (passo 3) e la memoria
+   (passi 5-6) implementeranno queste interfacce senza toccare il workflow.
+3. **Routing centralizzato** (`routing.py`) — funzioni pure e testabili senza
+   LLM: estraibilità → generazione o terminazione; dopo il retrieval →
+   assessment (o accettazione diretta se il valutatore è disattivato); dopo
+   l'assessment → `ACCEPT`/`REVISE`/`REJECT` con il limite di tentativi
+   (`REVISE` oltre il limite → `FAILED_VALIDATION`, mai promozione automatica
+   del miglior candidato).
+4. **Grafo LangGraph** (`graph.py`) — nodi sottili che delegano alle porte:
+   `check_extractability → generate → retrieve_memory → assess → accept` più
+   i nodi terminali. Il retrieval viene ripetuto dopo ogni generazione e la
+   persistenza avviene solo nel nodo `accept`, fuori dagli agenti, come da
+   design.
+5. **Configurazione del workflow** — `config/workflow.toml` con
+   `assessment_enabled`, `memory_enabled`, `max_generation_attempts = 3`:
+   i tre parametri del disegno sperimentale 2×2, validati rigorosamente
+   come le altre config.
+
+### 2. Scelte fatte e motivazioni
+
+- **Dependency injection ovunque**: il grafo riceve le implementazioni via
+  `WorkflowDependencies`. Oggi sono stub nei test; al passo 3 diventeranno
+  gli agenti LLM veri. Questo permette di testare l'intera macchina a stati
+  senza chiamare la rete, come richiede la Decisione 3.5 (§21).
+- **`memory_enabled = false` di default**: la memoria non esiste ancora
+  (passi 5-6); il grafo la salta e usa un retriever/store inerte
+  (`NullMemoryRetriever`, `NullRequirementStore`).
+- **Parametro di routing rinominato** `workflow_config`: LangGraph riserva
+  il nome `config` per il proprio `RunnableConfig`.
+- **Dipendenza aggiunta**: `langgraph` 1.2.11.
+
+### 3. Verifiche eseguite
+
+- `uv run ruff check .` e `ruff format` — puliti, nessun warning;
+- `uv run pytest` — **82 test passati** (34 nuovi: 12 sul routing puro,
+  11 sulla config, 11 end-to-end sul grafo con agenti finti). Coperti tutti
+  i percorsi della Decisione 3.5: NOT_EXTRACTABLE senza generazione, ACCEPT
+  al primo colpo con persistenza, REVISE con feedback e candidato precedente
+  passati al generatore, tre REVISE → FAILED_VALIDATION senza persistenza,
+  REJECT terminale, limite tentativi configurabile, workflow senza
+  valutatore, retrieval ripetuto a ogni generazione.
+
+### 4. Stato del sistema dopo questa modifica
+
+```text
+[✔] Preprocessing del dataset       (script esterno al sistema)
+[✔] Input Loader                    are.input
+[✔] Configurazione + client LLM     are.llm
+[ ] Workflow LangGraph (agenti)     are.agents
+[ ] Pipeline Runner
+[ ] Memoria persistente (SQLite)    are.db
+[ ] Server MCP                      are.mcp_server
+[ ] Valutazione sperimentale
+```
+
+Nessuna casella nuova in questa voce: lo scheletro del workflow è completo e
+testato, ma la casella "Workflow LangGraph (agenti)" verrà spuntata al passo
+successivo, quando gli agenti stub saranno sostituiti da quelli reali con i
+prompt (passo 3).
+
+---
+
 ## 2026-08-25 — Configurazione e astrazione LLM (Decisione 3.2)
 
 **Branch:** `feat/llm-config`
