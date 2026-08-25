@@ -1,0 +1,21 @@
+# Configurazione LLM di PR4Requirements (Decisione 3.2).
+#
+# Un blocco per agente: il modello è selezionabile separatamente per il
+# Generation Agent e per l'Assessment Agent. Questo file è versionato e
+# documenta la configurazione usata in ogni esecuzione; le credenziali NON
+# vanno mai qui (la chiave API vive solo in .env / variabili d'ambiente).
+#
+# In fase di sviluppo entrambi gli agenti usano il modello economico della
+# famiglia Claude (fascia Haiku) con temperature 0 per massimizzare la
+# riproducibilità. I parametri per gli esperimenti finali verranno calibrati
+# nella fase sperimentale (Decisione 3.7).
+
+[generation]
+model = "claude-haiku-4-5"
+temperature = 0.0
+max_tokens = 1024
+
+[assessment]
+model = "claude-haiku-4-5"
+temperature = 0.0
+max_tokens = 2048

@@ -56,3 +56,13 @@ git clone https://github.com/codebysave/pr-to-requirements.git
 cd pr-to-requirements
 uv sync
 ```
+
+## Configurazione
+
+I modelli e i parametri LLM dei due agenti sono definiti in `config/llm.toml`
+(versionato). La chiave API non va mai nel repository: copia `.env.example`
+in `.env` e inserisci la tua chiave Anthropic.
+
+```bash
+cp .env.example .env
+```
