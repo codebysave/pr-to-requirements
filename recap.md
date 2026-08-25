@@ -5,6 +5,12 @@ fatta al progetto: cosa è stato fatto, dove, perché, e come è stato verificat
 Ogni voce è divisa in pezzi semplici, così chiunque (inclusa la tutor) può
 ricostruire rapidamente la storia del sistema senza leggere i diff.
 
+**Convenzione.** La sezione "Stato del sistema" di ogni voce usa sempre lo
+stesso elenco di componenti, nello stesso ordine (quello di costruzione
+bottom-up della roadmap) e con gli stessi nomi. Tra una voce e l'altra cambia
+soltanto lo stato delle caselle — `[✔]` fatto, `[ ]` da fare — e la freccia
+`← questa modifica` che indica il componente completato dalla voce.
+
 ---
 
 ## 2026-08-25 — Configurazione e astrazione LLM (Decisione 3.2)
@@ -67,11 +73,14 @@ Il livello di accesso agli LLM, prerequisito di entrambi gli agenti. È il
 ### 5. Stato del sistema dopo questa modifica
 
 ```text
-Input Loader (are.input)            → fatto
-Config + astrazione LLM (are.llm)   → INTEGRATO ✔
-Workflow LangGraph (agenti)         → prossimo
-Pipeline Runner                     → prossimo
-Memoria persistente (SQLite + MCP)  → da fare
+[✔] Preprocessing del dataset       (script esterno al sistema)
+[✔] Input Loader                    are.input
+[✔] Configurazione + client LLM     are.llm          ← questa modifica
+[ ] Workflow LangGraph (agenti)     are.agents
+[ ] Pipeline Runner
+[ ] Memoria persistente (SQLite)    are.db
+[ ] Server MCP                      are.mcp_server
+[ ] Valutazione sperimentale
 ```
 
 ---
@@ -159,10 +168,12 @@ Due problemi del repository sono stati corretti in questa occasione:
 ### 6. Stato del sistema dopo questa modifica
 
 ```text
-preprocessing (fuori dal sistema)   → fatto (script esterno)
-Input Loader (are.input)            → INTEGRATO ✔
-Pipeline Runner                     → da fare
-Astrazione LLM + configurazione     → da fare
-Workflow LangGraph (agenti)         → da fare
-Memoria persistente (SQLite + MCP)  → da fare
+[✔] Preprocessing del dataset       (script esterno al sistema)
+[✔] Input Loader                    are.input        ← questa modifica
+[ ] Configurazione + client LLM     are.llm
+[ ] Workflow LangGraph (agenti)     are.agents
+[ ] Pipeline Runner
+[ ] Memoria persistente (SQLite)    are.db
+[ ] Server MCP                      are.mcp_server
+[ ] Valutazione sperimentale
 ```
