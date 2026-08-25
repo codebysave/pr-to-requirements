@@ -7,6 +7,75 @@ ricostruire rapidamente la storia del sistema senza leggere i diff.
 
 ---
 
+## 2026-08-25 — Configurazione e astrazione LLM (Decisione 3.2)
+
+**Branch:** `feat/llm-config`
+
+### 1. Cosa è stato costruito
+
+Il livello di accesso agli LLM, prerequisito di entrambi gli agenti. È il
+"passo 1" della roadmap dopo l'integrazione del loader. Tre pezzi:
+
+1. **Configurazione versionata per agente** — `config/llm.toml` definisce
+   modello e parametri separatamente per Generation Agent e Assessment Agent
+   (come richiede la Decisione 3.2: il modello è una variabile
+   dell'esperimento, non un valore cablato nel codice). In sviluppo entrambi
+   usano `claude-haiku-4-5` (fascia economica) con `temperature = 0` per la
+   riproducibilità.
+2. **Modulo di caricamento config** — `src/are/llm/config.py` legge il TOML
+   con la libreria standard (`tomllib`, niente dipendenze extra) e lo valida
+   rigorosamente, nello stesso stile del loader: sezioni obbligatorie,
+   chiavi sconosciute rifiutate, tipi e range controllati (`temperature` e
+   `top_p` in [0,1], `max_tokens` intero positivo), tutti i problemi
+   riportati insieme.
+3. **Client LLM astratto** — `src/are/llm/client.py` definisce il protocollo
+   `LLMClient` (l'interfaccia unica che gli agenti useranno) e
+   l'implementazione `AnthropicLLMClient` sopra l'SDK ufficiale `anthropic`.
+   La risposta (`LLMResponse`) include token in ingresso e uscita per il
+   tracciamento dei costi previsto dalla Decisione 3.2. Gli errori del
+   fornitore vengono incapsulati in `LLMCallError`.
+
+### 2. Gestione della chiave API
+
+- La chiave vive **solo** nella variabile d'ambiente `ANTHROPIC_API_KEY`,
+  caricabile dal file `.env` (già escluso da Git) tramite
+  `are.env.load_environment()`.
+- Aggiunto `.env.example` versionato che documenta la variabile richiesta, e
+  una sezione "Configurazione" nel README con le istruzioni.
+- Se la chiave manca, il client fallisce subito con un errore chiaro
+  (`MissingApiKeyError`) invece di fallire alla prima chiamata.
+
+### 3. Scelte fatte e motivazioni
+
+- **SDK Anthropic diretto, non LangChain** (deciso insieme): controllo totale
+  e trasparente dei parametri inviati, meno dipendenze, più facile da
+  documentare per la riproducibilità. LangGraph (passo 2) non richiede
+  oggetti LangChain: i nodi sono normali funzioni Python.
+- **Client iniettabile nei test**: `AnthropicLLMClient` accetta un SDK finto,
+  così i test verificano esattamente quali parametri vengono inviati senza
+  mai chiamare la rete.
+- **Dipendenze aggiunte**: `anthropic` (SDK ufficiale, v1.0.0) e
+  `python-dotenv` (caricamento `.env`). Prime dipendenze runtime del progetto.
+
+### 4. Verifiche eseguite
+
+- `uv run ruff check .` e `ruff format` — puliti;
+- `uv run pytest` — **48 test passati** (25 del loader + 23 nuovi: 13 sulla
+  validazione della config, 6 sul client con SDK finto, incluso il controllo
+  che il file `config/llm.toml` del repository sia valido).
+
+### 5. Stato del sistema dopo questa modifica
+
+```text
+Input Loader (are.input)            → fatto
+Config + astrazione LLM (are.llm)   → INTEGRATO ✔
+Workflow LangGraph (agenti)         → prossimo
+Pipeline Runner                     → prossimo
+Memoria persistente (SQLite + MCP)  → da fare
+```
+
+---
+
 ## 2026-08-25 — Integrazione del primo nodo: Input Loader
 
 **Branch:** `feat/input-loader`
