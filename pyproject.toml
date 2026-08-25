@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "pr-to-requirements"
 version = "0.1.0"
@@ -7,6 +11,9 @@ authors = [
     { name = "Andrea [Cognome]" },
     { name = "Marco [Cognome]" },
 ]
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [dependency-groups]
 dev = [
