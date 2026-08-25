@@ -135,11 +135,14 @@ mai la chiave API nel codice né la versioniamo: la gestiamo tramite variabile d
 modello e parametri. Versioniamo questo file per documentare la configurazione usata, mentre
 manteniamo le credenziali fuori dal repository.
 
-**Sulla fase sperimentale (Decisione 3.7).** La scelta del modello per agente entra nel
-disegno sperimentale. Il confronto principale del progetto è il disegno fattoriale 2×2
-(presenza/assenza del valutatore × presenza/assenza della memoria); teniamo costante la
-scelta del modello all'interno di ciascun confronto per non introdurre confondenti, ed
-eventualmente la variamo in un'analisi separata dedicata.
+**Sulla fase sperimentale (Decisione 3.7).** La configurazione di riferimento del progetto
+è il workflow completo (Generation Agent + Assessment Agent + memoria persistente),
+adottata al termine delle prove progressive svolte durante lo sviluppo. La valutazione
+definita nella Decisione 3.7 riguarda quindi la qualità dei requisiti prodotti da questa
+configurazione, misurata rispetto al gold standard, alla rubrica di qualità e alla
+valutazione umana. Manteniamo costante la scelta del modello all'interno di una stessa
+campagna di valutazione per non introdurre confondenti; un eventuale confronto tra modelli
+diversi costituisce un'analisi separata e va documentato come tale.
 
 **Sui costi.** Teniamo traccia del costo per esecuzione (token in ingresso e uscita,
 numero di chiamate) come metrica di valutazione, oltre alla qualità: un sistema più

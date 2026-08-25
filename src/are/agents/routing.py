@@ -32,8 +32,8 @@ def route_after_extractability(state: RequirementState) -> str:
 
 def route_after_retrieval(state: RequirementState, workflow_config: WorkflowConfig) -> str:
     """Con il valutatore attivo si passa all'assessment; senza, il candidato
-    del Generation Agent diventa direttamente l'output (configurazione
-    sperimentale del disegno 2×2)."""
+    del Generation Agent diventa direttamente l'output (configurazione delle
+    prove progressive, Decisione 3.7 §2)."""
 
     if workflow_config.assessment_enabled:
         return NODE_ASSESS

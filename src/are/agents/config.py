@@ -1,8 +1,9 @@
 """Configurazione del workflow (Decisione 3.5, §20).
 
 I parametri dell'architettura restano esterni alla logica dei nodi: il file
-TOML versionato permette di eseguire le configurazioni sperimentali del
-disegno fattoriale 2×2 (valutatore × memoria) senza modificare il codice.
+TOML versionato permette di eseguire il workflow in configurazioni diverse
+senza modificarne il codice, durante lo sviluppo incrementale e per le prove
+progressive descritte nella Decisione 3.7.
 """
 
 from __future__ import annotations
