@@ -13,6 +13,221 @@ soltanto lo stato delle caselle — `[✔]` fatto, `[ ]` da fare — e la frecci
 
 ---
 
+## 2026-08-26 — Prima esecuzione reale e ristrutturazione dei prompt
+
+**Branch:** `feat/usage-tracking`
+
+### 1. Il sistema ha girato per la prima volta sui dati veri
+
+Con la chiave API disponibile, il sistema ha elaborato le 9 Pull Request del
+campione scrapy dall'inizio alla fine. Tutta l'architettura costruita nei passi
+precedenti — loader, configurazione, grafo, agenti, runner, report — ha
+funzionato senza modifiche.
+
+La prima esecuzione ha però rivelato subito un problema tecnico: l'SDK
+`anthropic` 1.0.0 **non accetta più** i parametri di campionamento
+`temperature`, `top_p` e `top_k`, rimossi dal fornitore. Il nostro client li
+inviava e la chiamata falliva prima ancora di partire.
+
+### 2. Conseguenza metodologica sulla riproducibilità
+
+La Decisione 3.2 prevedeva di fissare `temperature = 0` per contenere la
+variabilità. Non è più possibile. Abbiamo quindi:
+
+- sostituito i parametri rimossi con `effort` (opzionale, non supportato dalla
+  fascia Haiku);
+- aggiunto alla Decisione 3.2 un aggiornamento datato che spiega la
+  situazione: la variabilità non si può più **sopprimere**, va **misurata**
+  con repliche multiple — il che rende il lavoro della tutor
+  (Donato et al., 2025b) ancora più pertinente;
+- annotato la lezione pratica: la configurazione va verificata contro l'SDK
+  installato, non contro la documentazione ricordata.
+
+### 3. Ristrutturazione dei tre prompt
+
+Le prime esecuzioni hanno mostrato che i prompt erano **contraddittori**: il
+valutatore suggeriva formulazioni che poi rifiutava, e il gate ammetteva Pull
+Request che il valutatore scartava. Dopo una ricerca sulle linee guida
+ufficiali di prompt engineering, i tre prompt sono stati riscritti:
+
+- **struttura XML** (`<role>`, `<task>`, `<definitions>`, `<procedure>`,
+  `<examples>`, `<output_format>`), che i modelli interpretano più
+  affidabilmente dei titoli markdown;
+- **blocco `<definitions>` identico nei tre prompt**, inserito
+  programmaticamente e verificato da un test: gate e agenti non possono più
+  usare nozioni diverse di «comportamento richiesto»;
+- **procedura ordinata** al posto di principi che si bilanciavano: il primo
+  passo che scatta decide, così il modello non sceglie arbitrariamente quale
+  criterio applicare;
+- **esempi diversificati** (5-7 per prompt) che coprono i casi problematici;
+- **istruzioni in positivo**, ciascuna con la propria motivazione.
+
+Sono stati inoltre rimossi dai prompt tutti i riferimenti al campione
+sperimentale (nomi di moduli e funzioni delle PR di scrapy). Erano una
+**contaminazione**: il modello riconosceva gli esempi invece di applicare i
+criteri, e qualunque misura sarebbe risultata viziata. Un test automatico ora
+lo impedisce, confrontando i prompt con il contenuto di
+`experiments/samples/`.
+
+### 4. Criteri di merito consolidati nella Decisione 3.1
+
+Le discussioni nate dai risultati reali hanno prodotto tre precisazioni, ora
+scritte nel documento di design:
+
+- **§9** — criterio generale di estraibilità: una Pull Request è estraibile
+  quando le sue informazioni sono sufficienti a identificare **in modo non
+  ambiguo almeno un comportamento richiesto**, indipendentemente dalla sua
+  tipologia;
+- **§9.1** — il criterio riguarda il **comportamento, non il meccanismo**:
+  l'ignoranza della tecnica non rende una PR non estraibile;
+- **§4.1** — criterio operativo per il valutatore: «il requisito descrive un
+  comportamento che il sistema deve garantire, o prescrive
+  un'implementazione?». Se è la seconda, `REVISE`, perché è un difetto di
+  formulazione e non di fondatezza;
+- **§4.2** — l'osservabilità va calibrata sul tipo di software: per una
+  libreria l'osservatore è chi usa l'interfaccia pubblica.
+
+### 5. Strumenti di lavoro
+
+- **Log leggibile**: al posto delle righe HTTP delle librerie, il flusso viene
+  raccontato per fasi (`[GATE]`, `[GENERA]`, `[VALUTA]`) con esiti e feedback;
+  con `--verbose` si vedono i messaggi inviati e le risposte grezze.
+- **Selezione del modello**: `--model haiku|sonnet|opus`, oppure
+  `--generation-model` / `--assessment-model` per combinazioni miste, oppure
+  `--choose-model` per un menu numerato nelle prove manuali.
+- **Costi e riproducibilità**: ogni report registra consumo e stima di costo
+  per agente, e la **versione datata** del modello (`claude-haiku-4-5-20251001`)
+  oltre all'alias richiesto.
+
+### 6. Risultati e limite raggiunto
+
+I report delle esecuzioni sono in `experiments/runs/`. Il confronto fra
+configurazioni mostra che **una sola Pull Request su 9 riceve lo stesso esito
+in tutte le prove**: le altre cambiano al variare del modello o della
+formulazione del prompt.
+
+Questo è il limite della giornata, ed è metodologico più che tecnico: senza
+sapere quale sia l'esito corretto per ciascuna Pull Request, ogni modifica ai
+prompt sposta i risultati senza che si possa dire se li migliora. **Il passo
+successivo è costruire il gold standard sulle 9 PR del campione**, come
+previsto dalla Decisione 3.7.
+
+> **Nota sui report allegati.** I prompt sono stati modificati più volte nel
+> corso della giornata mantenendo l'etichetta `v1`, quindi i report riportano
+> la stessa versione pur riferendosi a formulazioni diverse. È una fase
+> esplorativa: da qui in avanti ogni modifica sostanziale dovrà produrre una
+> nuova versione (`v2`, `v3`…) perché i confronti restino ricostruibili.
+
+### 7. Verifiche eseguite
+
+- `uv run ruff check .` e `ruff format` — puliti;
+- `uv run pytest` — **146 test passati** (27 nuovi: consumo e costi, selezione
+  dei modelli, struttura dei prompt, identità del blocco di definizioni,
+  assenza di contaminazione dal campione);
+- sei esecuzioni reali sul campione, con Haiku e con Opus.
+
+### 8. Stato del sistema dopo questa modifica
+
+```text
+[✔] Preprocessing del dataset       (script esterno al sistema)
+[✔] Input Loader                    are.input
+[✔] Configurazione + client LLM     are.llm
+[✔] Workflow LangGraph (agenti)     are.agents
+[✔] Pipeline Runner                 are.runner
+[ ] Memoria persistente (SQLite)    are.db
+[ ] Server MCP                      are.mcp_server
+[ ] Valutazione sperimentale
+```
+
+Nessuna casella nuova: il sistema era già completo, questa giornata lo ha reso
+funzionante sui dati reali e ne ha stabilizzato i prompt.
+
+---
+
+## 2026-08-26 — Preparazione al primo test reale: costi e prompt
+
+**Branch:** `feat/usage-tracking`
+
+### 1. Perché questa modifica
+
+Prima di eseguire il sistema con la chiave API vera mancavano tre cose: sapere
+quanto costa ogni esecuzione, poter verificare la chiave senza lanciare un
+intero batch, e avere prompt abbastanza espliciti per un modello piccolo come
+Haiku.
+
+### 2. Tracciamento del consumo e dei costi
+
+La Decisione 3.2 (§6) chiede di tenere traccia del costo per esecuzione come
+metrica di valutazione, accanto alla qualità. Finora i token erano disponibili
+ma nessuno li sommava.
+
+- Il client LLM ora accumula chiamate e token consumati, per agente.
+- `are/llm/pricing.py` contiene il listino dei modelli e stima il costo in
+  dollari. I token restano il dato oggettivo, il costo è una stima: se il
+  modello non è in listino il valore è `null`, mai un numero inventato. La
+  tabella riporta la data di riferimento del listino.
+- Il report di ogni esecuzione include il consumo per agente, i totali e la
+  stima di costo; il riepilogo a schermo li mostra a fine esecuzione.
+
+### 3. Verifica rapida della chiave
+
+Nuova opzione `--check-api`: esegue una sola chiamata minima e riporta esito,
+modello effettivo e costo. Serve a scoprire subito una chiave mancante o
+sbagliata, invece di accorgersene a metà di un batch.
+
+```bash
+uv run python -m are --check-api
+```
+
+### 4. Prompt rinforzati con esempi
+
+I tre prompt ora contengono esempi concreti di coppie ingresso/uscita. È la
+tecnica che aiuta di più i modelli piccoli: Haiku tende ad aggiungere testo
+attorno al JSON o a inserire dettagli non richiesti, e un esempio esplicito
+riduce entrambi i problemi.
+
+- *extractability*: tre esempi, fra cui un typo fix e un refactoring interno,
+  entrambi `NOT_EXTRACTABLE`;
+- *generation*: due esempi completi, con l'annotazione di cosa è stato
+  volutamente **omesso** perché non supportato dall'evidenza;
+- *assessment*: la stessa Pull Request valutata due volte, una con un
+  requisito che aggiunge dettagli inventati (`REVISE`, con le istruzioni di
+  correzione) e una con il requisito corretto (`ACCEPT`).
+
+Aggiunta anche una regola esplicita per l'assessment: giudicare solo rispetto
+alla Pull Request ricevuta, senza usare la conoscenza pregressa del progetto
+per dare per supportato un dettaglio plausibile. È la formulazione che
+avevamo già trovato utile nel prototipo NovitAI.
+
+Abbiamo modificato la versione `v1` invece di creare una `v2` perché `v1` non
+ha mai prodotto risultati: non c'era nulla da preservare.
+
+### 5. Verifiche eseguite
+
+- `uv run ruff check .` e `ruff format` — puliti;
+- `uv run pytest` — **129 test passati** (10 nuovi: consumo cumulato,
+  chiamata fallita che non conta come consumo, stima dei costi, modello fuori
+  listino, e due controlli di regressione sui prompt che verificano la
+  presenza di esempi JSON realmente validi).
+
+### 6. Stato del sistema dopo questa modifica
+
+```text
+[✔] Preprocessing del dataset       (script esterno al sistema)
+[✔] Input Loader                    are.input
+[✔] Configurazione + client LLM     are.llm
+[✔] Workflow LangGraph (agenti)     are.agents
+[✔] Pipeline Runner                 are.runner
+[ ] Memoria persistente (SQLite)    are.db
+[ ] Server MCP                      are.mcp_server
+[ ] Valutazione sperimentale
+```
+
+Nessuna casella nuova: è una modifica di preparazione. Il sistema è pronto per
+la prima esecuzione con la chiave API reale.
+
+---
+
 ## 2026-08-26 — Agenti reali e Pipeline Runner: sistema completo end-to-end
 
 **Branch:** `feat/agents-and-runner`

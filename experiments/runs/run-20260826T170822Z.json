@@ -1,0 +1,295 @@
+{
+  "run": {
+    "generated_at": "2026-08-26T17:08:22.635931+00:00",
+    "input_file": "experiments/samples/sample-scrapy_scrapy.json",
+    "pull_requests": 9,
+    "prompt_version": "v1",
+    "workflow": {
+      "assessment_enabled": true,
+      "memory_enabled": false,
+      "max_generation_attempts": 3
+    },
+    "llm": {
+      "generation": {
+        "model": "claude-haiku-4-5",
+        "resolved_model": "claude-haiku-4-5-20251001",
+        "max_tokens": 1024,
+        "effort": null
+      },
+      "assessment": {
+        "model": "claude-haiku-4-5",
+        "resolved_model": "claude-haiku-4-5-20251001",
+        "max_tokens": 2048,
+        "effort": null
+      }
+    },
+    "usage": {
+      "per_agent": {
+        "generation": {
+          "model": "claude-haiku-4-5",
+          "calls": 17,
+          "input_tokens": 18609,
+          "output_tokens": 747,
+          "estimated_cost_usd": 0.022344
+        },
+        "assessment": {
+          "model": "claude-haiku-4-5",
+          "calls": 8,
+          "input_tokens": 13399,
+          "output_tokens": 1128,
+          "estimated_cost_usd": 0.019039
+        }
+      },
+      "total_calls": 25,
+      "total_input_tokens": 32008,
+      "total_output_tokens": 1875,
+      "total_estimated_cost_usd": 0.041383,
+      "pricing_reference_date": "2026-08-26"
+    }
+  },
+  "summary": {
+    "NOT_EXTRACTABLE": 4,
+    "ACCEPTED": 5
+  },
+  "results": [
+    {
+      "pr_id": "scrapy-scrapy-pr-6869",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6869,
+      "timestamp": "2025-06-06T13:17:48+00:00",
+      "title": "Fix: Dangerous Code Execution Function Could Allow External Attacks in scrapy/shell.py",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "NOT_EXTRACTABLE",
+      "extractability_reason": "The description is conditional ('may be a code injection vulnerability') and never asserts that any behaviour was actually wrong or what the system must do to fix it.",
+      "accepted_requirement": null,
+      "generation_attempts": 0,
+      "iteration_history": []
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6870",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6870,
+      "timestamp": "2025-06-06T13:19:55+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "The required behaviour is stated: untrusted user input must no longer be able to load arbitrary code via importlib.import_module().",
+      "accepted_requirement": "The system shall prevent arbitrary code execution from untrusted user input.",
+      "generation_attempts": 2,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "If user input is passed to importlib.import_module(), then the system shall validate or restrict the input to prevent loading arbitrary code.",
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement specifies a mechanism ('validate or restrict') rather than the required behaviour. The evidence supports preventing arbitrary code loading, but does not specify the technique.",
+              "The requirement is conditional on user input being passed to importlib.import_module(), but the underlying obligation is to prevent arbitrary code execution regardless of implementation details."
+            ],
+            "unsupported_claims": [
+              "validate or restrict (implementation techniques not specified in the evidence)"
+            ],
+            "missing_information": [],
+            "revision_instructions": [
+              "Remove the conditional phrasing 'if user input is passed to importlib.import_module()' and the mechanism reference ('validate or restrict'). Replace with the abstract behaviour the evidence supports: preventing the execution or loading of arbitrary code from untrusted input.",
+              "Rephrase to focus on the outcome (prevented arbitrary code execution) rather than the specific function or validation technique."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "The system shall prevent arbitrary code execution from untrusted user input.",
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6875",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6875,
+      "timestamp": "2025-06-07T03:44:46+00:00",
+      "title": "Fix typo in cmdline.py comment: 'a argument' -> 'an argument'",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "NOT_EXTRACTABLE",
+      "extractability_reason": "Comment-only change with no observable behavioural effect on the system.",
+      "accepted_requirement": null,
+      "generation_attempts": 0,
+      "iteration_history": []
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6879",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6879,
+      "timestamp": "2025-06-09T02:36:45+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "The required behaviour is stated as a fact: untrusted user input must no longer be able to load arbitrary code through importlib.import_module() in genspider.py.",
+      "accepted_requirement": "If user input is passed to importlib.import_module(), then the system shall prevent execution of arbitrary code.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "If user input is passed to importlib.import_module(), then the system shall prevent execution of arbitrary code.",
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6880",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6880,
+      "timestamp": "2025-06-09T02:45:09+00:00",
+      "title": "Fix: Unsafe Data Processing Method Allows Malicious Code Execution in scrapy/exporters.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "The required behaviour is stated as a fact: the system must not use pickle for deserialization, replacing it with a safer format like JSON to prevent code execution vulnerabilities.",
+      "accepted_requirement": "When processing serialized data in the exporters module, the system shall not use pickle deserialization to avoid arbitrary code execution vulnerabilities.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When processing serialized data in the exporters module, the system shall not use pickle deserialization to avoid arbitrary code execution vulnerabilities.",
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6881",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6881,
+      "timestamp": "2025-06-09T02:51:14+00:00",
+      "title": "Fix: Unsafe XML Processing Library Could Allow Malicious Attacks in scrapy/http/request/rpc.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "The required behaviour is stated: xmlrpc usage must be replaced with defusedxml.xmlrpc to prevent malicious XML attacks.",
+      "accepted_requirement": "When processing XML-RPC requests, the system shall use defusedxml.xmlrpc instead of xmlrpc.",
+      "generation_attempts": 3,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When processing XML-RPC requests, the system shall use a defused XML library to prevent malicious XML attacks.",
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement specifies 'XML-RPC requests' as the scope, but the evidence indicates the change is in the request handling module, not necessarily limited to processing incoming requests. The actual behaviour may be broader or differently scoped.",
+              "The requirement uses 'defused XML library' as a specific implementation choice, but the evidence only supports the abstract behaviour of preventing malicious XML attacks. The mechanism (library choice) should not be named in a functional requirement."
+            ],
+            "unsupported_claims": [
+              "the specific use of 'defused XML library' (implementation detail)",
+              "the scope limited to 'XML-RPC requests' is not clearly defined in the evidence"
+            ],
+            "missing_information": [
+              "Whether the change applies to all XML processing in the module or only XML-RPC specifically",
+              "Whether this applies to request creation, processing, or both"
+            ],
+            "revision_instructions": [
+              "Remove the reference to 'defused XML library', which is an implementation choice. State instead what malicious XML attacks the system must prevent, or use the abstract term 'safe XML processing'.",
+              "Clarify the scope: specify whether this applies to XML-RPC processing in general, or to a specific operation such as request creation or handling."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "When processing XML-RPC, the system shall prevent malicious XML attacks.",
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement abstracts away from the specific mechanism mentioned in the Pull Request. The evidence indicates a switch from xmlrpc to defusedxml.xmlrpc, but the requirement does not ground this change in a concrete behaviour.",
+              "The requirement uses a vague phrase 'malicious XML attacks' without specificity. The Pull Request identifies a vulnerability class but does not detail which attacks are prevented."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [
+              "The specific library change from xmlrpc to defusedxml.xmlrpc is not reflected in the requirement, though it is the core action of the PR.",
+              "The specific vulnerability or attack class (if any) that defusedxml.xmlrpc protects against, beyond the general category of 'malicious XML attacks'."
+            ],
+            "revision_instructions": [
+              "Reframe the requirement to describe the behaviour of using defusedxml.xmlrpc for XML-RPC processing, rather than the abstract goal of preventing attacks. The mechanism is the supported fact here.",
+              "Replace 'malicious XML attacks' with a more specific characterization if the Pull Request evidence supports it, or keep it general but ensure the requirement states what the system does, not what it prevents."
+            ]
+          }
+        },
+        {
+          "attempt": 3,
+          "candidate": "When processing XML-RPC requests, the system shall use defusedxml.xmlrpc instead of xmlrpc.",
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6899",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6899,
+      "timestamp": "2025-06-21T01:51:04+00:00",
+      "title": "Fix typing of dynamic `request` attribute on `Failure` with a cast subclass",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "NOT_EXTRACTABLE",
+      "extractability_reason": "This describes a typing implementation detail for static analysis without specifying any observable system behavior change.",
+      "accepted_requirement": null,
+      "generation_attempts": 0,
+      "iteration_history": []
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6936",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6936,
+      "timestamp": "2025-07-03T00:58:14+00:00",
+      "title": "feat(settings): Change default SCHEDULER_PRIORITY_QUEUE (closes #6924)",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "The required behaviour is stated: the system must use DownloaderAwarePriorityQueue as the default scheduler priority queue instead of the previous default.",
+      "accepted_requirement": "The system shall use DownloaderAwarePriorityQueue as the default scheduler priority queue.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall use DownloaderAwarePriorityQueue as the default scheduler priority queue.",
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6947",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6947,
+      "timestamp": "2025-07-10T15:21:39+00:00",
+      "title": "Ban more imports that import twisted.internet.reactor.",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "NOT_EXTRACTABLE",
+      "extractability_reason": "The PR describes an internal change to import restrictions without stating what behaviour the system must exhibit or what problem is being solved.",
+      "accepted_requirement": null,
+      "generation_attempts": 0,
+      "iteration_history": []
+    }
+  ]
+}

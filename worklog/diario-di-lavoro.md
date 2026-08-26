@@ -538,6 +538,66 @@ Con questo il sistema è completo dall'inizio alla fine: si dà in pasto il file
 delle Pull Request e si ottengono i requisiti. Manca solo la chiave di accesso
 al servizio per poterlo eseguire davvero.
 
+### Mercoledì 26 agosto — notte
+
+Abbiamo attivato l'accesso al servizio e fatto girare il sistema per la prima
+volta sulle Pull Request vere. Una giornata sola, ma è quella in cui abbiamo
+imparato di più.
+
+**Il primo tentativo è fallito subito.** Alcuni parametri che passavamo al
+modello — quelli che regolano quanto le risposte sono variabili — non esistono
+più: il fornitore li ha rimossi. Il problema tecnico si è risolto in pochi
+minuti, ma la conseguenza è seria e riguarda la tesi: avevamo previsto di
+azzerare la variabilità fissando uno di quei parametri, e non è più possibile.
+La variabilità ora va **misurata** ripetendo le esecuzioni, non eliminata. In
+un certo senso il lavoro della tutor su questo tema diventa ancora più
+centrale per noi.
+
+**Poi il sistema ha funzionato.** Nove Pull Request elaborate dall'inizio alla
+fine, requisiti generati, valutati, alcuni riscritti dopo il feedback. Costo
+di un'esecuzione completa: quattro centesimi con il modello economico.
+
+**E abbiamo scoperto i problemi veri.** Il valutatore proponeva al generatore
+una formulazione e al giro successivo la bocciava, contraddicendosi. Il
+controllo iniziale scartava Pull Request da cui un requisito si poteva
+ricavare, e ne accettava altre praticamente identiche. Ne è nata una lunga
+discussione fra noi, e con un collega, su una questione di fondo: fino a che
+punto possiamo pretendere che una Pull Request descriva il comportamento del
+sistema? La conclusione è che non possiamo pretendere il **meccanismo** —
+quale libreria, quale tecnica — perché quello è già implementazione. Ma
+possiamo pretendere che il comportamento sia identificabile. Abbiamo scritto
+questa distinzione nei documenti di progetto: è probabilmente la decisione più
+importante presa oggi.
+
+**Abbiamo rifatto tutte le istruzioni degli agenti.** Dopo aver letto le linee
+guida ufficiali su come si scrivono istruzioni efficaci per questi modelli, le
+abbiamo riscritte da zero: sezioni ben separate, una procedura da seguire in
+ordine invece di principi sparsi che il modello poteva applicare a piacere,
+più esempi e tutti diversi fra loro, e una spiegazione del perché accanto a
+ogni regola.
+
+Ci siamo anche accorti di un errore nostro che avrebbe potuto falsare tutti i
+risultati: negli esempi delle istruzioni avevamo messo pezzi delle stesse Pull
+Request su cui poi misuravamo. Il modello le riconosceva invece di ragionare.
+Le abbiamo sostituite con esempi inventati e aggiunto un controllo automatico
+che d'ora in poi impedisce che succeda di nuovo.
+
+**Infine abbiamo confrontato due modelli** sullo stesso identico materiale: uno
+economico e uno molto più capace. Concordano su sei Pull Request su nove. Sulle
+altre tre decidono diversamente — e il modello più capace motiva meglio, ma
+"meglio" secondo noi non è ancora una misura.
+
+Ed è il punto in cui ci siamo fermati. Abbiamo modificato le istruzioni tre
+volte in una sera, ogni volta con una buona ragione, ogni volta ottenendo
+risultati diversi. Alla fine una sola Pull Request su nove riceve lo stesso
+esito in tutte le prove. Il problema non è più tecnico: **non sappiamo quale
+sia la risposta giusta**, quindi non possiamo dire se una modifica migliora le
+cose o le sposta soltanto.
+
+Il prossimo passo è quindi deciderlo noi, caso per caso, sulle nove Pull
+Request del campione: è il gold standard previsto dal piano di valutazione, e
+da stasera è diventato la cosa più urgente da fare.
+
 ---
 
 ## Situazione a fine agosto
@@ -548,17 +608,20 @@ Cosa c'è:
 - sette decisioni di progetto documentate;
 - lo script che prepara i dati, con la sua piccola interfaccia;
 - lo schema interattivo del flusso di lavoro;
-- il sistema funzionante dal file di ingresso ai requisiti generati;
+- il sistema funzionante dal file di ingresso ai requisiti generati, provato
+  sulle Pull Request reali con due modelli diversi;
 - una serie di controlli automatici che verificano tutto senza costi.
 
 Cosa manca:
 
-- la chiave di accesso al servizio, per eseguire il sistema sui dati veri;
+- il gold standard: decidere noi, caso per caso, quale sia l'esito corretto
+  per le nove Pull Request del campione;
 - la memoria dei requisiti già approvati e il modo per consultarla;
 - la scelta definitiva del progetto e delle Pull Request da usare;
 - il riferimento costruito a mano per la valutazione;
 - l'esecuzione delle prove e la raccolta dei risultati.
 
-Prossimo passo concreto: appena disponibile l'accesso al servizio, eseguire il
-sistema su poche Pull Request per vedere che tipo di requisiti produce e
-correggere le istruzioni degli agenti sulla base di quello che otteniamo.
+Prossimo passo concreto: costruire il gold standard sulle nove Pull Request del
+campione. Senza un riferimento condiviso su quale sia l'esito corretto, ogni
+ulteriore modifica alle istruzioni degli agenti cambia i risultati senza che
+si possa dire se li migliora.

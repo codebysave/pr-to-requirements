@@ -72,25 +72,46 @@ class PipelineRunner:
         results: list[RunResult] = []
 
         for index, pull_request in enumerate(ordered, start=1):
-            logger.info(
-                "Elaborazione %d/%d: %s (PR #%d)",
-                index,
-                len(ordered),
-                pull_request.id,
-                pull_request.pr_number,
-            )
+            self._log_header(index, len(ordered), pull_request)
             try:
                 final_state = self._graph.invoke(create_initial_state(pull_request))
             except Exception as exc:  # errore tecnico: non interrompe il batch
-                logger.error("Errore durante l'elaborazione di %s: %s", pull_request.id, exc)
+                logger.error("  [ERRORE]  %s: %s", type(exc).__name__, exc)
+                logger.info("  ESITO:    interrotto da un errore tecnico")
                 results.append(RunResult(pull_request, None, f"{type(exc).__name__}: {exc}"))
                 if self._stop_on_error:
                     break
                 continue
 
+            self._log_outcome(final_state)
             results.append(RunResult(pull_request, final_state))
 
         return results
+
+    @staticmethod
+    def _log_header(index: int, totale: int, pull_request: PullRequestRecord) -> None:
+        titolo = pull_request.title
+        if len(titolo) > 90:
+            titolo = titolo[:87] + "..."
+        logger.info("")
+        logger.info("%s", "-" * 78)
+        logger.info(
+            "PR #%d  %s  (%d di %d)",
+            pull_request.pr_number,
+            pull_request.repository,
+            index,
+            totale,
+        )
+        logger.info("  %s", titolo)
+        logger.info("%s", "-" * 78)
+
+    @staticmethod
+    def _log_outcome(state: RequirementState) -> None:
+        status = state["final_status"]
+        logger.info("  ESITO:    %s", status.value if status is not None else "SCONOSCIUTO")
+        accettato = state["accepted_requirement"]
+        if accettato:
+            logger.info('  REQUISITO: "%s"', accettato)
 
     def _order(self, pull_requests: Iterable[PullRequestRecord]) -> list[PullRequestRecord]:
         records = list(pull_requests)

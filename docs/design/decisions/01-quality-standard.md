@@ -220,6 +220,63 @@ implementativo. Dettagli tecnici possono essere mantenuti nel requisito soltanto
 costituiscono essi stessi un vincolo richiesto e sono esplicitamente supportati
 dall'evidenza.
 
+### 4.1 Criterio operativo
+
+La distinzione viene applicata attraverso una domanda esplicita:
+
+> «Il requisito descrive un comportamento che il sistema deve garantire, oppure sta
+> prescrivendo una particolare implementazione?»
+
+Se vale il secondo caso, l'esito appropriato è `REVISE` con l'istruzione di riformulare
+il requisito in termini comportamentali, senza imporre librerie, funzioni o tecniche non
+richieste. È importante notare che si tratta di un **difetto di formulazione, non di
+fondatezza**: la Pull Request può contenere un requisito valido che il Generation Agent
+ha semplicemente espresso al livello di astrazione sbagliato. Classificarlo come non
+estraibile, o rifiutarlo, farebbe perdere un caso legittimo.
+
+Il flusso desiderato è quindi:
+
+```text
+Pull Request
+      ↓
+che cosa deve garantire il sistema?
+      ↓
+requisito funzionale astratto e verificabile
+```
+
+e non:
+
+```text
+Pull Request
+      ↓
+frase tecnica ripresa dalla descrizione
+      ↓
+requisito che prescrive un'implementazione
+```
+
+La scelta della libreria o della tecnica resta una decisione dell'implementazione, che
+può realizzare il requisito in molti modi diversi.
+
+Come verifica pratica, adottiamo un test semplice: si rimuove dal requisito il nome
+della libreria, della funzione o del modulo. Se la frase residua esprime ancora il
+comportamento richiesto, quel nome era un dettaglio implementativo e va eliminato; se
+non resta nulla di significativo, il cambiamento tecnico costituiva esso stesso
+l'oggetto della Pull Request (tipicamente la modifica di un'impostazione predefinita) e
+può essere mantenuto.
+
+### 4.2 Comportamento osservabile per librerie e framework
+
+Il criterio di osservabilità va calibrato sul tipo di software analizzato. Molti
+progetti presenti nei dataset di Pull Request — incluso quello utilizzato nella prima
+sperimentazione — sono librerie o framework, privi di un'interfaccia rivolta a un utente
+finale.
+
+In questi casi il comportamento osservabile è quello percepibile da chi utilizza
+l'interfaccia pubblica del componente: valori restituiti, eccezioni sollevate, effetti a
+runtime, contratto dell'API. La verificabilità va giudicata a quel livello. Richiedere
+un'osservabilità di tipo applicativo porterebbe a scartare requisiti funzionali
+legittimi soltanto perché il software non ha un utente umano davanti.
+
 ---
 
 ## 5. Forma dei requisiti
@@ -349,12 +406,79 @@ quality constraints privi di un comportamento funzionale target.
 
 ## 9. PR non estraibili
 
-Non tutte le Pull Request devono produrre obbligatoriamente un requisito. Il Generator
-deve poter classificare una Pull Request come **not extractable** quando il contenuto
-disponibile non consente di ricostruire in modo sufficientemente fondato un requisito
-funzionale.
+Non tutte le Pull Request devono produrre obbligatoriamente un requisito. Il criterio
+generale adottato dal progetto è il seguente:
 
-Esempio:
+> Una Pull Request è considerata **estraibile** quando le informazioni in essa contenute
+> sono sufficienti a identificare **in modo non ambiguo almeno un comportamento richiesto
+> al sistema**.
+
+La formulazione è volutamente indipendente dalla tipologia della Pull Request: ciò che
+conta non è se si tratti di una funzionalità, di una correzione o di un intervento di
+sicurezza, ma se il testo permetta di stabilire *che cosa il sistema deve fare*.
+
+Applicato ai casi ricorrenti:
+
+- una Pull Request di funzionalità è estraibile se descrive il comportamento richiesto;
+- una correzione di difetto è estraibile se descrive quale comportamento deve essere
+  corretto;
+- un intervento di sicurezza è estraibile se descrive come il sistema deve comportarsi
+  **dopo** la correzione, non soltanto quale vulnerabilità è stata individuata;
+- una descrizione troppo vaga per determinare un comportamento specifico non è
+  estraibile.
+
+L'inciso «in modo non ambiguo» è essenziale: impedisce al Generation Agent di colmare le
+lacune inventando un requisito che l'evidenza non sostiene. L'esistenza di una modifica
+non costituisce di per sé evidenza di un comportamento: una Pull Request che dichiara
+soltanto di aver cambiato qualcosa, senza indicare che cosa il sistema debba fare, non
+consente di *identificare* un requisito, ma solo di *immaginarlo*.
+
+### 9.1 Il criterio riguarda il comportamento, non il meccanismo
+
+Il criterio va applicato al **comportamento richiesto**, non alla tecnica con cui è
+stato realizzato. L'ignoranza del meccanismo non rende una Pull Request non estraibile:
+il meccanismo appartiene all'implementazione, che il requisito non deve descrivere
+(§4).
+
+Esempio. Una Pull Request dichiara che input non attendibile permetteva il caricamento
+di codice arbitrario, e che il problema è stato corretto. Non è dato sapere se la
+correzione validi, rifiuti o limiti l'input: un requisito che nomini uno di questi
+meccanismi introdurrebbe informazione non supportata. È invece fondato il requisito
+espresso al livello di astrazione che l'evidenza sostiene:
+
+> The system shall prevent the execution of arbitrary code originating from untrusted
+> user input.
+
+Ne discende un criterio operativo per il Requirement Assessment Agent, che deve
+chiedersi:
+
+> «Questo requisito afferma soltanto ciò che la Pull Request permette di dedurre?»
+
+e **non**:
+
+> «La Pull Request descrive esattamente come il sistema deve comportarsi in ogni
+> situazione?»
+
+La seconda domanda è irrealistica — una Pull Request non contiene quasi mai tutti i
+dettagli — e renderebbe l'esito `FAILED_VALIDATION` eccessivamente frequente. Quando
+l'evidenza sostiene un comportamento soltanto a un livello astratto, il requisito
+corretto è quello astratto: non una formulazione più specifica, e non un fallimento.
+
+Resta invece non estraibile la Pull Request formulata in termini ipotetici («questo
+*potrebbe* essere pericoloso», «*se* il contenuto provenisse dall'esterno»), perché non
+afferma che un comportamento fosse effettivamente errato.
+
+Il rischio da evitare è quindi:
+
+```text
+problema segnalato
+      ↓
+il modello immagina quale dovrebbe essere il comportamento
+      ↓
+requisito inventato
+```
+
+Esempio non estraibile:
 
 > Refactor the parser to simplify the internal class hierarchy.
 
@@ -363,6 +487,11 @@ deve inventarne uno. Output atteso: `NOT_EXTRACTABLE`.
 
 La possibilità di non generare un requisito è necessaria per evitare che il modello
 trasformi automaticamente ogni modifica software in una nuova funzione del sistema.
+
+Il criterio è applicato dalla verifica preliminare di estraibilità (Decisione 3.5, §6).
+Quando la stessa insufficienza di evidenza emerge soltanto durante la valutazione, la
+decisione appropriata è `REJECT` e non `REVISE`: nessuna riscrittura può fondare un
+requisito su un'evidenza che non lo contiene.
 
 ---
 

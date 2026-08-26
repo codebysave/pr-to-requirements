@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import re
 from pathlib import Path
 
 import pytest
@@ -37,6 +39,32 @@ def test_assessment_prompt_lists_the_three_decisions() -> None:
         assert decision in prompt
 
 
+def test_every_prompt_requires_a_single_json_object() -> None:
+    for agent in (EXTRACTABILITY_AGENT, GENERATION_AGENT, ASSESSMENT_AGENT):
+        prompt = load_prompt(agent)
+
+        assert "single JSON object" in prompt, agent
+        assert "no markdown code fences" in prompt, agent
+
+
+def test_every_prompt_contains_at_least_one_valid_json_example() -> None:
+    """Gli esempi guidano i modelli piccoli: devono essere JSON realmente validi."""
+
+    for agent in (EXTRACTABILITY_AGENT, GENERATION_AGENT, ASSESSMENT_AGENT):
+        prompt = load_prompt(agent)
+        # Gli esempi compaiono come oggetto dentro <output>, oppure come riga
+        # a sé stante. Le righe con il carattere di alternativa descrivono lo
+        # schema di risposta, non un esempio concreto.
+        esempi = re.findall(r"<output>(\{.*?\})</output>", prompt, re.DOTALL)
+        esempi += [
+            riga for riga in re.findall(r"^\{.*\}$", prompt, re.MULTILINE) if '" | "' not in riga
+        ]
+
+        assert esempi, f"nessun esempio in {agent}"
+        for esempio in esempi:
+            json.loads(esempio)  # solleva se malformato
+
+
 def test_loads_prompt_from_custom_directory(tmp_path: Path) -> None:
     agent_dir = tmp_path / "generation"
     agent_dir.mkdir()
@@ -57,3 +85,71 @@ def test_rejects_empty_prompt(tmp_path: Path) -> None:
 
     with pytest.raises(PromptNotFoundError, match="vuoto"):
         load_prompt("generation", "v1", tmp_path)
+
+
+def test_prompts_do_not_leak_the_experimental_sample() -> None:
+    """I prompt non devono contenere elementi delle PR del campione.
+
+    Gli esempi nei prompt guidano il modello: se provenissero dalle stesse
+    Pull Request su cui misuriamo i risultati, la valutazione sperimentale
+    sarebbe contaminata (Decisione 3.7). Gli esempi devono restare inventati
+    e indipendenti dal campione.
+    """
+
+    samples_dir = Path(__file__).parent.parent / "experiments" / "samples"
+    identificatori: set[str] = set()
+
+    for sample_file in samples_dir.glob("*.json"):
+        for record in json.loads(sample_file.read_text(encoding="utf-8")):
+            identificatori.add(record["repository"].split("/")[0].lower())
+            testo = f"{record['title']} {record['body']}"
+            # Nomi di modulo, funzioni e file citati nella PR.
+            identificatori.update(
+                match.lower() for match in re.findall(r"\b\w+\.(?:py|\w+\(\))", testo)
+            )
+
+    for agent in (EXTRACTABILITY_AGENT, GENERATION_AGENT, ASSESSMENT_AGENT):
+        prompt = load_prompt(agent).lower()
+        trovati = sorted(term for term in identificatori if term in prompt)
+
+        assert not trovati, f"il prompt '{agent}' cita il campione: {trovati}"
+
+
+def _extract_block(prompt: str, tag: str) -> str:
+    match = re.search(rf"<{tag}>(.*?)</{tag}>", prompt, re.DOTALL)
+    assert match, f"blocco <{tag}> assente"
+    return match.group(1).strip()
+
+
+def test_all_prompts_share_an_identical_definitions_block() -> None:
+    """I tre prompt devono usare le stesse definizioni, parola per parola.
+
+    Quando le nozioni di 'comportamento richiesto' e di 'evidenza' divergono,
+    gate, generatore e valutatore applicano criteri diversi allo stesso caso:
+    il gate ammette Pull Request che il valutatore poi rifiuta, e il ciclo di
+    revisione non converge.
+    """
+
+    blocchi = {
+        agent: _extract_block(load_prompt(agent), "definitions")
+        for agent in (EXTRACTABILITY_AGENT, GENERATION_AGENT, ASSESSMENT_AGENT)
+    }
+
+    assert len(set(blocchi.values())) == 1, "le definizioni divergono fra i prompt"
+
+
+def test_prompts_use_the_expected_structure() -> None:
+    for agent in (EXTRACTABILITY_AGENT, GENERATION_AGENT, ASSESSMENT_AGENT):
+        prompt = load_prompt(agent)
+
+        for tag in ("role", "task", "definitions", "procedure", "examples", "output_format"):
+            assert f"<{tag}>" in prompt and f"</{tag}>" in prompt, f"{agent}: manca <{tag}>"
+
+
+def test_prompts_provide_several_diverse_examples() -> None:
+    """La documentazione ufficiale raccomanda da 3 a 5 esempi variati."""
+
+    for agent in (EXTRACTABILITY_AGENT, GENERATION_AGENT, ASSESSMENT_AGENT):
+        esempi = re.findall(r"<example>", load_prompt(agent))
+
+        assert len(esempi) >= 4, f"{agent}: solo {len(esempi)} esempi"

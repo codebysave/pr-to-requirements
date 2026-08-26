@@ -1,7 +1,14 @@
 """API pubblica del livello di accesso agli LLM di PR4Requirements."""
 
 from .client import API_KEY_ENV_VAR, AnthropicLLMClient, LLMClient, LLMResponse
-from .config import AGENT_SECTIONS, AgentLLMSettings, LLMConfig, load_llm_config
+from .config import (
+    AGENT_SECTIONS,
+    MODEL_ALIASES,
+    AgentLLMSettings,
+    LLMConfig,
+    load_llm_config,
+    resolve_model_alias,
+)
 from .exceptions import (
     InvalidLLMConfigError,
     LLMCallError,
@@ -10,10 +17,18 @@ from .exceptions import (
     LLMConfigFileError,
     MissingApiKeyError,
 )
+from .pricing import (
+    PRICING_REFERENCE_DATE,
+    UsageStats,
+    estimate_cost_usd,
+    format_usage,
+)
 
 __all__ = [
     "AGENT_SECTIONS",
     "API_KEY_ENV_VAR",
+    "MODEL_ALIASES",
+    "PRICING_REFERENCE_DATE",
     "AgentLLMSettings",
     "AnthropicLLMClient",
     "InvalidLLMConfigError",
@@ -25,5 +40,9 @@ __all__ = [
     "LLMConfigFileError",
     "LLMResponse",
     "MissingApiKeyError",
+    "UsageStats",
+    "estimate_cost_usd",
+    "format_usage",
     "load_llm_config",
+    "resolve_model_alias",
 ]

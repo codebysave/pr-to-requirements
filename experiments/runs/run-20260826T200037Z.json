@@ -1,0 +1,234 @@
+{
+  "run": {
+    "generated_at": "2026-08-26T20:00:37.273164+00:00",
+    "input_file": "experiments/samples/sample-scrapy_scrapy.json",
+    "pull_requests": 9,
+    "prompt_version": "v1",
+    "workflow": {
+      "assessment_enabled": true,
+      "memory_enabled": false,
+      "max_generation_attempts": 3
+    },
+    "llm": {
+      "generation": {
+        "model": "claude-haiku-4-5",
+        "resolved_model": "claude-haiku-4-5-20251001",
+        "max_tokens": 1024,
+        "effort": null
+      },
+      "assessment": {
+        "model": "claude-haiku-4-5",
+        "resolved_model": "claude-haiku-4-5-20251001",
+        "max_tokens": 2048,
+        "effort": null
+      }
+    },
+    "usage": {
+      "per_agent": {
+        "generation": {
+          "model": "claude-haiku-4-5",
+          "calls": 12,
+          "input_tokens": 14009,
+          "output_tokens": 653,
+          "estimated_cost_usd": 0.017274
+        },
+        "assessment": {
+          "model": "claude-haiku-4-5",
+          "calls": 3,
+          "input_tokens": 6211,
+          "output_tokens": 808,
+          "estimated_cost_usd": 0.010251
+        }
+      },
+      "total_calls": 15,
+      "total_input_tokens": 20220,
+      "total_output_tokens": 1461,
+      "total_estimated_cost_usd": 0.027525,
+      "pricing_reference_date": "2026-08-26"
+    }
+  },
+  "summary": {
+    "NOT_EXTRACTABLE": 7,
+    "REJECTED": 2
+  },
+  "results": [
+    {
+      "pr_id": "scrapy-scrapy-pr-6869",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6869,
+      "timestamp": "2025-06-06T13:17:48+00:00",
+      "title": "Fix: Dangerous Code Execution Function Could Allow External Attacks in scrapy/shell.py",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "NOT_EXTRACTABLE",
+      "extractability_reason": "The PR uses conditional language ('may be', 'could allow') and never asserts that external input actually reaches the eval() function or that any behaviour must change; it only reports a potential vulnerability without stating a required behaviour.",
+      "accepted_requirement": null,
+      "generation_attempts": 0,
+      "iteration_history": []
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6870",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6870,
+      "timestamp": "2025-06-06T13:19:55+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "NOT_EXTRACTABLE",
+      "extractability_reason": "The PR describes that a vulnerability was found and fixed, but does not assert what the system must do after the fix—only that remediation was applied without specifying the required behaviour.",
+      "accepted_requirement": null,
+      "generation_attempts": 0,
+      "iteration_history": []
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6875",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6875,
+      "timestamp": "2025-06-07T03:44:46+00:00",
+      "title": "Fix typo in cmdline.py comment: 'a argument' -> 'an argument'",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "NOT_EXTRACTABLE",
+      "extractability_reason": "Comment-only change with no observable behavioural effect on the system.",
+      "accepted_requirement": null,
+      "generation_attempts": 0,
+      "iteration_history": []
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6879",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6879,
+      "timestamp": "2025-06-09T02:36:45+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "NOT_EXTRACTABLE",
+      "extractability_reason": "The PR describes a vulnerability class and that it was remediated, but does not assert what the system must do; without seeing the actual code change, the required behaviour cannot be identified from this text alone.",
+      "accepted_requirement": null,
+      "generation_attempts": 0,
+      "iteration_history": []
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6880",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6880,
+      "timestamp": "2025-06-09T02:45:09+00:00",
+      "title": "Fix: Unsafe Data Processing Method Allows Malicious Code Execution in scrapy/exporters.py",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "NOT_EXTRACTABLE",
+      "extractability_reason": "The PR describes a vulnerability that was found and states a fix was applied, but does not specify what the system must do after the fix—only that pickle should be avoided without stating the required behavior.",
+      "accepted_requirement": null,
+      "generation_attempts": 0,
+      "iteration_history": []
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6881",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6881,
+      "timestamp": "2025-06-09T02:51:14+00:00",
+      "title": "Fix: Unsafe XML Processing Library Could Allow Malicious Attacks in scrapy/http/request/rpc.py",
+      "final_status": "REJECTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "The required behaviour is stated: the system must use defusedxml.xmlrpc instead of xmlrpc to prevent unsafe XML processing attacks.",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall process XML-RPC requests without executing arbitrary code contained in the XML.",
+          "assessment": {
+            "decision": "REJECT",
+            "issues": [
+              "The Pull Request does not describe the resulting behaviour after the fix. It identifies a vulnerability and states that a remediation was applied, but does not specify what the system must do to prevent arbitrary code execution.",
+              "The requirement assumes a specific attack vector (arbitrary code in XML) that the Pull Request mentions only as a general risk category. The evidence does not detail the threat model or the mechanisms by which the fix prevents it.",
+              "The Pull Request is a tool-generated security patch with no functional specification of the corrected behaviour. It names a library replacement (defusedxml.xmlrpc instead of xmlrpc) but does not explain what observable behaviour this change enforces."
+            ],
+            "unsupported_claims": [
+              "executing arbitrary code contained in the XML - the PR does not specify this as the particular attack prevented"
+            ],
+            "missing_information": [
+              "What specific XML-RPC processing vulnerabilities the fix addresses",
+              "What behaviour the system exhibits after the fix that it did not exhibit before",
+              "The mechanism or validation applied to XML-RPC input to prevent attacks"
+            ],
+            "revision_instructions": [
+              "Do not attempt to derive a functional requirement from this evidence. The Pull Request identifies a security issue and applies an automated remediation without describing the resulting system behaviour. A requirement would require the PR to state what the corrected code must do, not merely that a vulnerable library was replaced. This is a case for REJECT: no rewrite of the candidate using only the available evidence can produce a properly grounded requirement."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6899",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6899,
+      "timestamp": "2025-06-21T01:51:04+00:00",
+      "title": "Fix typing of dynamic `request` attribute on `Failure` with a cast subclass",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "NOT_EXTRACTABLE",
+      "extractability_reason": "The PR describes a typing fix for static analysis with no observable runtime behavior change, making it an internal implementation detail rather than a system requirement.",
+      "accepted_requirement": null,
+      "generation_attempts": 0,
+      "iteration_history": []
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6936",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6936,
+      "timestamp": "2025-07-03T00:58:14+00:00",
+      "title": "feat(settings): Change default SCHEDULER_PRIORITY_QUEUE (closes #6924)",
+      "final_status": "REJECTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "The required behaviour is stated: the default SCHEDULER_PRIORITY_QUEUE must be DownloaderAwarePriorityQueue instead of its previous value.",
+      "accepted_requirement": null,
+      "generation_attempts": 2,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall use DownloaderAwarePriorityQueue as the default priority queue for the scheduler.",
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement names a specific implementation (DownloaderAwarePriorityQueue) rather than stating the required behaviour.",
+              "The requirement describes a configuration change rather than a functional capability or system behaviour."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [
+              "The functional benefit or behaviour change that results from using DownloaderAwarePriorityQueue instead of the previous default queue."
+            ],
+            "revision_instructions": [
+              "Remove the specific queue name (DownloaderAwarePriorityQueue) and state instead what scheduling behaviour the system must provide. The Pull Request does not explain why this queue was chosen or what problem it solves, so you must either infer from context or reject the requirement as unfounded.",
+              "If the evidence does support a functional requirement at a higher level of abstraction, express it as a capability or observable system behaviour, not as a configuration or implementation choice."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "The requirement cannot be determined from the evidence provided. The Pull Request describes a configuration change to the default scheduler priority queue but does not state what functional behaviour or capability this change enables or what problem it solves. Without evidence of the observable system behaviour that results from this change, a functional requirement cannot be reconstructed.",
+          "assessment": {
+            "decision": "REJECT",
+            "issues": [
+              "The Pull Request does not describe the functional behaviour that results from changing the default scheduler priority queue. It reports a configuration change and that tests pass, but does not state what capability is enabled or what problem is solved.",
+              "The evidence does not contain observable system behaviour that can be verified. The Pull Request confirms backward compatibility and that existing tests pass, but does not describe what the new queue does or how the system's observable behaviour differs."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [
+              "The functional purpose of the DownloaderAwarePriorityQueue and how it changes the system's scheduling behaviour",
+              "What problem the change solves or what capability it enables"
+            ],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6947",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6947,
+      "timestamp": "2025-07-10T15:21:39+00:00",
+      "title": "Ban more imports that import twisted.internet.reactor.",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "NOT_EXTRACTABLE",
+      "extractability_reason": "The PR describes what code was changed but does not identify any observable behaviour requirement or what the system must do as a result.",
+      "accepted_requirement": null,
+      "generation_attempts": 0,
+      "iteration_history": []
+    }
+  ]
+}

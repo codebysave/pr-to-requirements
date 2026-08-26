@@ -6,16 +6,19 @@
 # vanno mai qui (la chiave API vive solo in .env / variabili d'ambiente).
 #
 # In fase di sviluppo entrambi gli agenti usano il modello economico della
-# famiglia Claude (fascia Haiku) con temperature 0 per massimizzare la
-# riproducibilità. I parametri per gli esperimenti finali verranno calibrati
-# nella fase sperimentale (Decisione 3.7).
+# famiglia Claude (fascia Haiku). I parametri per gli esperimenti finali
+# verranno calibrati nella fase sperimentale (Decisione 3.7).
+#
+# Nota sui parametri di campionamento: `temperature`, `top_p` e `top_k` non
+# esistono più nell'API dei modelli attuali (rimossi dal fornitore). Alcuni
+# modelli accettano al loro posto `effort` (low | medium | high | xhigh |
+# max), che regola profondità del ragionamento e spesa di token. La fascia
+# Haiku non lo supporta, quindi qui non viene impostato.
 
 [generation]
 model = "claude-haiku-4-5"
-temperature = 0.0
 max_tokens = 1024
 
 [assessment]
 model = "claude-haiku-4-5"
-temperature = 0.0
 max_tokens = 2048
