@@ -13,6 +13,90 @@ soltanto lo stato delle caselle — `[✔]` fatto, `[ ]` da fare — e la frecci
 
 ---
 
+## 2026-08-26 — Preparazione al primo test reale: costi e prompt
+
+**Branch:** `feat/usage-tracking`
+
+### 1. Perché questa modifica
+
+Prima di eseguire il sistema con la chiave API vera mancavano tre cose: sapere
+quanto costa ogni esecuzione, poter verificare la chiave senza lanciare un
+intero batch, e avere prompt abbastanza espliciti per un modello piccolo come
+Haiku.
+
+### 2. Tracciamento del consumo e dei costi
+
+La Decisione 3.2 (§6) chiede di tenere traccia del costo per esecuzione come
+metrica di valutazione, accanto alla qualità. Finora i token erano disponibili
+ma nessuno li sommava.
+
+- Il client LLM ora accumula chiamate e token consumati, per agente.
+- `are/llm/pricing.py` contiene il listino dei modelli e stima il costo in
+  dollari. I token restano il dato oggettivo, il costo è una stima: se il
+  modello non è in listino il valore è `null`, mai un numero inventato. La
+  tabella riporta la data di riferimento del listino.
+- Il report di ogni esecuzione include il consumo per agente, i totali e la
+  stima di costo; il riepilogo a schermo li mostra a fine esecuzione.
+
+### 3. Verifica rapida della chiave
+
+Nuova opzione `--check-api`: esegue una sola chiamata minima e riporta esito,
+modello effettivo e costo. Serve a scoprire subito una chiave mancante o
+sbagliata, invece di accorgersene a metà di un batch.
+
+```bash
+uv run python -m are --check-api
+```
+
+### 4. Prompt rinforzati con esempi
+
+I tre prompt ora contengono esempi concreti di coppie ingresso/uscita. È la
+tecnica che aiuta di più i modelli piccoli: Haiku tende ad aggiungere testo
+attorno al JSON o a inserire dettagli non richiesti, e un esempio esplicito
+riduce entrambi i problemi.
+
+- *extractability*: tre esempi, fra cui un typo fix e un refactoring interno,
+  entrambi `NOT_EXTRACTABLE`;
+- *generation*: due esempi completi, con l'annotazione di cosa è stato
+  volutamente **omesso** perché non supportato dall'evidenza;
+- *assessment*: la stessa Pull Request valutata due volte, una con un
+  requisito che aggiunge dettagli inventati (`REVISE`, con le istruzioni di
+  correzione) e una con il requisito corretto (`ACCEPT`).
+
+Aggiunta anche una regola esplicita per l'assessment: giudicare solo rispetto
+alla Pull Request ricevuta, senza usare la conoscenza pregressa del progetto
+per dare per supportato un dettaglio plausibile. È la formulazione che
+avevamo già trovato utile nel prototipo NovitAI.
+
+Abbiamo modificato la versione `v1` invece di creare una `v2` perché `v1` non
+ha mai prodotto risultati: non c'era nulla da preservare.
+
+### 5. Verifiche eseguite
+
+- `uv run ruff check .` e `ruff format` — puliti;
+- `uv run pytest` — **129 test passati** (10 nuovi: consumo cumulato,
+  chiamata fallita che non conta come consumo, stima dei costi, modello fuori
+  listino, e due controlli di regressione sui prompt che verificano la
+  presenza di esempi JSON realmente validi).
+
+### 6. Stato del sistema dopo questa modifica
+
+```text
+[✔] Preprocessing del dataset       (script esterno al sistema)
+[✔] Input Loader                    are.input
+[✔] Configurazione + client LLM     are.llm
+[✔] Workflow LangGraph (agenti)     are.agents
+[✔] Pipeline Runner                 are.runner
+[ ] Memoria persistente (SQLite)    are.db
+[ ] Server MCP                      are.mcp_server
+[ ] Valutazione sperimentale
+```
+
+Nessuna casella nuova: è una modifica di preparazione. Il sistema è pronto per
+la prima esecuzione con la chiave API reale.
+
+---
+
 ## 2026-08-26 — Agenti reali e Pipeline Runner: sistema completo end-to-end
 
 **Branch:** `feat/agents-and-runner`

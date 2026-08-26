@@ -69,14 +69,22 @@ cp .env.example .env
 
 ## Esecuzione
 
-Con la chiave API configurata, il sistema elabora un file JSON di Pull Request
-e produce i requisiti generati:
+Per verificare che la chiave API funzioni, con una sola chiamata minima:
+
+```bash
+uv run python -m are --check-api
+```
+
+Per elaborare un file di Pull Request e produrre i requisiti:
 
 ```bash
 uv run python -m are --input experiments/samples/sample-scrapy_scrapy.json --limit 3
 ```
 
-Il report dell'esecuzione (requisiti accettati, stati finali, storico delle
-revisioni, modelli e prompt usati) viene salvato in `experiments/runs/`.
+Il report dell'esecuzione viene salvato in `experiments/runs/` e contiene i
+requisiti accettati, gli stati finali, lo storico delle revisioni, i modelli e
+i prompt usati e il consumo di token con la stima del costo.
+
 Opzioni utili: `--limit N` per elaborare solo le prime N Pull Request e
-contenere i costi, `--output` per scegliere il file del report.
+contenere i costi, `--output` per scegliere il file del report,
+`--prompt-version` per usare una versione diversa dei prompt.

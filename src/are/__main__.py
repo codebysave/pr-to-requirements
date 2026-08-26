@@ -30,7 +30,18 @@ from are.agents.llm_agents import (
 from are.agents.prompts import DEFAULT_PROMPT_VERSION
 from are.env import load_environment
 from are.input import PullRequestInputError, PullRequestLoader
-from are.llm import AgentLLMSettings, AnthropicLLMClient, LLMConfig, load_llm_config
+from are.llm import (
+    PRICING_REFERENCE_DATE,
+    AgentLLMSettings,
+    AnthropicLLMClient,
+    LLMCallError,
+    LLMConfig,
+    MissingApiKeyError,
+    UsageStats,
+    estimate_cost_usd,
+    format_usage,
+    load_llm_config,
+)
 from are.runner import PipelineRunner, build_run_report, save_run_report, summarize
 
 DEFAULT_LLM_CONFIG = Path("config/llm.toml")
@@ -46,6 +57,13 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     load_environment()
+
+    if args.check_api:
+        return _check_api(args.llm_config)
+
+    if not args.input:
+        print("Argomento --input obbligatorio (oppure usare --check-api).", file=sys.stderr)
+        return 2
 
     try:
         pull_requests = PullRequestLoader().load(args.input)
@@ -84,6 +102,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     results = runner.run(pull_requests)
 
+    usage = {
+        "generation": (llm_config.generation.model, generation_client.usage),
+        "assessment": (llm_config.assessment.model, assessment_client.usage),
+    }
+
     report = build_run_report(
         results,
         metadata={
@@ -96,11 +119,41 @@ def main(argv: list[str] | None = None) -> int:
                 "max_generation_attempts": workflow_config.max_generation_attempts,
             },
             "llm": _describe_llm_config(llm_config),
+            "usage": _describe_usage(usage),
         },
     )
     output_path = save_run_report(report, args.output or _default_output_path())
 
-    _print_summary(results, output_path)
+    _print_summary(results, output_path, usage)
+    return 0
+
+
+def _check_api(llm_config_path: str) -> int:
+    """Verifica che la chiave API funzioni, con una chiamata minima."""
+
+    llm_config = load_llm_config(llm_config_path)
+    settings = llm_config.generation
+    print(f"Verifica dell'accesso al modello {settings.model}...")
+
+    try:
+        client = AnthropicLLMClient(settings)
+    except MissingApiKeyError as exc:
+        print(f"\n{exc}", file=sys.stderr)
+        return 3
+
+    try:
+        response = client.complete(
+            system="Reply with a single word.",
+            user_message="Say OK.",
+        )
+    except LLMCallError as exc:
+        print(f"\nChiamata fallita: {exc}", file=sys.stderr)
+        return 3
+
+    print(f"Risposta ricevuta: {response.text.strip()[:60]}")
+    print(f"Modello effettivo: {response.model}")
+    print(f"Consumo: {format_usage(settings.model, client.usage)}")
+    print("\nAccesso al modello funzionante.")
     return 0
 
 
@@ -111,8 +164,13 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--input",
-        required=True,
         help="file JSON normalizzato con le Pull Request",
+    )
+    parser.add_argument(
+        "--check-api",
+        action="store_true",
+        help="verifica che la chiave API funzioni, con una sola chiamata minima, "
+        "senza elaborare Pull Request",
     )
     parser.add_argument(
         "--output",
@@ -158,12 +216,49 @@ def _describe_agent_settings(settings: AgentLLMSettings) -> dict[str, object]:
     }
 
 
+def _describe_usage(usage: dict[str, tuple[str, UsageStats]]) -> dict[str, object]:
+    """Consumo per agente più il totale, con la stima di costo (Decisione 3.2, §6)."""
+
+    per_agent: dict[str, object] = {}
+    totale = UsageStats()
+    costo_totale = 0.0
+    costo_noto = True
+
+    for agente, (model, stats) in usage.items():
+        costo = estimate_cost_usd(model, stats)
+        per_agent[agente] = {
+            "model": model,
+            "calls": stats.calls,
+            "input_tokens": stats.input_tokens,
+            "output_tokens": stats.output_tokens,
+            "estimated_cost_usd": round(costo, 6) if costo is not None else None,
+        }
+        totale += stats
+        if costo is None:
+            costo_noto = False
+        else:
+            costo_totale += costo
+
+    return {
+        "per_agent": per_agent,
+        "total_calls": totale.calls,
+        "total_input_tokens": totale.input_tokens,
+        "total_output_tokens": totale.output_tokens,
+        "total_estimated_cost_usd": round(costo_totale, 6) if costo_noto else None,
+        "pricing_reference_date": PRICING_REFERENCE_DATE,
+    }
+
+
 def _default_output_path() -> Path:
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     return DEFAULT_OUTPUT_DIR / f"run-{stamp}.json"
 
 
-def _print_summary(results: list, output_path: Path) -> None:
+def _print_summary(
+    results: list,
+    output_path: Path,
+    usage: dict[str, tuple[str, UsageStats]] | None = None,
+) -> None:
     for result in results:
         pull_request = result.pull_request
         if not result.succeeded:
@@ -178,6 +273,13 @@ def _print_summary(results: list, output_path: Path) -> None:
     print("\nRiepilogo:")
     for status, count in sorted(summarize(results).items()):
         print(f"  {status}: {count}")
+
+    if usage:
+        print("\nConsumo:")
+        for agente, (model, stats) in usage.items():
+            if stats.calls:
+                print(f"  {agente}: {format_usage(model, stats)}")
+
     print(f"\nReport salvato in: {output_path}")
 
 

@@ -101,6 +101,32 @@ def test_wraps_sdk_errors_in_llm_call_error() -> None:
     assert excinfo.value.__cause__ is sdk_error
 
 
+def test_client_accumulates_usage_across_calls() -> None:
+    fake = FakeSdkClient()
+    client = AnthropicLLMClient(SETTINGS, sdk_client=fake)  # type: ignore[arg-type]
+
+    assert client.usage.calls == 0
+
+    client.complete(system="s", user_message="u")
+    client.complete(system="s", user_message="u")
+
+    assert client.usage.calls == 2
+    assert client.usage.input_tokens == 240
+    assert client.usage.output_tokens == 30
+
+
+def test_failed_call_does_not_count_as_usage() -> None:
+    sdk_error = anthropic.APIConnectionError(
+        request=httpx2.Request("POST", "https://api.anthropic.com/v1/messages")
+    )
+    client = AnthropicLLMClient(SETTINGS, sdk_client=FakeSdkClient(error=sdk_error))  # type: ignore[arg-type]
+
+    with pytest.raises(LLMCallError):
+        client.complete(system="s", user_message="u")
+
+    assert client.usage.calls == 0
+
+
 def test_missing_api_key_raises_clear_error(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv(API_KEY_ENV_VAR, raising=False)
 

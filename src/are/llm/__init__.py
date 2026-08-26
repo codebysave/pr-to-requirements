@@ -10,10 +10,17 @@ from .exceptions import (
     LLMConfigFileError,
     MissingApiKeyError,
 )
+from .pricing import (
+    PRICING_REFERENCE_DATE,
+    UsageStats,
+    estimate_cost_usd,
+    format_usage,
+)
 
 __all__ = [
     "AGENT_SECTIONS",
     "API_KEY_ENV_VAR",
+    "PRICING_REFERENCE_DATE",
     "AgentLLMSettings",
     "AnthropicLLMClient",
     "InvalidLLMConfigError",
@@ -25,5 +32,8 @@ __all__ = [
     "LLMConfigFileError",
     "LLMResponse",
     "MissingApiKeyError",
+    "UsageStats",
+    "estimate_cost_usd",
+    "format_usage",
     "load_llm_config",
 ]

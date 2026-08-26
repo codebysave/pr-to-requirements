@@ -14,6 +14,7 @@ import anthropic
 
 from .config import AgentLLMSettings
 from .exceptions import LLMCallError, MissingApiKeyError
+from .pricing import UsageStats
 
 API_KEY_ENV_VAR = "ANTHROPIC_API_KEY"
 
@@ -56,6 +57,7 @@ class AnthropicLLMClient:
         sdk_client: anthropic.Anthropic | None = None,
     ) -> None:
         self._settings = settings
+        self._usage = UsageStats()
         if sdk_client is not None:
             self._client = sdk_client
         else:
@@ -67,6 +69,11 @@ class AnthropicLLMClient:
     @property
     def settings(self) -> AgentLLMSettings:
         return self._settings
+
+    @property
+    def usage(self) -> UsageStats:
+        """Consumo cumulato dall'inizio dell'esecuzione (Decisione 3.2, §6)."""
+        return self._usage
 
     def complete(self, *, system: str, user_message: str) -> LLMResponse:
         """Invia la richiesta al modello configurato.
@@ -93,6 +100,11 @@ class AnthropicLLMClient:
             raise LLMCallError(self._settings.model, str(exc)) from exc
 
         text = "".join(block.text for block in response.content if block.type == "text")
+        self._usage += UsageStats(
+            calls=1,
+            input_tokens=response.usage.input_tokens,
+            output_tokens=response.usage.output_tokens,
+        )
         return LLMResponse(
             text=text,
             model=response.model,
