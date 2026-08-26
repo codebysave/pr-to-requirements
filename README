@@ -66,3 +66,17 @@ in `.env` e inserisci la tua chiave Anthropic.
 ```bash
 cp .env.example .env
 ```
+
+## Esecuzione
+
+Con la chiave API configurata, il sistema elabora un file JSON di Pull Request
+e produce i requisiti generati:
+
+```bash
+uv run python -m are --input experiments/samples/sample-scrapy_scrapy.json --limit 3
+```
+
+Il report dell'esecuzione (requisiti accettati, stati finali, storico delle
+revisioni, modelli e prompt usati) viene salvato in `experiments/runs/`.
+Opzioni utili: `--limit N` per elaborare solo le prime N Pull Request e
+contenere i costi, `--output` per scegliere il file del report.

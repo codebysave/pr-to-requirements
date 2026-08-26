@@ -13,6 +13,104 @@ soltanto lo stato delle caselle — `[✔]` fatto, `[ ]` da fare — e la frecci
 
 ---
 
+## 2026-08-26 — Agenti reali e Pipeline Runner: sistema completo end-to-end
+
+**Branch:** `feat/agents-and-runner`
+
+### 1. Cosa è stato costruito
+
+I passi 3 e 4 della roadmap insieme: il sistema passa da scheletro a pipeline
+funzionante, dal file JSON ai requisiti generati.
+
+1. **Prompt versionati** (`prompts/<agente>/v1.md`) — tre prompt in inglese
+   che traducono la Decisione 3.1 in istruzioni operative:
+   - *extractability*: quando una PR non consente di ricostruire un requisito
+     (refactoring interno, dipendenze, documentazione, typo, test, modifiche
+     di tipizzazione, descrizioni troppo vaghe);
+   - *generation*: forma `shall`, i quattro pattern EARS adottati,
+     distinzione WHAT/HOW con esempio, divieto di aggiungere canali, limiti
+     temporali o tecnologie non supportate, gestione della revisione;
+   - *assessment*: le sei condizioni necessarie (fidelity, natura funzionale,
+     fedeltà, atomicità, non ambiguità, verificabilità), i criteri ulteriori,
+     l'uso dei requisiti storici e il criterio per distinguere `REVISE` da
+     `REJECT`.
+2. **Caricatore dei prompt** (`are/agents/prompts.py`) — carica una versione
+   specifica e fallisce con errore chiaro se manca o è vuota. La versione
+   usata finisce nei metadati del report.
+3. **Agenti LLM** (`are/agents/llm_agents.py`) — le tre implementazioni
+   concrete delle porte definite al passo 2: gate di estraibilità,
+   Generation Agent e Assessment Agent. Ognuno costruisce il messaggio,
+   invoca il client LLM e valida la risposta.
+4. **Pipeline Runner** (`are/runner.py`) — il ciclo esterno: ordina le PR
+   cronologicamente, invoca il grafo una PR alla volta fino allo stato finale,
+   raccoglie i risultati e produce il report JSON con storico e metadati.
+5. **Entry point** (`are/__main__.py`) — il comando che collega tutto:
+   `uv run python -m are --input <file.json> --limit N`.
+
+### 2. Scelte fatte e motivazioni
+
+- **JSON validato lato applicativo, non structured output del fornitore.**
+  Gli agenti chiedono al modello un oggetto JSON e lo validano qui. Usare una
+  funzionalità proprietaria avrebbe legato il codice ad Anthropic, contro il
+  principio di astrazione della Decisione 3.2 (§4.3).
+- **Parsing tollerante ma severo.** Accetta il JSON racchiuso in un blocco
+  markdown o accompagnato da testo (casi frequenti nei modelli piccoli), ma
+  una risposta senza JSON valido, con una decisione non riconosciuta o con
+  campi malformati solleva `AgentResponseError`: meglio un errore esplicito
+  che un requisito inventato.
+- **Errori tecnici distinti dagli esiti semantici.** Se una chiamata LLM
+  fallisce, il Runner registra l'errore su quella PR e prosegue con le altre;
+  l'errore non diventa uno stato finale del workflow. Risolve il punto aperto
+  della Decisione 3.5 §22.
+- **Ordine cronologico sempre attivo** nel Runner: quando la memoria sarà
+  disponibile, una PR non deve poter recuperare requisiti dal futuro.
+- **`--limit`** per elaborare poche PR e contenere i costi durante le prove.
+- **Il gate di estraibilità riusa la configurazione del Generation Agent**:
+  è una fase della pipeline, non un terzo agente (Decisione 3.5, §4.3).
+
+### 3. Verifiche eseguite
+
+- `uv run ruff check .` e `ruff format` — puliti;
+- `uv run pytest` — **119 test passati** (37 nuovi: 6 sui prompt, 20 sugli
+  agenti LLM con client finto, 11 sul Runner). Coperti: parsing di risposte
+  in tutte le forme, decisioni non riconosciute, campi mancanti, feedback
+  strutturato passato al generatore in revisione, requisiti storici inseriti
+  nel messaggio dell'assessment, ordine cronologico, errore tecnico che non
+  blocca il batch, struttura del report;
+- **prova della catena completa** con client LLM simulato sulle 9 PR reali di
+  scrapy: gate che scarta correttamente il typo fix, loop
+  `REVISE → generate → ACCEPT` con il feedback che raggiunge il generatore,
+  report salvato con storico e metadati.
+
+### 4. Come eseguirlo davvero
+
+Serve la chiave API Anthropic in `.env` (`ANTHROPIC_API_KEY`). Poi:
+
+```bash
+uv run python -m are --input experiments/samples/sample-scrapy_scrapy.json --limit 3
+```
+
+Finché la chiave non è disponibile il codice resta completo e testato: non
+sarà necessaria alcuna modifica, solo il file `.env`.
+
+### 5. Stato del sistema dopo questa modifica
+
+```text
+[✔] Preprocessing del dataset       (script esterno al sistema)
+[✔] Input Loader                    are.input
+[✔] Configurazione + client LLM     are.llm
+[✔] Workflow LangGraph (agenti)     are.agents        ← questa modifica
+[✔] Pipeline Runner                 are.runner        ← questa modifica
+[ ] Memoria persistente (SQLite)    are.db
+[ ] Server MCP                      are.mcp_server
+[ ] Valutazione sperimentale
+```
+
+Il sistema è ora completo dal file di input ai requisiti generati. Restano la
+memoria persistente con il suo accesso via MCP e la fase di valutazione.
+
+---
+
 ## 2026-08-25 — Allineamento delle Decisioni 3.2 e 3.5 al piano di valutazione 3.7
 
 **Branch:** `feat/workflow-skeleton`
