@@ -18,23 +18,45 @@ from .exceptions import InvalidLLMConfigError, LLMConfigFileError
 
 AGENT_SECTIONS: tuple[str, ...] = ("generation", "assessment")
 
-_REQUIRED_KEYS = frozenset({"model", "temperature", "max_tokens"})
-_OPTIONAL_KEYS = frozenset({"top_p"})
+_REQUIRED_KEYS = frozenset({"model", "max_tokens"})
+_OPTIONAL_KEYS = frozenset({"effort"})
 _ALLOWED_KEYS = _REQUIRED_KEYS | _OPTIONAL_KEYS
+
+EFFORT_LEVELS: tuple[str, ...] = ("low", "medium", "high", "xhigh", "max")
+
+# Scorciatoie per selezionare un modello da riga di comando durante la
+# sperimentazione (Decisione 3.2, §4.2). Un identificativo completo può essere
+# passato direttamente e viene lasciato invariato.
+MODEL_ALIASES: dict[str, str] = {
+    "haiku": "claude-haiku-4-5",
+    "sonnet": "claude-sonnet-5",
+    "opus": "claude-opus-5",
+}
+
+
+def resolve_model_alias(nome: str) -> str:
+    """Traduce un alias nel corrispondente identificativo del modello."""
+
+    return MODEL_ALIASES.get(nome.strip().lower(), nome.strip())
 
 
 @dataclass(frozen=True, slots=True)
 class AgentLLMSettings:
     """Parametri di generazione di un singolo agente.
 
-    ``top_p`` è opzionale: quando è ``None`` il parametro non viene inviato
-    all'API e vale il default del fornitore.
+    I parametri di campionamento ``temperature``, ``top_p`` e ``top_k`` non
+    esistono più nell'API dei modelli attuali: sono stati rimossi dal
+    fornitore. Al loro posto alcuni modelli accettano ``effort``, che regola
+    la profondità del ragionamento e la spesa complessiva di token.
+
+    ``effort`` è opzionale e non è supportato da tutti i modelli (la fascia
+    Haiku lo rifiuta): quando è ``None`` non viene inviato e vale il
+    comportamento predefinito del modello.
     """
 
     model: str
-    temperature: float
     max_tokens: int
-    top_p: float | None = None
+    effort: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -112,38 +134,23 @@ def _parse_agent_section(
     if "model" in data and (not isinstance(model, str) or not model.strip()):
         section_issues.append(f'[{section}] "model" deve essere una stringa non vuota')
 
-    temperature = _validate_unit_interval(section, "temperature", data, section_issues)
-    top_p = _validate_unit_interval(section, "top_p", data, section_issues)
-
     max_tokens = data.get("max_tokens")
     if "max_tokens" in data and (type(max_tokens) is not int or max_tokens <= 0):
         section_issues.append(f'[{section}] "max_tokens" deve essere un intero positivo')
+
+    effort = data.get("effort")
+    if "effort" in data and effort not in EFFORT_LEVELS:
+        ammessi = ", ".join(EFFORT_LEVELS)
+        section_issues.append(f'[{section}] "effort" deve essere uno fra: {ammessi}')
 
     issues.extend(section_issues)
     if section_issues:
         return None
 
     assert isinstance(model, str)
-    assert isinstance(temperature, (int, float))
     assert type(max_tokens) is int
     return AgentLLMSettings(
         model=model,
-        temperature=float(temperature),
         max_tokens=max_tokens,
-        top_p=float(top_p) if top_p is not None else None,
+        effort=effort if isinstance(effort, str) else None,
     )
-
-
-def _validate_unit_interval(
-    section: str,
-    key: str,
-    data: dict[str, Any],
-    section_issues: list[str],
-) -> float | int | None:
-    if key not in data:
-        return None
-    value = data[key]
-    if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0.0 <= value <= 1.0:
-        section_issues.append(f'[{section}] "{key}" deve essere un numero compreso tra 0 e 1')
-        return None
-    return value

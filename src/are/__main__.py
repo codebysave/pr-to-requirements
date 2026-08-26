@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
+from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -31,6 +32,7 @@ from are.agents.prompts import DEFAULT_PROMPT_VERSION
 from are.env import load_environment
 from are.input import PullRequestInputError, PullRequestLoader
 from are.llm import (
+    MODEL_ALIASES,
     PRICING_REFERENCE_DATE,
     AgentLLMSettings,
     AnthropicLLMClient,
@@ -41,6 +43,7 @@ from are.llm import (
     estimate_cost_usd,
     format_usage,
     load_llm_config,
+    resolve_model_alias,
 )
 from are.runner import PipelineRunner, build_run_report, save_run_report, summarize
 
@@ -53,8 +56,12 @@ def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
     logging.basicConfig(
         level=logging.DEBUG if args.verbose else logging.INFO,
-        format="%(levelname)-8s %(message)s",
+        format="%(message)s",
     )
+    # Le librerie HTTP e l'SDK registrano una riga per ogni chiamata: rumore
+    # che nasconde il flusso del workflow.
+    for rumoroso in ("httpx", "httpx2", "httpcore", "anthropic"):
+        logging.getLogger(rumoroso).setLevel(logging.WARNING)
 
     load_environment()
 
@@ -74,7 +81,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.limit is not None:
         pull_requests = pull_requests[: args.limit]
 
-    llm_config = load_llm_config(args.llm_config)
+    llm_config = _apply_model_overrides(load_llm_config(args.llm_config), args)
     workflow_config = load_workflow_config(args.workflow_config)
 
     generation_client = AnthropicLLMClient(llm_config.generation)
@@ -98,13 +105,21 @@ def main(argv: list[str] | None = None) -> int:
     print(
         f"Elaborazione di {len(pull_requests)} Pull Request "
         f"(assessment={workflow_config.assessment_enabled}, "
-        f"memory={workflow_config.memory_enabled})\n"
+        f"memory={workflow_config.memory_enabled})"
+    )
+    print(
+        f"Modelli: generazione={llm_config.generation.model}, "
+        f"valutazione={llm_config.assessment.model}\n"
     )
     results = runner.run(pull_requests)
 
     usage = {
         "generation": (llm_config.generation.model, generation_client.usage),
         "assessment": (llm_config.assessment.model, assessment_client.usage),
+    }
+    resolved_models = {
+        "generation": generation_client.resolved_model,
+        "assessment": assessment_client.resolved_model,
     }
 
     report = build_run_report(
@@ -118,7 +133,7 @@ def main(argv: list[str] | None = None) -> int:
                 "memory_enabled": workflow_config.memory_enabled,
                 "max_generation_attempts": workflow_config.max_generation_attempts,
             },
-            "llm": _describe_llm_config(llm_config),
+            "llm": _describe_llm_config(llm_config, resolved_models),
             "usage": _describe_usage(usage),
         },
     )
@@ -191,6 +206,25 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         default=DEFAULT_PROMPT_VERSION,
         help=f"versione dei prompt da usare (default: {DEFAULT_PROMPT_VERSION})",
     )
+    alias = ", ".join(MODEL_ALIASES)
+    parser.add_argument(
+        "--model",
+        help=f"modello per entrambi gli agenti: {alias}, oppure un identificativo completo. "
+        "Prevale su config/llm.toml",
+    )
+    parser.add_argument(
+        "--generation-model",
+        help="modello del solo Generation Agent; prevale su --model",
+    )
+    parser.add_argument(
+        "--assessment-model",
+        help="modello del solo Assessment Agent; prevale su --model",
+    )
+    parser.add_argument(
+        "--choose-model",
+        action="store_true",
+        help="chiede il modello all'avvio con un menu numerato (solo per prove manuali)",
+    )
     parser.add_argument(
         "--limit",
         type=int,
@@ -200,19 +234,82 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def _describe_llm_config(config: LLMConfig) -> dict[str, dict[str, object]]:
+def _apply_model_overrides(config: LLMConfig, args: argparse.Namespace) -> LLMConfig:
+    """Sostituisce i modelli della configurazione con quelli richiesti a riga di comando.
+
+    Le opzioni specifiche per agente prevalgono su ``--model``, che a sua volta
+    prevale sul file di configurazione. Con ``--choose-model`` la scelta viene
+    chiesta all'avvio: comoda per le prove manuali, da evitare negli script,
+    dove conviene indicare il modello esplicitamente perché resti registrato.
+    """
+
+    scelta = args.model
+    if args.choose_model and not scelta:
+        scelta = _ask_model()
+
+    generation = args.generation_model or scelta
+    assessment = args.assessment_model or scelta
+
+    return LLMConfig(
+        generation=_with_model(config.generation, generation),
+        assessment=_with_model(config.assessment, assessment),
+    )
+
+
+def _with_model(settings: AgentLLMSettings, model: str | None) -> AgentLLMSettings:
+    if model is None:
+        return settings
+    return replace(settings, model=resolve_model_alias(model))
+
+
+def _ask_model() -> str | None:
+    """Menu numerato per scegliere il modello nelle prove manuali.
+
+    Restituisce ``None`` quando si sceglie di mantenere la configurazione.
+    """
+
+    voci = list(MODEL_ALIASES.items())
+    print("Scegli il modello da usare per questa esecuzione:")
+    for numero, (alias, identificativo) in enumerate(voci, start=1):
+        print(f"  {numero}) {alias:<8} {identificativo}")
+    print(f"  {len(voci) + 1}) usa i modelli indicati in config/llm.toml")
+
+    while True:
+        risposta = input("Numero: ").strip()
+        if risposta.isdigit():
+            scelto = int(risposta)
+            if 1 <= scelto <= len(voci):
+                alias = voci[scelto - 1][0]
+                print()
+                return alias
+            if scelto == len(voci) + 1:
+                print()
+                return None
+        print("Scelta non valida.")
+
+
+def _describe_llm_config(
+    config: LLMConfig,
+    resolved_models: dict[str, str | None] | None = None,
+) -> dict[str, dict[str, object]]:
+    resolved = resolved_models or {}
     return {
-        "generation": _describe_agent_settings(config.generation),
-        "assessment": _describe_agent_settings(config.assessment),
+        "generation": _describe_agent_settings(config.generation, resolved.get("generation")),
+        "assessment": _describe_agent_settings(config.assessment, resolved.get("assessment")),
     }
 
 
-def _describe_agent_settings(settings: AgentLLMSettings) -> dict[str, object]:
+def _describe_agent_settings(
+    settings: AgentLLMSettings,
+    resolved_model: str | None = None,
+) -> dict[str, object]:
     return {
         "model": settings.model,
-        "temperature": settings.temperature,
+        # Versione datata restituita dal fornitore: è il dato da citare per la
+        # riproducibilità (Decisione 3.2, §4.4).
+        "resolved_model": resolved_model,
         "max_tokens": settings.max_tokens,
-        "top_p": settings.top_p,
+        "effort": settings.effort,
     }
 
 

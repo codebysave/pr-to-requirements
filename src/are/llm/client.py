@@ -58,6 +58,7 @@ class AnthropicLLMClient:
     ) -> None:
         self._settings = settings
         self._usage = UsageStats()
+        self._resolved_model: str | None = None
         if sdk_client is not None:
             self._client = sdk_client
         else:
@@ -75,6 +76,17 @@ class AnthropicLLMClient:
         """Consumo cumulato dall'inizio dell'esecuzione (Decisione 3.2, §6)."""
         return self._usage
 
+    @property
+    def resolved_model(self) -> str | None:
+        """Versione esatta del modello che ha risposto, es. ``...-20251001``.
+
+        La configurazione indica un alias di famiglia (``claude-haiku-4-5``);
+        il fornitore lo risolve in una versione datata, che è il dato da
+        riportare per la riproducibilità (Decisione 3.2, §4.4). Vale ``None``
+        finché non è stata effettuata alcuna chiamata.
+        """
+        return self._resolved_model
+
     def complete(self, *, system: str, user_message: str) -> LLMResponse:
         """Invia la richiesta al modello configurato.
 
@@ -87,12 +99,11 @@ class AnthropicLLMClient:
         params: dict[str, Any] = {
             "model": self._settings.model,
             "max_tokens": self._settings.max_tokens,
-            "temperature": self._settings.temperature,
             "system": system,
             "messages": [{"role": "user", "content": user_message}],
         }
-        if self._settings.top_p is not None:
-            params["top_p"] = self._settings.top_p
+        if self._settings.effort is not None:
+            params["output_config"] = {"effort": self._settings.effort}
 
         try:
             response = self._client.messages.create(**params)
@@ -100,6 +111,7 @@ class AnthropicLLMClient:
             raise LLMCallError(self._settings.model, str(exc)) from exc
 
         text = "".join(block.text for block in response.content if block.type == "text")
+        self._resolved_model = response.model
         self._usage += UsageStats(
             calls=1,
             input_tokens=response.usage.input_tokens,

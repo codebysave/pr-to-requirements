@@ -42,6 +42,27 @@ MAX_REASON_LENGTH = 500
 _PREVIEW_LENGTH = 200
 
 
+def _log_exchange(fase: str, system: str, user_message: str, risposta: str) -> None:
+    """Registra a livello DEBUG i messaggi scambiati con il modello.
+
+    Il prompt di sistema è lungo e identico a ogni chiamata: se ne registra
+    solo la dimensione, mentre il messaggio specifico della Pull Request e la
+    risposta grezza vengono riportati per intero.
+    """
+
+    if not logger.isEnabledFor(logging.DEBUG):
+        return
+    logger.debug("")
+    logger.debug("   +-- %s: messaggio inviato ---", fase)
+    logger.debug("   |   (prompt di sistema: %d caratteri, dai file in prompts/)", len(system))
+    for riga in user_message.splitlines():
+        logger.debug("   |   %s", riga)
+    logger.debug("   +-- %s: risposta ricevuta ---", fase)
+    for riga in risposta.splitlines():
+        logger.debug("   |   %s", riga)
+    logger.debug("")
+
+
 class AgentResponseError(Exception):
     """La risposta del modello non rispetta il contratto atteso dall'agente."""
 
@@ -132,10 +153,10 @@ class LLMExtractabilityChecker:
         return self._prompt_version
 
     def check(self, pull_request: PullRequestRecord) -> ExtractabilityResult:
-        response = self._client.complete(
-            system=self._system,
-            user_message=_format_pull_request(pull_request),
-        )
+        logger.info("  [GATE]    verifico se la PR consente di identificare un comportamento...")
+        user_message = _format_pull_request(pull_request)
+        response = self._client.complete(system=self._system, user_message=user_message)
+        _log_exchange("GATE", self._system, user_message, response.text)
         data = parse_json_object(response.text, EXTRACTABILITY_AGENT)
 
         raw_decision = _require_non_empty_string(
@@ -152,6 +173,7 @@ class LLMExtractabilityChecker:
 
         raw_reason = data.get("reason", "")
         reason = raw_reason.strip()[:MAX_REASON_LENGTH] if isinstance(raw_reason, str) else ""
+        logger.info("  [GATE]    -> %s: %s", decision.value, reason or "(nessuna motivazione)")
         return ExtractabilityResult(decision=decision, reason=reason)
 
 
@@ -173,12 +195,19 @@ class LLMRequirementGenerator:
         previous_candidate: str | None,
         feedback: AssessmentFeedback | None,
     ) -> str:
-        response = self._client.complete(
-            system=self._system,
-            user_message=self._build_message(pull_request, previous_candidate, feedback),
-        )
+        if feedback is None:
+            logger.info("  [GENERA]  scrivo il requisito dalla sola evidenza della PR...")
+        else:
+            logger.info("  [GENERA]  riscrivo il requisito applicando il feedback ricevuto...")
+
+        user_message = self._build_message(pull_request, previous_candidate, feedback)
+        response = self._client.complete(system=self._system, user_message=user_message)
+        _log_exchange("GENERA", self._system, user_message, response.text)
+
         data = parse_json_object(response.text, GENERATION_AGENT)
-        return _require_non_empty_string(data, "requirement", GENERATION_AGENT, response.text)
+        requisito = _require_non_empty_string(data, "requirement", GENERATION_AGENT, response.text)
+        logger.info('  [GENERA]  -> "%s"', requisito)
+        return requisito
 
     def _build_message(
         self,
@@ -216,10 +245,17 @@ class LLMRequirementAssessor:
         candidate: str,
         retrieved_requirements: Sequence[RetrievedRequirement],
     ) -> AssessmentResult:
-        response = self._client.complete(
-            system=self._system,
-            user_message=self._build_message(pull_request, candidate, retrieved_requirements),
-        )
+        if retrieved_requirements:
+            logger.info(
+                "  [VALUTA]  esamino il requisito, con %d requisiti storici a confronto...",
+                len(retrieved_requirements),
+            )
+        else:
+            logger.info("  [VALUTA]  esamino il requisito candidato...")
+
+        user_message = self._build_message(pull_request, candidate, retrieved_requirements)
+        response = self._client.complete(system=self._system, user_message=user_message)
+        _log_exchange("VALUTA", self._system, user_message, response.text)
         data = parse_json_object(response.text, ASSESSMENT_AGENT)
 
         raw_decision = _require_non_empty_string(
@@ -247,10 +283,21 @@ class LLMRequirementAssessor:
             ),
         )
 
+        logger.info("  [VALUTA]  -> %s", decision.value)
+        for etichetta, valori in (
+            ("problema", feedback.issues),
+            ("non supportato", feedback.unsupported_claims),
+            ("informazione mancante", feedback.missing_information),
+            ("istruzione", feedback.revision_instructions),
+        ):
+            for valore in valori:
+                logger.info("              %s: %s", etichetta, valore)
+
         if decision is AssessmentDecision.REVISE and not feedback.revision_instructions:
             # Senza istruzioni il tentativo successivo ripeterebbe l'errore.
             logger.warning(
-                "Assessment REVISE senza revision_instructions per la PR %s", pull_request.id
+                "  [VALUTA]  attenzione: REVISE senza istruzioni di revisione (PR %s)",
+                pull_request.id,
             )
         return AssessmentResult(decision=decision, feedback=feedback)
 

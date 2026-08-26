@@ -6,7 +6,7 @@ import pytest
 
 from are.llm import InvalidLLMConfigError, LLMConfigFileError, load_llm_config
 
-VALID_SECTION = {"model": '"claude-haiku-4-5"', "temperature": "0.0", "max_tokens": "1024"}
+VALID_SECTION = {"model": '"claude-haiku-4-5"', "max_tokens": "1024"}
 
 
 def render_config(
@@ -32,17 +32,15 @@ def write_config(tmp_path: Path, content: str) -> Path:
 def test_loads_valid_config_with_per_agent_settings(tmp_path: Path) -> None:
     content = render_config(
         generation=VALID_SECTION,
-        assessment={**VALID_SECTION, "temperature": "0.2", "top_p": "0.9"},
+        assessment={**VALID_SECTION, "effort": '"high"'},
     )
 
     config = load_llm_config(write_config(tmp_path, content))
 
     assert config.generation.model == "claude-haiku-4-5"
-    assert config.generation.temperature == 0.0
     assert config.generation.max_tokens == 1024
-    assert config.generation.top_p is None
-    assert config.assessment.temperature == 0.2
-    assert config.assessment.top_p == 0.9
+    assert config.generation.effort is None
+    assert config.assessment.effort == "high"
 
 
 def test_repository_config_file_is_valid() -> None:
@@ -96,13 +94,11 @@ def test_rejects_missing_required_key(tmp_path: Path) -> None:
     [
         ("model", '""'),
         ("model", "7"),
-        ("temperature", "1.5"),
-        ("temperature", "-0.1"),
-        ("temperature", "true"),
+        ("effort", '"turbo"'),
+        ("effort", "3"),
         ("max_tokens", "0"),
         ("max_tokens", '"1024"'),
         ("max_tokens", "true"),
-        ("top_p", "2.0"),
     ],
 )
 def test_rejects_invalid_field_values(tmp_path: Path, field: str, value: str) -> None:
@@ -116,10 +112,10 @@ def test_rejects_invalid_field_values(tmp_path: Path, field: str, value: str) ->
 
 
 def test_reports_all_issues_together(tmp_path: Path) -> None:
-    content = render_config(generation={"temperature": "5.0", "max_tokens": "-1"})
+    content = render_config(generation={"effort": '"turbo"', "max_tokens": "-1"})
 
     with pytest.raises(InvalidLLMConfigError) as excinfo:
         load_llm_config(write_config(tmp_path, content))
 
-    # model mancante, temperature fuori range, max_tokens non positivo, sezione assessment mancante
+    # model mancante, max_tokens non positivo, effort non valido, sezione assessment mancante
     assert len(excinfo.value.issues) == 4

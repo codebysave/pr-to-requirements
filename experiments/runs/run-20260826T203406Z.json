@@ -1,0 +1,209 @@
+{
+  "run": {
+    "generated_at": "2026-08-26T20:34:06.650773+00:00",
+    "input_file": "experiments/samples/sample-scrapy_scrapy.json",
+    "pull_requests": 9,
+    "prompt_version": "v1",
+    "workflow": {
+      "assessment_enabled": true,
+      "memory_enabled": false,
+      "max_generation_attempts": 3
+    },
+    "llm": {
+      "generation": {
+        "model": "claude-opus-5",
+        "resolved_model": "claude-opus-5",
+        "max_tokens": 1024,
+        "effort": null
+      },
+      "assessment": {
+        "model": "claude-opus-5",
+        "resolved_model": "claude-opus-5",
+        "max_tokens": 2048,
+        "effort": null
+      }
+    },
+    "usage": {
+      "per_agent": {
+        "generation": {
+          "model": "claude-opus-5",
+          "calls": 12,
+          "input_tokens": 23049,
+          "output_tokens": 2398,
+          "estimated_cost_usd": 0.175195
+        },
+        "assessment": {
+          "model": "claude-opus-5",
+          "calls": 3,
+          "input_tokens": 9963,
+          "output_tokens": 1118,
+          "estimated_cost_usd": 0.077765
+        }
+      },
+      "total_calls": 15,
+      "total_input_tokens": 33012,
+      "total_output_tokens": 3516,
+      "total_estimated_cost_usd": 0.25296,
+      "pricing_reference_date": "2026-08-26"
+    }
+  },
+  "summary": {
+    "NOT_EXTRACTABLE": 6,
+    "ACCEPTED": 3
+  },
+  "results": [
+    {
+      "pr_id": "scrapy-scrapy-pr-6869",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6869,
+      "timestamp": "2025-06-06T13:17:48+00:00",
+      "title": "Fix: Dangerous Code Execution Function Could Allow External Attacks in scrapy/shell.py",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "NOT_EXTRACTABLE",
+      "extractability_reason": "Conditional audit finding about eval() with no asserted wrong behaviour or described post-fix behaviour.",
+      "accepted_requirement": null,
+      "generation_attempts": 0,
+      "iteration_history": []
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6870",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6870,
+      "timestamp": "2025-06-06T13:19:55+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "It states as fact that untrusted input reaching import_module allows arbitrary code loading and was fixed, so the required behaviour is that user-supplied values must not cause arbitrary modules to be imported.",
+      "accepted_requirement": "The system shall prevent user-supplied input used to identify a module from causing arbitrary code to be loaded and executed when generating a spider.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall prevent user-supplied input used to identify a module from causing arbitrary code to be loaded and executed when generating a spider.",
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6875",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6875,
+      "timestamp": "2025-06-07T03:44:46+00:00",
+      "title": "Fix typo in cmdline.py comment: 'a argument' -> 'an argument'",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "NOT_EXTRACTABLE",
+      "extractability_reason": "Comment-only typo fix with no behavioural effect.",
+      "accepted_requirement": null,
+      "generation_attempts": 0,
+      "iteration_history": []
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6879",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6879,
+      "timestamp": "2025-06-09T02:36:45+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "It states as fact that user-supplied input to import_module can load arbitrary code and was fixed, so the required behaviour is that dynamic imports must not execute untrusted modules.",
+      "accepted_requirement": "The system shall prevent user-supplied input used to select a module for dynamic import from causing arbitrary code to be loaded and executed.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall prevent user-supplied input used to select a module for dynamic import from causing arbitrary code to be loaded and executed.",
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6880",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6880,
+      "timestamp": "2025-06-09T02:45:09+00:00",
+      "title": "Fix: Unsafe Data Processing Method Allows Malicious Code Execution in scrapy/exporters.py",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "NOT_EXTRACTABLE",
+      "extractability_reason": "The body is a generic automated linter warning about pickle with no statement of what the exporter must actually do after the change.",
+      "accepted_requirement": null,
+      "generation_attempts": 0,
+      "iteration_history": []
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6881",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6881,
+      "timestamp": "2025-06-09T02:51:14+00:00",
+      "title": "Fix: Unsafe XML Processing Library Could Allow Malicious Attacks in scrapy/http/request/rpc.py",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "NOT_EXTRACTABLE",
+      "extractability_reason": "The description is a generic, conditional scanner finding ('not inherently safe', 'could allow') that prescribes a library swap without asserting any specific wrong behaviour to correct.",
+      "accepted_requirement": null,
+      "generation_attempts": 0,
+      "iteration_history": []
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6899",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6899,
+      "timestamp": "2025-06-21T01:51:04+00:00",
+      "title": "Fix typing of dynamic `request` attribute on `Failure` with a cast subclass",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "NOT_EXTRACTABLE",
+      "extractability_reason": "Typing-only change explicitly stated to leave runtime behaviour unchanged, so no required system behaviour can be identified.",
+      "accepted_requirement": null,
+      "generation_attempts": 0,
+      "iteration_history": []
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6936",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6936,
+      "timestamp": "2025-07-03T00:58:14+00:00",
+      "title": "feat(settings): Change default SCHEDULER_PRIORITY_QUEUE (closes #6924)",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "The required behaviour is stated: the scheduler's default priority queue must be DownloaderAwarePriorityQueue.",
+      "accepted_requirement": "The system shall use the downloader-aware priority queue as its default scheduler priority queue.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall use the downloader-aware priority queue as its default scheduler priority queue.",
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6947",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6947,
+      "timestamp": "2025-07-10T15:21:39+00:00",
+      "title": "Ban more imports that import twisted.internet.reactor.",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "NOT_EXTRACTABLE",
+      "extractability_reason": "The text only says unspecified imports were banned and references another PR, giving no identifiable required system behaviour.",
+      "accepted_requirement": null,
+      "generation_attempts": 0,
+      "iteration_history": []
+    }
+  ]
+}

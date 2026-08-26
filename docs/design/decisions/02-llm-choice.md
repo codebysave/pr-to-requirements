@@ -40,10 +40,11 @@ qualità del modello incide direttamente sul risultato.
 in un secondo momento) possono ripeterlo e ottenere gli stessi risultati. Con gli LLM
 questo è meno ovvio che con un programma tradizionale: lo stesso modello, ricevendo la
 stessa identica richiesta, può produrre risposte diverse. Questa variabilità dipende da due
-fattori. Il primo è la *configurazione*: parametri come la temperatura regolano quanto le
-risposte del modello sono deterministiche o variabili. Il secondo è la *versione del
-modello*: i fornitori aggiornano i modelli nel tempo, e la stessa richiesta a distanza di
-mesi può dare risultati differenti. Un lavoro della tutor (Donato et al., 2025b) documenta
+fattori. Il primo è la *configurazione*: i parametri di generazione influenzano quanto le
+risposte del modello sono deterministiche o variabili (si veda però l'aggiornamento al
+punto 4.4: i parametri di campionamento non sono più disponibili nei modelli attuali). Il
+secondo è la *versione del modello*: i fornitori aggiornano i modelli nel tempo, e la
+stessa richiesta a distanza di mesi può dare risultati differenti. Un lavoro della tutor (Donato et al., 2025b) documenta
 proprio questa variabilità degli output al variare della configurazione e tra repliche
 della stessa richiesta. La conseguenza pratica è che, per ogni esperimento, dobbiamo
 registrare con precisione quale modello, quale versione e quali parametri abbiamo usato,
@@ -86,9 +87,25 @@ manteniamo aperta la possibilità di introdurre modelli open source (opzioni B o
 fase successiva.
 
 **4.4 Parametri di generazione fissati e versionati.** Per ogni esecuzione sperimentale
-fissiamo e riportiamo: nome ed esatta **versione** del modello (es. l'identificativo
-completo con data), temperatura, top-p, e ogni altro parametro rilevante. Eseguiamo la
-stessa configurazione in più repliche per controllare il non-determinismo.
+fissiamo e riportiamo: nome ed esatta **versione** del modello, i parametri di
+generazione disponibili e la versione dei prompt utilizzati. Eseguiamo la stessa
+configurazione in più repliche per controllare il non-determinismo.
+
+> **Aggiornamento (agosto 2026).** In fase di implementazione abbiamo verificato che i
+> parametri di campionamento `temperature`, `top_p` e `top_k` **non sono più disponibili**
+> nell'API dei modelli attuali: sono stati rimossi dal fornitore. Alcuni modelli
+> accettano al loro posto `effort` (`low`, `medium`, `high`, `xhigh`, `max`), che regola
+> la profondità del ragionamento e la spesa complessiva di token; la fascia Haiku, usata
+> in sviluppo, non lo supporta.
+>
+> La conseguenza metodologica è rilevante: **non possiamo più ridurre la variabilità
+> fissando la temperatura a zero**, come avevamo previsto. Questo non invalida il
+> requisito di riproducibilità, ma sposta il peso interamente sulle contromisure già
+> indicate in questa decisione: registrare con precisione modello, versione, parametri
+> disponibili e versione dei prompt, ed eseguire ogni configurazione in più repliche per
+> **misurare** la variabilità invece di sopprimerla. Il lavoro della tutor
+> (Donato et al., 2025b) documenta proprio questa variabilità fra repliche della stessa
+> richiesta, ed è quindi il riferimento da citare anche per la nuova situazione.
 
 ---
 
@@ -166,8 +183,12 @@ nei log. In caso di passaggio futuro a modelli open source, l'astrazione descrit
 - Manteniamo aperta la possibilità di introdurre modelli open source (per massimizzare la
   riproducibilità o ridurre i costi sugli esperimenti su larga scala), resa praticabile
   dall'astrazione dal fornitore.
-- Calibreremo i parametri di generazione (temperatura, top-p) e il numero di repliche per
+- Calibreremo i parametri di generazione ancora disponibili e il numero di repliche per
   configurazione nella fase sperimentale; non li fissiamo in questa decisione.
+- La rimozione dei parametri di campionamento da parte del fornitore (punto 4.4) è un
+  esempio concreto del rischio già previsto: l'API dei modelli cambia nel tempo. Le
+  prossime revisioni della configurazione vanno verificate contro l'SDK effettivamente
+  installato, non contro la documentazione ricordata.
 
 ---
 

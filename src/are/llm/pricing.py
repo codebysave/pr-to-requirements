@@ -64,13 +64,25 @@ def estimate_cost_usd(model: str, usage: UsageStats) -> float | None:
     return (usage.input_tokens * input_price + usage.output_tokens * output_price) / 1_000_000
 
 
+def _migliaia(valore: int) -> str:
+    """Formatta un intero con il punto come separatore delle migliaia."""
+    return f"{valore:,}".replace(",", ".")
+
+
 def format_usage(model: str, usage: UsageStats) -> str:
     """Riga leggibile con chiamate, token e costo stimato."""
 
     cost = estimate_cost_usd(model, usage)
-    costo = f"${cost:.4f}" if cost is not None else "n/d"
+    # Sotto il decimo di centesimo il valore arrotondato non è informativo.
+    if cost is None:
+        costo = "n/d"
+    elif 0 < cost < 0.0001:
+        costo = "< $0,0001"
+    else:
+        costo = f"${cost:.4f}".replace(".", ",")
+
     return (
         f"{usage.calls} chiamate, "
-        f"{usage.input_tokens:,} token in ingresso, "
-        f"{usage.output_tokens:,} in uscita, costo stimato {costo}"
-    ).replace(",", ".")
+        f"{_migliaia(usage.input_tokens)} token in ingresso, "
+        f"{_migliaia(usage.output_tokens)} in uscita, costo stimato {costo}"
+    )
