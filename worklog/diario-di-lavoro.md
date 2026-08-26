@@ -8,9 +8,197 @@ dove ci siamo bloccati. È un racconto del lavoro, non una documentazione
 tecnica: per quella ci sono i documenti di design in `docs/` e il registro
 delle modifiche in `recap.md`.
 
+Il diario copre due fasi. La prima, da fine aprile a metà luglio, è di
+formazione e prototipazione: abbiamo studiato gli strumenti e li abbiamo
+provati su progetti nostri, prima di sapere con precisione su cosa avremmo
+lavorato. La seconda, da fine luglio, è lo stage vero e proprio.
+
 ---
 
-## Settimana 1 — Avvio e inquadramento del problema
+# Parte 1 — Formazione e prototipazione
+
+## 27 aprile – 8 maggio — Primo contatto con LangChain e LangGraph
+
+### Lunedì 27 aprile — venerdì 1 maggio
+
+Abbiamo iniziato a studiare LangChain, incuriositi dal fatto che se ne parlasse
+ovunque ma senza capire bene cosa fosse. La prima settimana è servita
+soprattutto a chiarirci le idee su un punto: questi strumenti non "fanno
+funzionare meglio" un modello linguistico, servono a organizzare il lavoro
+attorno al modello. Il modello resta quello che è; cambia il modo in cui gli
+si passano le informazioni e si gestisce quello che risponde.
+
+Lettura della documentazione ufficiale e prove con esempi minimi, per capire i
+concetti di base: come si struttura una richiesta, come si concatenano più
+passaggi, come si tiene traccia di quello che è successo prima.
+
+### Lunedì 4 maggio — venerdì 8 maggio
+
+Passaggio a LangGraph, che è la parte che ci interessava davvero. La
+differenza rispetto a una semplice sequenza di passaggi è che qui si disegna
+un grafo: ci sono nodi che fanno qualcosa, uno stato condiviso che passa da
+un nodo all'altro, e soprattutto si possono fare dei **cicli**, cioè tornare
+indietro a un passaggio precedente.
+
+È stato il momento in cui abbiamo capito perché serve: se vuoi che un sistema
+produca qualcosa, lo controlli, e in caso rifaccia il lavoro, ti serve
+esattamente questo. Con una catena lineare non si può.
+
+Abbiamo studiato come si definisce lo stato, come si collegano i nodi e come
+si scrivono le condizioni che decidono dove andare dopo. Prove con grafi
+piccolissimi, giusto per vedere il ciclo funzionare.
+
+Nota che ci siamo segnati: sono strumenti recenti e in evoluzione rapida.
+Molti esempi trovati online erano già scritti per versioni precedenti e non
+funzionavano più. Conviene fidarsi della documentazione ufficiale e
+diffidare dei tutorial vecchi di qualche mese.
+
+---
+
+## 11 – 22 maggio — Model Context Protocol
+
+### Lunedì 11 maggio — venerdì 15 maggio
+
+Studio di MCP, il Model Context Protocol. All'inizio non ci era chiaro che
+problema risolvesse. Poi l'abbiamo inquadrato così: un modello linguistico da
+solo sa solo produrre testo, non può leggere un file o interrogare un
+database. Per fargli fare queste cose bisogna metterlo in condizione di
+chiedere a qualcun altro di farle. MCP è un modo standard di offrire questi
+"servizi".
+
+La cosa che ci ha convinti è che è uno standard e non una soluzione fatta in
+casa: si descrive una volta cosa un servizio sa fare, e chiunque può usarlo.
+
+### Lunedì 18 maggio — venerdì 22 maggio
+
+Approfondimento pratico: com'è fatto un server, come si dichiarano gli
+strumenti che mette a disposizione, che forma hanno le richieste e le
+risposte. Abbiamo provato a scriverne uno piccolissimo per capire il
+meccanismo dall'interno.
+
+Ci siamo appuntati una cosa che si rivelerà importante più avanti: MCP è il
+modo di **esporre** delle capacità, non è il posto dove i dati vivono. Il
+database resta una cosa a parte.
+
+---
+
+## 25 maggio – 5 giugno — Primi prototipi e studio delle API
+
+### Lunedì 25 maggio — venerdì 29 maggio
+
+Primo esperimento vero, per mettere insieme le cose studiate: una piccola
+pipeline che legge le email di una casella e le organizza da sola. Il sistema
+legge il messaggio, decide a quale categoria appartiene — spam, pubblicità,
+lavoro, personale — crea l'etichetta corrispondente e sposta l'email nella
+cartella giusta.
+
+Ha funzionato meglio di quanto ci aspettassimo sui casi ovvi, ma ci ha
+insegnato qualcosa sui casi ambigui: una newsletter di lavoro va in
+"pubblicità" o in "lavoro"? Senza un criterio scritto in modo esplicito, il
+sistema decideva in modo diverso ogni volta.
+
+È stata la prima volta che ci siamo scontrati con un problema che poi
+ritroveremo identico nello stage: **se non definisci con precisione i criteri,
+il modello se li inventa**, e i risultati non sono confrontabili tra
+un'esecuzione e l'altra.
+
+### Lunedì 1 giugno — venerdì 5 giugno
+
+Settimana dedicata al lato pratico dei modelli: come si collega un modello a
+un programma tramite API, come si ottiene e si conserva una chiave di accesso,
+come si costruisce una richiesta.
+
+Studio dei costi. Abbiamo capito il meccanismo dei token: si paga per quanto
+testo entra e per quanto ne esce, con prezzi diversi tra i due, e il testo in
+uscita costa parecchio di più. Abbiamo fatto qualche conto per capire quanto
+costerebbe far girare una pipeline decine di volte al giorno durante lo
+sviluppo — abbastanza da farci decidere di usare sempre il modello più
+economico finché si tratta solo di verificare che il codice funzioni.
+
+Confronto tra i modelli della famiglia Claude: le fasce disponibili, la
+differenza di prezzo tra l'una e l'altra, e in quali casi conviene salire di
+livello. Ci siamo segnati anche la questione della riproducibilità: lo stesso
+modello con la stessa richiesta può rispondere in modo diverso, e i modelli
+vengono aggiornati nel tempo. Se si vogliono confrontare dei risultati bisogna
+annotare con precisione quale modello e quali impostazioni si sono usati.
+
+---
+
+## 8 – 19 giugno — NovitAI.it, il progetto gemello
+
+### Lunedì 8 giugno — venerdì 12 giugno
+
+Due settimane sul progetto più impegnativo di questa fase: **NovitAI.it**, un
+blog che si gestisce da solo. L'idea è che una pipeline si occupi dell'intero
+processo: cercare argomenti di attualità, scrivere l'articolo, rivederlo e
+pubblicarlo online, senza intervento umano.
+
+L'abbiamo costruito con la stessa tecnologia che avremmo usato poi nello
+stage: LangGraph per il flusso, MCP per l'accesso ai dati, un database per
+tenere memoria di quello che è già stato pubblicato, le API dei modelli per la
+scrittura, istruzioni di sistema per definire il comportamento di ogni
+passaggio, e un ciclo di revisione prima della pubblicazione.
+
+La prima settimana è servita a mettere in piedi la struttura e a far arrivare
+un articolo dalla ricerca dell'argomento fino alla bozza.
+
+### Lunedì 15 giugno — venerdì 19 giugno
+
+Seconda settimana: revisione e pubblicazione. Qui abbiamo aggiunto il
+passaggio che controlla l'articolo prima che vada online, e il ciclo che lo fa
+riscrivere se non va bene.
+
+Due lezioni che ci siamo portati dietro:
+
+La prima è che il controllo automatico serve davvero, ma solo se ha criteri
+propri. Un modello a cui chiedi "va bene questo articolo?" tende a rispondere
+di sì; se invece gli dai una lista precisa di cose da verificare, inizia a
+trovare i problemi.
+
+La seconda riguarda la memoria: senza un archivio di quello che era già stato
+pubblicato, il sistema riscriveva articoli su argomenti già trattati. Il
+database non serviva solo ad archiviare, serviva a **non ripetersi**.
+
+---
+
+## 22 giugno – 10 luglio — Messa a punto e bilancio
+
+### Lunedì 22 giugno — venerdì 3 luglio
+
+Periodo di osservazione e correzioni su NovitAI. Con il sistema in funzione
+sono emersi i problemi che a tavolino non si vedono: articoli troppo simili
+tra loro, passaggi che ogni tanto si bloccavano, costi più alti del previsto
+quando il ciclo di revisione girava troppe volte.
+
+Da qui la decisione, presa qui e poi ripresa nello stage, di **mettere sempre
+un limite al numero di tentativi**: un ciclo che può girare all'infinito
+prima o poi lo fa, e la bolletta se ne accorge.
+
+### Lunedì 6 luglio — venerdì 10 luglio
+
+Bilancio di questa prima fase. In poco più di due mesi eravamo passati dal non
+sapere cosa fosse LangGraph ad avere un sistema funzionante che pubblicava
+articoli da solo.
+
+Soprattutto, avevamo capito quali sono i pezzi ricorrenti di questo tipo di
+sistemi: un flusso a stati con la possibilità di tornare indietro, istruzioni
+scritte con cura, un controllo con criteri espliciti, una memoria di quello
+che è già stato fatto, e un limite ai tentativi.
+
+---
+
+## 13 – 17 luglio — Preparazione allo stage
+
+Contatti con l'università per l'avvio dello stage e prime informazioni sul
+tema proposto. Sapendo che avrebbe riguardato modelli linguistici e agenti,
+abbiamo ripreso e riordinato gli appunti dei mesi precedenti, per arrivare al
+primo incontro con un'idea chiara di cosa sapevamo fare.
+
+---
+
+# Parte 2 — Lo stage
+
+## 20 – 24 luglio — Avvio e inquadramento del problema
 
 ### Lunedì 20 luglio
 
@@ -64,7 +252,7 @@ requisiti, sistemi multi-agente, e il protocollo MCP per la memoria.
 
 ---
 
-## Settimana 2 — Stato dell'arte
+## 27 – 31 luglio — Stato dell'arte
 
 ### Lunedì 27 luglio
 
@@ -108,7 +296,7 @@ il nostro lavoro va a riempire.
 
 ---
 
-## Settimana 3 — Nascita del progetto
+## 3 – 7 agosto — Nascita del progetto
 
 ### Lunedì 3 agosto
 
@@ -156,7 +344,7 @@ giorni successivi.
 
 ---
 
-## Settimana 4 — Stato dell'arte e prime decisioni
+## 10 – 14 agosto — Stato dell'arte e prime decisioni
 
 ### Lunedì 10 — mercoledì 12 agosto
 
@@ -182,7 +370,7 @@ Breve pausa per Ferragosto.
 
 ---
 
-## Settimana 5 — Le decisioni di design
+## 17 – 22 agosto — Le decisioni di design
 
 ### Lunedì 17 — martedì 18 agosto
 
@@ -243,7 +431,7 @@ Request con poco testo.
 
 ---
 
-## Settimana 6 — Dal progetto al codice
+## 24 – 26 agosto — Dal progetto al codice
 
 ### Lunedì 24 agosto
 
