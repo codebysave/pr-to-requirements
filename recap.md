@@ -13,6 +13,178 @@ soltanto lo stato delle caselle — `[✔]` fatto, `[ ]` da fare — e la frecci
 
 ---
 
+## 2026-08-27 — Gate deterministico, rifiuto motivato, memoria del valutatore e confronto fra modelli
+
+**Branch:** `feat/deterministic-gate`
+
+### 1. Perché questa giornata
+
+La giornata precedente si era chiusa con un problema chiaro: il sistema
+funzionava, ma i suoi esiti cambiavano a ogni modifica dei prompt senza che si
+potesse dire se stessero migliorando. Sono emersi tre difetti concreti dalle
+esecuzioni reali, e questa voce racconta come sono stati corretti; poi cinque
+esecuzioni controllate hanno finalmente separato l'effetto dei prompt da quello
+del modello.
+
+### 2. Il gate non è più un agente LLM
+
+Il primo controllo della pipeline — «questa Pull Request contiene abbastanza
+informazione perché valga la pena valutarla?» — era affidato a un modello. Era
+la scelta sbagliata per tre motivi, ora scritti in testa a
+`src/are/agents/extractability.py`:
+
+- **riproducibilità**: un controllo sintattico dà sempre lo stesso esito, un
+  modello no;
+- **informazione disponibile**: il gate decide *senza vedere il requisito*,
+  mentre l'Assessment Agent ce l'ha davanti. Il giudizio semantico spetta
+  quindi a quest'ultimo, che può rifiutare con `REJECT`;
+- **costo**: zero invece di una chiamata per Pull Request.
+
+Il nuovo `DeterministicExtractabilityChecker` scarta soltanto i casi
+incontestabili: corpo vuoto o assente, oppure titolo più corpo sotto una soglia
+di caratteri (`min_evidence_characters`, default 50, configurabile in
+`config/workflow.toml`). La soglia è dichiarata nel codice e nella
+configurazione come **criterio di comodo da calibrare sul gold standard**, non
+come valore fondato.
+
+Il prompt `prompts/extractability/v1.md` e la classe `LLMExtractabilityChecker`
+sono stati **eliminati**. Da qui in avanti il sistema ha **due agenti e due
+prompt**: il gate non è un agente.
+
+### 3. Il valutatore ora vede i propri giudizi precedenti
+
+Nelle esecuzioni si vedeva il valutatore chiedere una correzione, riceverla, e
+poi chiederne una opposta al giro successivo: a ogni chiamata partiva da zero,
+senza sapere di aver già parlato di quella Pull Request.
+
+Ora l'`IterationRecord` con i tentativi precedenti viene passato dal grafo al
+nodo di assessment, e il prompt contiene un blocco `<previous_attempts>` con
+una regola esplicita: **se il problema segnalato è stato risolto non va
+ripetuto; se è rimasto, può essere riproposto.** Non è un divieto di insistere,
+è un divieto di contraddirsi.
+
+Effetto misurato: da quel momento in poi nessuna esecuzione ha più prodotto
+`FAILED_VALIDATION` per esaurimento dei tentativi.
+
+### 4. Il generatore può dichiarare di non riuscire, e il valutatore conferma o dissente
+
+Prima il generatore era obbligato a produrre una frase anche quando l'evidenza
+non la sosteneva: ne uscivano requisiti inventati, oppure campi vuoti e prosa
+al posto del JSON.
+
+Ora può rispondere `{"cannot_ground": "..."}` con la motivazione. Il flusso
+prosegue comunque verso il valutatore, che ha due strade:
+
+- **concorda** → `CONFIRM_NOT_EXTRACTABLE`, la Pull Request si chiude come non
+  estraibile;
+- **dissente** → `REVISE`, spiegando perché un requisito è invece fondato e da
+  dove partire per scriverlo.
+
+In codice: nuovi `GenerationOutcome` e `AssessmentDecision.CONFIRM_NOT_EXTRACTABLE`
+in `state.py`, nuovo instradamento `route_after_generation` (una rinuncia non
+passa dal recupero in memoria, che presuppone un candidato da confrontare),
+firma di `assess()` estesa in `ports.py`. Il flusso è documentato nella
+Decisione 3.5, §10.4.
+
+### 5. Precisazioni ai documenti di design
+
+- **Decisione 3.1 §6.5** — introdotto il **quinto pattern EARS** (*optional
+  feature*: `Where <feature is included>, the system shall <response>`), che
+  mancava. I pattern restano **consigliati e non obbligatori**: sono una guida
+  alla forma, e imporli produrrebbe frasi forzate dove l'evidenza non ha una
+  condizione da mettere in testa.
+- **Decisione 3.1 §8.1** — il test black-box come criterio operativo di
+  «comportamento richiesto».
+- **Decisione 3.1 §8.2** — il requisito descrive il **sistema**, non la
+  modifica: «il sistema ora usa X» non è un requisito.
+- **Decisione 3.5 §4.3, §10.3, §10.4, §18** — riallineate al gate
+  deterministico e al nuovo flusso di rifiuto.
+
+### 6. Cinque esecuzioni per capire la scelta dei modelli
+
+Con il codice fermo e i prompt fermi, il sistema è stato lanciato **cinque
+volte sullo stesso campione** cambiando soltanto quale modello sta al posto del
+generatore e quale al posto del valutatore.
+
+| Generatore → Valutatore | Accettati | Non estraibili | Rifiutati | Errori | Revisioni | Costo |
+|---|---|---|---|---|---|---|
+| Haiku → Haiku | 3 | 6 | 0 | 0 | 5 | $0,11 |
+| Haiku → Opus | 6 | 3 | 0 | 0 | 2 | $0,46 |
+| Opus → Sonnet | 6 | 2 | 0 | 1 | 0 | $0,43 |
+| Opus → Opus | 7 | 2 | 0 | 0 | 0 | $0,53 |
+| Sonnet → Opus | 6 | 2 | 1 | 0 | 3 | $0,65 |
+
+Tre risultati non ovvi, tutti documentati con gli esempi veri in
+`experiments/analisi/confronto-modelli.md`:
+
+1. **il ciclo di revisione si accende solo se c'è un divario di capacità** fra i
+   due ruoli — con modelli pari (Haiku→Haiku, Opus→Opus) o con valutatore più
+   debole (Opus→Sonnet) non produce alcun miglioramento;
+2. **lo stesso modello è più severo da giudice che da autore**: Opus accetta
+   senza obiezioni una formulazione scritta da Opus che poi boccia, definendola
+   «circolare», quando arriva da Sonnet. È il rischio di Huang et al. 2024
+   osservato sui nostri dati, e un argomento concreto per usare due modelli
+   diversi;
+3. **la configurazione con il modello migliore ovunque non è la migliore**: i
+   requisiti finali di Sonnet→Opus superano quelli di Opus→Opus, perché il ciclo
+   li corregge. È la tesi di Wang et al. 2025 (*Cross-Refine*) verificata sul
+   nostro campione, e giustifica a posteriori la scelta della Decisione 3.2 di
+   rendere il modello configurabile **per agente**.
+
+### 7. Materiale per la valutazione
+
+- `experiments/analisi/confronto-modelli.md` — il documento di analisi delle
+  cinque esecuzioni, in italiano, con le citazioni tradotte e i rimandi ai
+  report grezzi;
+- `experiments/gold-standard/` — le schede di annotazione (`scheda-annotazione.md`
+  come modello, una copia per annotatore) e `pull-request-in-input.md` con i
+  soli testi delle 9 Pull Request, da leggere **prima** di guardare qualunque
+  output del sistema;
+- `experiments/runs/` — dieci nuovi report della giornata.
+
+### 8. Limiti noti, dichiarati e non risolti
+
+- **Manca il gold standard.** Ogni giudizio di qualità in questa voce è nostro,
+  non misurato. È il passo che blocca tutto il resto.
+- **`max_tokens = 2048` per il valutatore è troppo basso**: nell'esecuzione
+  Opus→Sonnet ha troncato una risposta e la Pull Request è finita in `ERROR`.
+  Va portato a 4096; non è stato fatto durante la serie per non rendere le
+  cinque esecuzioni incomparabili.
+- **Una sola esecuzione per configurazione** non permette di distinguere la
+  differenza fra modelli dal rumore del campionamento — e senza `temperature`
+  la variabilità non si può più sopprimere, va misurata con repliche.
+- **Il campione è piccolo e sbilanciato**: 9 Pull Request, di cui 5 generate da
+  uno scanner automatico con lo stesso boilerplate.
+
+### 9. Verifiche eseguite
+
+- `uv run ruff check .` e `ruff format` — puliti;
+- `uv run pytest` — **164 test passati** (18 nuovi: gate deterministico,
+  instradamento dopo la generazione, rifiuto motivato e conferma, blocco dei
+  tentativi precedenti nel prompt);
+- cinque esecuzioni reali complete sul campione, con tutte le combinazioni di
+  modelli previste.
+
+### 10. Stato del sistema dopo questa modifica
+
+```text
+[✔] Preprocessing del dataset       (script esterno al sistema)
+[✔] Input Loader                    are.input
+[✔] Configurazione + client LLM     are.llm
+[✔] Workflow LangGraph (agenti)     are.agents
+[✔] Pipeline Runner                 are.runner
+[ ] Memoria persistente (SQLite)    are.db
+[ ] Server MCP                      are.mcp_server
+[ ] Valutazione sperimentale                         ← iniziata: gold standard da compilare
+```
+
+Nessuna casella nuova completata: la giornata ha corretto tre difetti degli
+agenti e prodotto il primo confronto controllato fra modelli. L'ultima casella
+è ora **in corso** — le schede del gold standard esistono ma vanno compilate a
+mano, ed è la condizione perché qualunque altra modifica sia misurabile.
+
+---
+
 ## 2026-08-26 — Prima esecuzione reale e ristrutturazione dei prompt
 
 **Branch:** `feat/usage-tracking`

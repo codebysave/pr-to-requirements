@@ -17,6 +17,8 @@ from .state import (
     AssessmentFeedback,
     AssessmentResult,
     ExtractabilityResult,
+    GenerationOutcome,
+    IterationRecord,
     RetrievedRequirement,
 )
 
@@ -39,8 +41,13 @@ class RequirementGenerator(Protocol):
         pull_request: PullRequestRecord,
         previous_candidate: str | None,
         feedback: AssessmentFeedback | None,
-    ) -> str:
-        """Genera un candidato; dal secondo tentativo riceve anche il feedback."""
+    ) -> GenerationOutcome:
+        """Genera un candidato; dal secondo tentativo riceve anche il feedback.
+
+        Può restituire un esito di rinuncia motivata quando l'evidenza non
+        consente di ricostruire alcun requisito: la rinuncia viene comunque
+        sottoposta al valutatore.
+        """
         ...
 
 
@@ -50,9 +57,24 @@ class RequirementAssessor(Protocol):
     def assess(
         self,
         pull_request: PullRequestRecord,
-        candidate: str,
+        candidate: str | None,
         retrieved_requirements: Sequence[RetrievedRequirement],
-    ) -> AssessmentResult: ...
+        history: Sequence[IterationRecord] = (),
+        generation_refusal: str | None = None,
+    ) -> AssessmentResult:
+        """Valuta il candidato corrente.
+
+        ``history`` contiene i tentativi già esaminati in questa esecuzione,
+        con i rispettivi verdetti: serve a mantenere coerenza fra un giro e
+        l'altro e a riconoscere un ciclo che non converge. È vuoto al primo
+        tentativo.
+
+        ``generation_refusal`` è valorizzato quando il generatore ha rinunciato
+        motivatamente invece di produrre un requisito: in quel caso ``candidate``
+        è ``None`` e l'oggetto della valutazione è la rinuncia stessa, da
+        confermare con ``CONFIRM_NOT_EXTRACTABLE`` o respingere con ``REVISE``.
+        """
+        ...
 
 
 class MemoryRetriever(Protocol):

@@ -5,12 +5,12 @@ import pytest
 from are.agents import (
     AssessmentDecision,
     AssessmentFeedback,
-    Extractability,
+    AssessmentResult,
+    IterationRecord,
     RetrievedRequirement,
 )
 from are.agents.llm_agents import (
     AgentResponseError,
-    LLMExtractabilityChecker,
     LLMRequirementAssessor,
     LLMRequirementGenerator,
     parse_json_object,
@@ -86,44 +86,6 @@ def test_error_message_truncates_long_responses() -> None:
     assert excinfo.value.raw_response == "x" * 500
 
 
-# --- gate di estraibilità ---------------------------------------------------
-
-
-def test_extractability_checker_reads_decision_and_reason() -> None:
-    client = FakeLLMClient('{"extractability": "EXTRACTABLE", "reason": "new export capability"}')
-    checker = LLMExtractabilityChecker(client)
-
-    result = checker.check(PR)
-
-    assert result.decision is Extractability.EXTRACTABLE
-    assert result.reason == "new export capability"
-    system, user_message = client.requests[0]
-    assert "NOT_EXTRACTABLE" in system
-    assert PR.title in user_message
-    assert PR.body in user_message
-
-
-def test_extractability_checker_accepts_not_extractable() -> None:
-    client = FakeLLMClient('{"extractability": "not_extractable", "reason": "typo fix"}')
-
-    result = LLMExtractabilityChecker(client).check(PR)
-
-    assert result.decision is Extractability.NOT_EXTRACTABLE
-
-
-def test_extractability_checker_rejects_unknown_verdict() -> None:
-    client = FakeLLMClient('{"extractability": "MAYBE"}')
-
-    with pytest.raises(AgentResponseError, match="MAYBE"):
-        LLMExtractabilityChecker(client).check(PR)
-
-
-def test_extractability_checker_tolerates_missing_reason() -> None:
-    client = FakeLLMClient('{"extractability": "EXTRACTABLE"}')
-
-    assert LLMExtractabilityChecker(client).check(PR).reason == ""
-
-
 # --- Generation Agent -------------------------------------------------------
 
 
@@ -132,9 +94,10 @@ def test_generator_returns_requirement_text() -> None:
         '{"requirement": "The system shall allow users to export reports in PDF format."}'
     )
 
-    requirement = LLMRequirementGenerator(client).generate(PR, None, None)
+    outcome = LLMRequirementGenerator(client).generate(PR, None, None)
 
-    assert requirement == "The system shall allow users to export reports in PDF format."
+    assert outcome.requirement == "The system shall allow users to export reports in PDF format."
+    assert not outcome.refused
 
 
 def test_generator_first_attempt_sends_only_the_evidence() -> None:
@@ -242,3 +205,58 @@ def test_assessor_omits_memory_section_when_no_requirements_retrieved() -> None:
 
     _, user_message = client.requests[0]
     assert "PREVIOUSLY VALIDATED REQUIREMENTS" not in user_message
+
+
+# --- storico dei tentativi precedenti --------------------------------------
+
+
+def revise_result(instruction: str) -> AssessmentResult:
+    return AssessmentResult(
+        AssessmentDecision.REVISE,
+        AssessmentFeedback(
+            issues=("Names a library.",),
+            unsupported_claims=("SomeLibrary",),
+            revision_instructions=(instruction,),
+        ),
+    )
+
+
+def test_assessor_omits_the_history_section_on_the_first_attempt() -> None:
+    client = FakeLLMClient('{"decision": "ACCEPT"}')
+
+    LLMRequirementAssessor(client).assess(PR, "The system shall export reports.", ())
+
+    _, user_message = client.requests[0]
+    assert "PREVIOUS ATTEMPTS" not in user_message
+
+
+def test_assessor_receives_previous_candidates_and_its_own_verdicts() -> None:
+    client = FakeLLMClient('{"decision": "ACCEPT"}')
+    history = (
+        IterationRecord(1, "The system shall use SomeLibrary.", revise_result("Remove it.")),
+    )
+
+    LLMRequirementAssessor(client).assess(PR, "The system shall parse safely.", (), history)
+
+    _, user_message = client.requests[0]
+    assert "PREVIOUS ATTEMPTS" in user_message
+    assert "Attempt 1" in user_message
+    assert "The system shall use SomeLibrary." in user_message
+    assert "REVISE" in user_message
+    assert "Remove it." in user_message
+    # Lo storico precede il candidato corrente nel messaggio.
+    assert user_message.index("PREVIOUS ATTEMPTS") < user_message.index("CANDIDATE REQUIREMENT")
+
+
+def test_assessor_reports_every_previous_attempt_in_order() -> None:
+    client = FakeLLMClient('{"decision": "REJECT"}')
+    history = (
+        IterationRecord(1, "First try.", revise_result("Fix A.")),
+        IterationRecord(2, "Second try.", revise_result("Fix B.")),
+    )
+
+    LLMRequirementAssessor(client).assess(PR, "Third try.", (), history)
+
+    _, user_message = client.requests[0]
+    assert user_message.index("Attempt 1") < user_message.index("Attempt 2")
+    assert "Fix A." in user_message and "Fix B." in user_message

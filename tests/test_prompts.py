@@ -8,15 +8,16 @@ import pytest
 
 from are.agents.prompts import (
     ASSESSMENT_AGENT,
-    EXTRACTABILITY_AGENT,
     GENERATION_AGENT,
     PromptNotFoundError,
     load_prompt,
 )
 
+AGENTS = (GENERATION_AGENT, ASSESSMENT_AGENT)
+
 
 def test_repository_prompts_are_available_for_every_agent() -> None:
-    for agent in (EXTRACTABILITY_AGENT, GENERATION_AGENT, ASSESSMENT_AGENT):
+    for agent in AGENTS:
         prompt = load_prompt(agent)
 
         assert prompt.strip()
@@ -27,9 +28,23 @@ def test_generation_prompt_states_the_project_conventions() -> None:
 
     # I vincoli della Decisione 3.1 devono essere presenti nel prompt.
     assert "shall" in prompt
+    assert "black-box" in prompt.lower()
+    # I cinque pattern EARS adottati (Decisione 3.1, §6).
+    assert "The system shall <response>" in prompt
     assert "When <trigger>" in prompt
     assert "While <state>" in prompt
     assert "If <undesired condition>" in prompt
+    assert "Where <feature is present>" in prompt
+
+
+def test_both_prompts_forbid_referring_to_the_change_itself() -> None:
+    """Il requisito descrive il sistema, non la Pull Request (Decisione 3.1, §8.2)."""
+
+    for agent in AGENTS:
+        prompt = load_prompt(agent)
+
+        assert "the remediation" in prompt, agent
+        assert "Pull Request" in prompt, agent
 
 
 def test_assessment_prompt_lists_the_three_decisions() -> None:
@@ -40,7 +55,7 @@ def test_assessment_prompt_lists_the_three_decisions() -> None:
 
 
 def test_every_prompt_requires_a_single_json_object() -> None:
-    for agent in (EXTRACTABILITY_AGENT, GENERATION_AGENT, ASSESSMENT_AGENT):
+    for agent in AGENTS:
         prompt = load_prompt(agent)
 
         assert "single JSON object" in prompt, agent
@@ -50,7 +65,7 @@ def test_every_prompt_requires_a_single_json_object() -> None:
 def test_every_prompt_contains_at_least_one_valid_json_example() -> None:
     """Gli esempi guidano i modelli piccoli: devono essere JSON realmente validi."""
 
-    for agent in (EXTRACTABILITY_AGENT, GENERATION_AGENT, ASSESSMENT_AGENT):
+    for agent in AGENTS:
         prompt = load_prompt(agent)
         # Gli esempi compaiono come oggetto dentro <output>, oppure come riga
         # a sé stante. Le righe con il carattere di alternativa descrivono lo
@@ -108,7 +123,7 @@ def test_prompts_do_not_leak_the_experimental_sample() -> None:
                 match.lower() for match in re.findall(r"\b\w+\.(?:py|\w+\(\))", testo)
             )
 
-    for agent in (EXTRACTABILITY_AGENT, GENERATION_AGENT, ASSESSMENT_AGENT):
+    for agent in AGENTS:
         prompt = load_prompt(agent).lower()
         trovati = sorted(term for term in identificatori if term in prompt)
 
@@ -122,24 +137,20 @@ def _extract_block(prompt: str, tag: str) -> str:
 
 
 def test_all_prompts_share_an_identical_definitions_block() -> None:
-    """I tre prompt devono usare le stesse definizioni, parola per parola.
+    """I due agenti devono usare le stesse definizioni, parola per parola.
 
     Quando le nozioni di 'comportamento richiesto' e di 'evidenza' divergono,
-    gate, generatore e valutatore applicano criteri diversi allo stesso caso:
-    il gate ammette Pull Request che il valutatore poi rifiuta, e il ciclo di
-    revisione non converge.
+    generatore e valutatore applicano criteri diversi allo stesso requisito e
+    il ciclo di revisione non converge.
     """
 
-    blocchi = {
-        agent: _extract_block(load_prompt(agent), "definitions")
-        for agent in (EXTRACTABILITY_AGENT, GENERATION_AGENT, ASSESSMENT_AGENT)
-    }
+    blocchi = {agent: _extract_block(load_prompt(agent), "definitions") for agent in AGENTS}
 
     assert len(set(blocchi.values())) == 1, "le definizioni divergono fra i prompt"
 
 
 def test_prompts_use_the_expected_structure() -> None:
-    for agent in (EXTRACTABILITY_AGENT, GENERATION_AGENT, ASSESSMENT_AGENT):
+    for agent in AGENTS:
         prompt = load_prompt(agent)
 
         for tag in ("role", "task", "definitions", "procedure", "examples", "output_format"):
@@ -149,7 +160,7 @@ def test_prompts_use_the_expected_structure() -> None:
 def test_prompts_provide_several_diverse_examples() -> None:
     """La documentazione ufficiale raccomanda da 3 a 5 esempi variati."""
 
-    for agent in (EXTRACTABILITY_AGENT, GENERATION_AGENT, ASSESSMENT_AGENT):
+    for agent in AGENTS:
         esempi = re.findall(r"<example>", load_prompt(agent))
 
         assert len(esempi) >= 4, f"{agent}: solo {len(esempi)} esempi"

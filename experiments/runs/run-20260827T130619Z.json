@@ -1,0 +1,299 @@
+{
+  "run": {
+    "generated_at": "2026-08-27T13:06:19.699365+00:00",
+    "input_file": "experiments/samples/sample-scrapy_scrapy.json",
+    "pull_requests": 9,
+    "prompt_version": "v1",
+    "workflow": {
+      "assessment_enabled": true,
+      "memory_enabled": false,
+      "max_generation_attempts": 3
+    },
+    "llm": {
+      "generation": {
+        "model": "claude-opus-5",
+        "resolved_model": "claude-opus-5",
+        "max_tokens": 1024,
+        "effort": null
+      },
+      "assessment": {
+        "model": "claude-opus-5",
+        "resolved_model": "claude-opus-5",
+        "max_tokens": 2048,
+        "effort": null
+      }
+    },
+    "usage": {
+      "per_agent": {
+        "generation": {
+          "model": "claude-opus-5",
+          "calls": 9,
+          "input_tokens": 32834,
+          "output_tokens": 1654,
+          "estimated_cost_usd": 0.20552
+        },
+        "assessment": {
+          "model": "claude-opus-5",
+          "calls": 9,
+          "input_tokens": 45998,
+          "output_tokens": 3644,
+          "estimated_cost_usd": 0.32109
+        }
+      },
+      "total_calls": 18,
+      "total_input_tokens": 78832,
+      "total_output_tokens": 5298,
+      "total_estimated_cost_usd": 0.52661,
+      "pricing_reference_date": "2026-08-26"
+    }
+  },
+  "summary": {
+    "ACCEPTED": 7,
+    "NOT_EXTRACTABLE": 2
+  },
+  "results": [
+    {
+      "pr_id": "scrapy-scrapy-pr-6869",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6869,
+      "timestamp": "2025-06-06T13:17:48+00:00",
+      "title": "Fix: Dangerous Code Execution Function Could Allow External Attacks in scrapy/shell.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 960 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall not execute externally supplied content as code when processing input in the interactive shell.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall not execute externally supplied content as code when processing input in the interactive shell.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6870",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6870,
+      "timestamp": "2025-06-06T13:19:55+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 978 caratteri: la valutazione prosegue",
+      "accepted_requirement": "When generating a spider, the system shall prevent user-supplied input from causing arbitrary code to be loaded and executed.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When generating a spider, the system shall prevent user-supplied input from causing arbitrary code to be loaded and executed.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6875",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6875,
+      "timestamp": "2025-06-07T03:44:46+00:00",
+      "title": "Fix typo in cmdline.py comment: 'a argument' -> 'an argument'",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 579 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The change is explicitly limited to correcting wording in a source-code comment and states that no functionality is affected, so no externally observable behaviour is added or altered.",
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The evidence describes only a comment wording correction in a source file and states explicitly that no code logic or functionality is affected, so no externally observable behaviour is established.",
+              "No black-box test could distinguish the system before and after the change, so any requirement would be an invention."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6879",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6879,
+      "timestamp": "2025-06-09T02:36:45+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 978 caratteri: la valutazione prosegue",
+      "accepted_requirement": "When generating a spider, the system shall prevent user-supplied input from causing arbitrary code to be loaded and executed.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When generating a spider, the system shall prevent user-supplied input from causing arbitrary code to be loaded and executed.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6880",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6880,
+      "timestamp": "2025-06-09T02:45:09+00:00",
+      "title": "Fix: Unsafe Data Processing Method Allows Malicious Code Execution in scrapy/exporters.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 989 caratteri: la valutazione prosegue",
+      "accepted_requirement": "When exporting scraped items, the system shall serialize them in a form that does not allow arbitrary code to be executed when the exported data is later read back.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When exporting scraped items, the system shall serialize them in a form that does not allow arbitrary code to be executed when the exported data is later read back.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6881",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6881,
+      "timestamp": "2025-06-09T02:51:14+00:00",
+      "title": "Fix: Unsafe XML Processing Library Could Allow Malicious Attacks in scrapy/http/request/rpc.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 852 caratteri: la valutazione prosegue",
+      "accepted_requirement": "When handling XML-RPC data, the system shall process the XML without allowing maliciously crafted content to compromise the application.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When handling XML-RPC data, the system shall process the XML without allowing maliciously crafted content to compromise the application.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6899",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6899,
+      "timestamp": "2025-06-21T01:51:04+00:00",
+      "title": "Fix typing of dynamic `request` attribute on `Failure` with a cast subclass",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 937 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The change is explicitly limited to static type annotations and states that runtime behaviour is unchanged, so no externally observable behaviour is established by the evidence.",
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The evidence describes a static-typing-only change: a cast to a subclass introduced solely to satisfy type checkers, with the body stating explicitly that runtime behaviour is unchanged and no new Failure instances are created.",
+              "A change verifiable only by reading annotations or running a type checker over the source fails the black-box test, so no required behaviour of the system can be grounded in this evidence.",
+              "The writer's reason is accurate and complete; nothing in the title or body describes an observable guarantee that could be stated as a requirement."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6936",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6936,
+      "timestamp": "2025-07-03T00:58:14+00:00",
+      "title": "feat(settings): Change default SCHEDULER_PRIORITY_QUEUE (closes #6924)",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 600 caratteri: la valutazione prosegue",
+      "accepted_requirement": "Where the scheduler priority queue setting has not been overridden, the system shall schedule requests using the downloader-aware priority queue.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "Where the scheduler priority queue setting has not been overridden, the system shall schedule requests using the downloader-aware priority queue.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6947",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6947,
+      "timestamp": "2025-07-10T15:21:39+00:00",
+      "title": "Ban more imports that import twisted.internet.reactor.",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 157 caratteri: la valutazione prosegue",
+      "accepted_requirement": "When a module that is prohibited from depending on the Twisted global reactor is imported, the system shall not cause twisted.internet.reactor to be imported.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When a module that is prohibited from depending on the Twisted global reactor is imported, the system shall not cause twisted.internet.reactor to be imported.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [
+              "The condition is stated in general terms ('a module that is prohibited from depending on the Twisted global reactor') because the evidence names no specific modules; this is the correct level given the evidence."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    }
+  ]
+}

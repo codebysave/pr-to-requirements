@@ -200,6 +200,7 @@ def _serialize_result(result: RunResult) -> dict[str, Any]:
                 {
                     "attempt": record.attempt,
                     "candidate": record.candidate,
+                    "refusal_reason": record.refusal_reason,
                     "assessment": _serialize_assessment(record.assessment),
                 }
                 for record in state["iteration_history"]

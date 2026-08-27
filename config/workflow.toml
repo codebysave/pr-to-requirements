@@ -16,3 +16,10 @@
 assessment_enabled = true
 memory_enabled = false
 max_generation_attempts = 3
+
+# Lunghezza minima complessiva di titolo e corpo perché una Pull Request
+# venga sottoposta agli agenti. È un criterio di comodo, non una soglia
+# fondata: va calibrato sul gold standard (punto aperto sulle Pull Request
+# con corpo assente o scarsamente informativo). Con 0 il controllo si limita
+# a scartare i corpi vuoti.
+min_evidence_characters = 50

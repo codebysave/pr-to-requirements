@@ -22,11 +22,18 @@ class Extractability(StrEnum):
 
 
 class AssessmentDecision(StrEnum):
-    """Decisione dell'Assessment Agent sul requisito candidato."""
+    """Decisione dell'Assessment Agent (Decisione 3.5, §10).
+
+    ``CONFIRM_NOT_EXTRACTABLE`` è la risposta alla dichiarazione con cui il
+    Generation Agent constata di non poter ricostruire alcun requisito: il
+    valutatore la conferma, oppure dissente con ``REVISE`` spiegando quale
+    comportamento ritiene identificabile.
+    """
 
     ACCEPT = "ACCEPT"
     REVISE = "REVISE"
     REJECT = "REJECT"
+    CONFIRM_NOT_EXTRACTABLE = "CONFIRM_NOT_EXTRACTABLE"
 
 
 class FinalStatus(StrEnum):
@@ -78,17 +85,38 @@ class RetrievedRequirement:
 
 
 @dataclass(frozen=True, slots=True)
+class GenerationOutcome:
+    """Esito di un tentativo di generazione.
+
+    Il Generation Agent produce un requisito oppure constata di non poterlo
+    ricostruire senza inventare (Decisione 3.1, §11.10). La constatazione non
+    chiude da sola l'elaborazione: viene sottoposta al valutatore, che la
+    conferma o la respinge.
+    """
+
+    requirement: str | None = None
+    refusal_reason: str | None = None
+
+    @property
+    def refused(self) -> bool:
+        return self.requirement is None
+
+
+@dataclass(frozen=True, slots=True)
 class IterationRecord:
     """Un tentativo del loop Generation → Assessment, conservato per traccia.
 
+    ``candidate`` è ``None`` quando il generatore ha dichiarato di non poter
+    ricostruire un requisito, e la motivazione si trova in ``refusal_reason``.
     ``assessment`` è ``None`` quando la configurazione sperimentale esegue il
     workflow senza valutatore. Lo storico appartiene ai log dell'esecuzione,
     non alla memoria persistente dei requisiti validati.
     """
 
     attempt: int
-    candidate: str
+    candidate: str | None
     assessment: AssessmentResult | None
+    refusal_reason: str | None = None
 
 
 class RequirementState(TypedDict):
@@ -97,6 +125,7 @@ class RequirementState(TypedDict):
     pull_request: PullRequestRecord
     extractability: ExtractabilityResult | None
     candidate_requirement: str | None
+    generation_refusal: str | None
     generation_attempt: int
     retrieved_requirements: tuple[RetrievedRequirement, ...]
     assessment: AssessmentResult | None
@@ -112,6 +141,7 @@ def create_initial_state(pull_request: PullRequestRecord) -> RequirementState:
         pull_request=pull_request,
         extractability=None,
         candidate_requirement=None,
+        generation_refusal=None,
         generation_attempt=0,
         retrieved_requirements=(),
         assessment=None,

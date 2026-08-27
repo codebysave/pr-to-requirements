@@ -15,6 +15,7 @@ VALID_CONFIG = """
 assessment_enabled = true
 memory_enabled = false
 max_generation_attempts = 3
+min_evidence_characters = 50
 """
 
 
@@ -30,6 +31,7 @@ def test_loads_valid_config(tmp_path: Path) -> None:
     assert config.assessment_enabled is True
     assert config.memory_enabled is False
     assert config.max_generation_attempts == 3
+    assert config.min_evidence_characters == 50
 
 
 def test_repository_config_file_is_valid() -> None:
@@ -69,6 +71,8 @@ def test_rejects_unknown_key(tmp_path: Path) -> None:
         ("max_generation_attempts", "0"),
         ("max_generation_attempts", "true"),
         ("max_generation_attempts", '"3"'),
+        ("min_evidence_characters", "-1"),
+        ("min_evidence_characters", "true"),
     ],
 )
 def test_rejects_invalid_field_values(tmp_path: Path, field: str, value: str) -> None:
@@ -76,6 +80,7 @@ def test_rejects_invalid_field_values(tmp_path: Path, field: str, value: str) ->
         "assessment_enabled": "true",
         "memory_enabled": "false",
         "max_generation_attempts": "3",
+        "min_evidence_characters": "50",
     }
     lines[field] = value
     content = "[workflow]\n" + "\n".join(f"{key} = {val}" for key, val in lines.items())
@@ -90,5 +95,5 @@ def test_reports_all_issues_together(tmp_path: Path) -> None:
     with pytest.raises(InvalidWorkflowConfigError) as excinfo:
         load_workflow_config(write_config(tmp_path, content))
 
-    # due chiavi obbligatorie mancanti, una chiave sconosciuta, un tipo errato
-    assert len(excinfo.value.issues) == 4
+    # tre chiavi obbligatorie mancanti, una sconosciuta, un tipo errato
+    assert len(excinfo.value.issues) == 5

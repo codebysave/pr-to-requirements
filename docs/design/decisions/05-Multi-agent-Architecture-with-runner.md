@@ -22,7 +22,7 @@ La presente decisione stabilisce:
 - i componenti agentici e non agentici;
 - lo stato condiviso della pipeline;
 - il ciclo `Generation → Assessment → Revision`;
-- le condizioni `ACCEPT`, `REVISE` e `REJECT`;
+- le condizioni `ACCEPT`, `REVISE`, `REJECT` e `CONFIRM_NOT_EXTRACTABLE`;
 - il numero massimo di tentativi;
 - la gestione del feedback;
 - il comportamento al raggiungimento del limite;
@@ -182,6 +182,7 @@ Produce una decisione tra:
 ACCEPT
 REVISE
 REJECT
+CONFIRM_NOT_EXTRACTABLE
 ```
 
 insieme a feedback strutturato e informazioni utili al routing.
@@ -202,7 +203,7 @@ La prima architettura prevede componenti deterministiche per:
 - logging;
 - gestione dello stato finale.
 
-La verifica di estraibilità può utilizzare un modello LLM nella sua implementazione, ma viene considerata una fase preliminare della pipeline e non un terzo agente autonomo.
+La verifica di estraibilità è una fase preliminare della pipeline e non un terzo agente autonomo. È stata implementata come **controllo deterministico**: scarta soltanto le Pull Request prive di testo sufficiente perché una qualsiasi valutazione sia possibile. La scelta risponde a tre ragioni: un controllo sintattico è riproducibile, mentre un modello può cambiare esito fra un'esecuzione e l'altra; il giudizio semantico richiede di vedere il requisito, che a questo stadio non esiste ancora; e il costo è nullo. Il giudizio sull'identificabilità di un comportamento appartiene quindi al ciclo, dove il generatore lo formula e il valutatore lo verifica (§10.4).
 
 
 ### 4.4 Pipeline Runner
@@ -496,8 +497,44 @@ In questo caso la pipeline termina senza una nuova generazione e senza persisten
 
 `REJECT` viene mantenuto distinto da `NOT_EXTRACTABLE`:
 
-- `NOT_EXTRACTABLE` viene deciso prima della generazione;
-- `REJECT` può emergere successivamente durante il processo di valutazione.
+- `REJECT` riguarda un candidato prodotto e non riparabile;
+- `NOT_EXTRACTABLE` constata che dalla Pull Request non si ricava alcun requisito.
+
+### 10.4 `CONFIRM_NOT_EXTRACTABLE`
+
+La Decisione 3.1 (§11.10) prevede che il Generation Agent possa constatare di non
+essere in grado di ricostruire un requisito senza inventarlo. La constatazione non chiude
+però da sola l'elaborazione: verrebbe a mancare qualsiasi controllo sull'auto-esclusione,
+e il generatore potrebbe usarla come scorciatoia davanti ai casi difficili.
+
+La rinuncia viene quindi sottoposta al Requirement Assessment Agent, che dispone di una
+quarta decisione:
+
+```text
+Generation Agent
+   │
+   ├── requisito candidato ──→ Assessment ──→ ACCEPT / REVISE / REJECT
+   │
+   └── rinuncia motivata ────→ Assessment ──→ CONFIRM_NOT_EXTRACTABLE
+                                            └ REVISE (dissenso motivato)
+```
+
+Con `CONFIRM_NOT_EXTRACTABLE` il valutatore concorda e lo stato finale diventa
+`NOT_EXTRACTABLE`. Con `REVISE` dissente, indicando quale comportamento ritiene
+identificabile e in quale parte dell'evidenza: il controllo torna al generatore, che
+dispone così di un'informazione che nel normale ciclo di revisione non riceverebbe mai,
+perché il feedback presuppone un candidato da correggere.
+
+La rinuncia non attraversa il recupero dalla memoria, che presuppone un candidato da
+confrontare. Quando il valutatore è disattivato non esiste chi possa verificarla e
+l'elaborazione si chiude come `NOT_EXTRACTABLE`.
+
+> **Nota sull'evoluzione del §6.** La verifica preliminare di estraibilità è stata
+> implementata come controllo deterministico e non semantico: scarta soltanto le Pull
+> Request prive di testo sufficiente. Il giudizio sul fatto che un comportamento sia
+> identificabile si è quindi spostato all'interno del ciclo, dove viene formulato dal
+> generatore e verificato dal valutatore. `NOT_EXTRACTABLE` non è più perciò un esito
+> deciso esclusivamente prima della generazione.
 
 ---
 
@@ -768,7 +805,7 @@ FAILED_VALIDATION
 
 ### `NOT_EXTRACTABLE`
 
-La pipeline ha determinato prima della generazione che l'evidenza disponibile non consente di ricostruire un requisito funzionale nello scope stabilito.
+Dalla Pull Request non si ricava alcun requisito funzionale nello scope stabilito. L'esito può derivare dal controllo preliminare, quando il testo disponibile è insufficiente, oppure dal ciclo, quando il generatore constata di non poter ricostruire un requisito e il valutatore conferma con `CONFIRM_NOT_EXTRACTABLE` (§10.4).
 
 ### `REJECTED`
 

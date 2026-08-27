@@ -300,9 +300,26 @@ dalla Pull Request.
 ## 6. Pattern EARS adottati
 
 EARS viene utilizzato come riferimento sintattico per rendere più uniforme la
-formulazione dei requisiti. Non tutti i pattern EARS devono necessariamente essere
-utilizzati: il sottoinsieme iniziale adottato comprende **quattro** pattern, quelli
-maggiormente compatibili con i requisiti funzionali ricostruiti dalle Pull Request.
+formulazione dei requisiti. Il progetto adotta **cinque** pattern.
+
+> **Aggiornamento (agosto 2026).** Il sottoinsieme iniziale comprendeva quattro pattern.
+> Le prime prove sui dati reali hanno mostrato che il cambiamento di un valore
+> predefinito — caso ricorrente nelle Pull Request di configurazione — non è
+> rappresentabile in modo corretto da nessuno dei quattro: la forma ubiquitous afferma
+> un comportamento incondizionato, mentre il valore predefinito vale soltanto finché non
+> viene sovrascritto. Il pattern *optional feature* (§6.5) copre esattamente questo caso.
+> L'estensione avviene secondo quanto previsto dal §17.
+
+L'uso di uno dei cinque pattern è **obbligatorio** per il Requirement Generation Agent.
+La forma vincolata rende i requisiti confrontabili fra loro e, come osservato nella
+Decisione 3.2, rende più affidabile l'output di un modello linguistico. Un comportamento
+che non risulti rappresentabile da alcun pattern è inoltre un indizio che il candidato
+non sia un buon requisito funzionale.
+
+La mancata conformità sintattica costituisce tuttavia un difetto di **formulazione**, non
+di fondatezza: comporta `REVISE` e non `REJECT`, perché un requisito corretto nel
+contenuto ma mal formattato è recuperabile in una revisione, mentre rifiutarlo farebbe
+perdere informazione.
 
 ### 6.1 Ubiquitous requirement
 
@@ -342,6 +359,26 @@ il comportamento che il sistema deve adottare in tale situazione.
 > If `<undesired condition>`, then the system shall `<response>`.
 
 Esempio: *If authentication fails, then the system shall reject the login attempt.*
+
+### 6.5 Optional feature
+
+Utilizzato quando il comportamento vale in presenza di una determinata configurazione,
+opzione o funzionalità.
+
+> Where `<feature is present>`, the system shall `<response>`.
+
+Esempio: *Where the export module is installed, the system shall offer PDF as an output
+format.*
+
+È il pattern appropriato per i **valori predefiniti**, che valgono soltanto in assenza di
+una configurazione esplicita:
+
+> Where the retry policy has not been overridden, the system shall retry failed requests
+> using exponential backoff.
+
+Scrivere lo stesso requisito in forma ubiquitous — *«The system shall use exponential
+backoff»* — sarebbe scorretto, perché afferma un comportamento incondizionato mentre il
+valore predefinito è sovrascrivibile.
 
 ---
 
@@ -401,6 +438,42 @@ Non costituiscono invece il target principale del sistema: refactoring puramente
 modifiche infrastrutturali prive di comportamento funzionale ricostruibile; aggiornamenti
 di dipendenze; modifiche esclusivamente interne; requisiti esclusivamente prestazionali;
 quality constraints privi di un comportamento funzionale target.
+
+### 8.1 Criterio operativo: il test black-box
+
+La definizione precedente descrive che cosa sia un requisito funzionale, ma non fornisce
+un modo per decidere i casi incerti. Adottiamo quindi un criterio operativo:
+
+> Un requisito è funzionale se è possibile immaginare un **test black-box** che lo
+> verifichi: un test che fallisce prima della modifica e passa dopo, **senza ispezionare
+> il codice sorgente**.
+
+Il criterio è concreto e discrimina i casi che in astratto restano ambigui. Una modifica
+alla tipizzazione statica, per esempio, non è verificabile in questo modo: il test
+dovrebbe esaminare le annotazioni nel sorgente, non il comportamento del sistema. Lo
+stesso vale per la correzione di un commento o per una riorganizzazione interna a
+comportamento invariato.
+
+Il criterio non coincide con la distinzione tra requisiti funzionali e non funzionali
+della norma ISO/IEC 25010: un intervento di sicurezza è classificato da quella norma
+come caratteristica di qualità, ma può comunque esprimere un comportamento funzionale
+quando descrive la risposta del sistema a un input. «Il sistema non deve eseguire codice
+arbitrario proveniente da input non attendibile» è verificabile black-box e costituisce
+quindi un requisito funzionale; «il codice deve essere sicuro» non lo è.
+
+L'osservabilità va intesa al livello dell'interfaccia pubblica del componente (§4.2):
+per una libreria, ciò che un chiamante può osservare in termini di valori restituiti,
+errori sollevati ed effetti a runtime.
+
+### 8.2 Il requisito descrive il sistema, non la modifica
+
+Un requisito non deve contenere riferimenti al processo di sviluppo: espressioni come
+*this Pull Request*, *the patch*, *the fix*, *the remediation* descrivono l'intervento,
+non il comportamento del sistema. Il requisito deve essere comprensibile a chi non ha
+mai visto la Pull Request da cui è stato ricostruito.
+
+Formulazioni come *«The system shall remediate the vulnerability»* vanno quindi rifiutate:
+non dicono che cosa il sistema faccia.
 
 ---
 
@@ -647,6 +720,10 @@ durante i test una quota significativa di requisiti funzionali risultasse diffic
 rappresentabile attraverso il sottoinsieme selezionato, la convenzione sintattica potrà
 essere estesa o rilassata, mantenendo invariati i principi di qualità e grounding
 definiti in questa decisione.
+
+Una prima estensione è già avvenuta in questo modo: le prove sui dati reali hanno mostrato
+che i valori predefiniti non erano rappresentabili correttamente, e il pattern *optional
+feature* è stato aggiunto ai quattro iniziali (§6.5).
 
 ---
 

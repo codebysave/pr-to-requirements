@@ -600,28 +600,138 @@ da stasera è diventato la cosa più urgente da fare.
 
 ---
 
+## 27 agosto — Le correzioni, e finalmente un confronto pulito
+
+### Giovedì 27 agosto — mattina
+
+Siamo partiti dai tre difetti che ieri sera ci avevano fermato, e li abbiamo
+affrontati uno per uno.
+
+**Il primo controllo non lo fa più un modello.** All'ingresso della pipeline
+c'era un agente il cui compito era dire «questa Pull Request contiene abbastanza
+informazione per andare avanti?». Discutendone ci siamo accorti che era la
+scelta sbagliata: un modello, per rispondere a quella domanda, deve immaginarsi
+il requisito che non ha ancora davanti, e sbaglia in entrambe le direzioni.
+Lo abbiamo sostituito con un controllo banale e deterministico — corpo vuoto,
+oppure meno di cinquanta caratteri fra titolo e descrizione — e abbiamo
+restituito il giudizio vero a chi il requisito ce l'ha sotto gli occhi, cioè al
+valutatore. Costa zero, dà sempre lo stesso risultato, e non pretende di sapere
+cose che non può sapere.
+
+La soglia dei cinquanta caratteri è arbitraria e lo abbiamo scritto: è un
+numero di comodo che andrà calibrato quando avremo il gold standard.
+
+**Il valutatore ora si ricorda cosa ha già detto.** Ieri lo avevamo visto
+chiedere una correzione, riceverla, e poi al giro dopo chiederne una opposta:
+ogni volta ripartiva da zero. Adesso gli passiamo i tentativi precedenti con i
+suoi stessi giudizi, e la regola è semplice: se il problema è stato risolto non
+si ripete, se è rimasto si può insistere. Non gli abbiamo tolto la severità,
+gli abbiamo tolto la smemoratezza. Da quel momento non è più capitato che una
+Pull Request esaurisse i tre tentativi a vuoto.
+
+**Il generatore può dire "non ci riesco".** Prima era costretto a scrivere una
+frase anche quando la Pull Request non ne conteneva una: e allora se la
+inventava, oppure produceva testo confuso. Ora può fermarsi e spiegare perché.
+La cosa che ci piace di più è cosa succede dopo: il caso passa comunque al
+valutatore, che può dargli ragione — e la Pull Request si chiude — oppure
+dissentire, spiegandogli perché un requisito c'è davvero e da dove partire. È
+diventato un dialogo in due direzioni invece che una catena di montaggio.
+
+### Giovedì 27 agosto — pomeriggio
+
+Con il codice fermo e le istruzioni ferme, abbiamo finalmente potuto fare la
+cosa che ieri non era possibile: cambiare **una sola variabile alla volta**.
+
+Abbiamo lanciato il sistema cinque volte sullo stesso identico materiale,
+cambiando solo quale modello scrive i requisiti e quale li giudica. Tre
+modelli: uno economico, uno intermedio, uno molto capace. I risultati vanno da
+tre a sette requisiti accettati su nove — quindi la scelta del modello sposta
+gli esiti più di qualunque modifica alle istruzioni fatta finora.
+
+Ma le tre cose che abbiamo imparato sono più interessanti del punteggio.
+
+**La prima.** Il giro di revisione — il generatore scrive, il valutatore
+critica, il generatore corregge — è la ragione per cui abbiamo costruito due
+agenti invece di uno. Ebbene: **non si accende quasi mai.** Se i due modelli
+sono uguali, il secondo approva il primo e il giro non parte. Se il giudice è
+più debole dell'autore, idem. Serve una differenza di capacità fra i due, e
+nemmeno troppo grande: quando il giudice è molto più forte, l'autore capisce la
+critica ma non è capace di scrivere di meglio.
+
+**La seconda, che non ci aspettavamo.** Lo stesso modello è molto più severo
+quando giudica che quando scrive. Una frase che aveva accettato senza obiezioni
+— l'aveva scritta lui — l'ha poi bocciata, definendola «circolare», quando gli
+è arrivata da un altro modello. Non è un errore: è che nessuno l'aveva mai
+guardata con occhio critico, perché chi l'aveva scritta era la stessa persona
+che doveva criticarla. È l'argomento più concreto che abbiamo trovato per usare
+**due modelli diversi**, ed è anche quello che dicono i lavori accademici che
+avevamo letto a luglio.
+
+**La terza.** La configurazione che accetta più requisiti non è quella che
+produce i requisiti migliori. Mettendo il modello più capace ovunque se ne
+ottengono sette su nove, ma passano al primo colpo e nessuno li corregge.
+Mettendo il modello intermedio a scrivere e quello capace a giudicare se ne
+ottengono sei, però tre sono passati attraverso una correzione — e sono
+visibilmente più precisi. Ne abbiamo preso uno come esempio: la prima versione
+diceva che il sistema deve «proteggere da input malevoli che potrebbero
+compromettere l'applicazione»; il giudice ha fatto notare che è una definizione
+circolare, perché descrive l'input attraverso il danno che dovrebbe evitare. La
+seconda versione dice esattamente cosa il sistema non deve fare con quel
+contenuto. È tutta un'altra cosa.
+
+Abbiamo scritto tutto questo in un documento a parte, con gli esempi veri, così
+fra un mese ci si capisce ancora qualcosa.
+
+**Una nota sui costi**, perché è controintuitiva: la configurazione migliore è
+anche la più cara, e non di poco. Non perché usi il modello più costoso — anzi,
+usa quello intermedio per metà del lavoro — ma perché **un giudice che ha
+qualcosa da correggere scrive il doppio**. Le correzioni si pagano. Sessantacinque
+centesimi per nove Pull Request: sostenibile ora, da tenere d'occhio quando le
+Pull Request saranno mille.
+
+**Dove ci siamo fermati.** Sempre allo stesso punto di ieri, ed è giusto così:
+tutti i giudizi di qualità qui sopra sono nostri, a occhio. Finché non
+compiliamo le schede del gold standard — ognuno la sua, senza guardare cosa ha
+prodotto il sistema — non possiamo dire se quella configurazione è davvero
+migliore o se semplicemente ci piace di più. Le schede sono pronte da stamattina.
+Tocca a noi.
+
+---
+
 ## Situazione a fine agosto
 
 Cosa c'è:
 
 - lo stato dell'arte, diviso in quattro aree;
-- sette decisioni di progetto documentate;
+- sette decisioni di progetto documentate, tenute aggiornate man mano che le
+  prove ci facevano cambiare idea;
 - lo script che prepara i dati, con la sua piccola interfaccia;
 - lo schema interattivo del flusso di lavoro;
 - il sistema funzionante dal file di ingresso ai requisiti generati, provato
-  sulle Pull Request reali con due modelli diversi;
-- una serie di controlli automatici che verificano tutto senza costi.
+  sulle Pull Request reali con tutte le combinazioni dei tre modelli;
+- un controllo d'ingresso che non usa modelli e costa zero;
+- due agenti che si parlano davvero: il secondo ricorda cosa ha già detto, e il
+  primo può dichiarare di non riuscire invece di inventare;
+- il conteggio dei consumi e la stima dei costi per ogni esecuzione;
+- un documento che spiega cosa cambia al cambiare dei modelli, con gli esempi;
+- le schede per costruire il gold standard, pronte da compilare;
+- centosessantaquattro controlli automatici che verificano tutto senza costi.
 
 Cosa manca:
 
-- il gold standard: decidere noi, caso per caso, quale sia l'esito corretto
-  per le nove Pull Request del campione;
+- il gold standard: decidere noi, caso per caso, quale sia l'esito corretto per
+  le nove Pull Request del campione — è la cosa che blocca tutto il resto,
+  perché senza non possiamo dire se una modifica migliora o solo cambia;
+- ripetere le esecuzioni più volte, ora che la variabilità non si può più
+  spegnere, per capire quanto delle differenze fra modelli sia vera differenza
+  e quanto sia rumore;
 - la memoria dei requisiti già approvati e il modo per consultarla;
-- la scelta definitiva del progetto e delle Pull Request da usare;
-- il riferimento costruito a mano per la valutazione;
-- l'esecuzione delle prove e la raccolta dei risultati.
+- la scelta definitiva del progetto e delle Pull Request da usare: nove sono
+  poche, e cinque di quelle nove le ha scritte un programma automatico con lo
+  stesso testo di base;
+- l'esecuzione delle prove finali e la raccolta dei risultati.
 
-Prossimo passo concreto: costruire il gold standard sulle nove Pull Request del
-campione. Senza un riferimento condiviso su quale sia l'esito corretto, ogni
-ulteriore modifica alle istruzioni degli agenti cambia i risultati senza che
-si possa dire se li migliora.
+Prossimo passo concreto: **compilare le schede del gold standard**, ognuno la
+propria, senza guardare cosa ha prodotto il sistema. È un lavoro noioso di
+mezza giornata, ed è l'unico che trasforma tutte le impressioni raccolte finora
+in qualcosa di misurabile.

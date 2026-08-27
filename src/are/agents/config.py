@@ -16,7 +16,14 @@ from pathlib import Path
 from .exceptions import InvalidWorkflowConfigError, WorkflowConfigFileError
 
 _SECTION = "workflow"
-_REQUIRED_KEYS = frozenset({"assessment_enabled", "memory_enabled", "max_generation_attempts"})
+_REQUIRED_KEYS = frozenset(
+    {
+        "assessment_enabled",
+        "memory_enabled",
+        "max_generation_attempts",
+        "min_evidence_characters",
+    }
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -26,6 +33,7 @@ class WorkflowConfig:
     assessment_enabled: bool = True
     memory_enabled: bool = False
     max_generation_attempts: int = 3
+    min_evidence_characters: int = 50
 
 
 def load_workflow_config(path: str | os.PathLike[str]) -> WorkflowConfig:
@@ -85,14 +93,22 @@ def load_workflow_config(path: str | os.PathLike[str]) -> WorkflowConfig:
             f'[{_SECTION}] "max_generation_attempts" deve essere un intero maggiore o uguale a 1'
         )
 
+    min_evidence = data.get("min_evidence_characters")
+    if "min_evidence_characters" in data and (type(min_evidence) is not int or min_evidence < 0):
+        issues.append(
+            f'[{_SECTION}] "min_evidence_characters" deve essere un intero maggiore o uguale a 0'
+        )
+
     if issues:
         raise InvalidWorkflowConfigError(config_path, issues)
 
     assert isinstance(assessment_enabled, bool)
     assert isinstance(memory_enabled, bool)
     assert type(max_attempts) is int
+    assert type(min_evidence) is int
     return WorkflowConfig(
         assessment_enabled=assessment_enabled,
         memory_enabled=memory_enabled,
         max_generation_attempts=max_attempts,
+        min_evidence_characters=min_evidence,
     )

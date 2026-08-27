@@ -12,17 +12,17 @@ Flusso:
                  ▼
              generate ←──────────────────┐
                  │                       │ REVISE (entro il limite)
-                 ▼                       │
-           retrieve_memory               │
-                 │                       │
-                 ▼                       │
-              assess ────────────────────┤
-                 │                       │
-        ┌────────┼────────┐              │
-        ▼        ▼        ▼              │
-     accept  mark_rejected  mark_failed_validation
-        │        │        │
-        └────────┴────────┴──→ END
+                 ├── rinuncia ────┐      │
+                 ▼                ▼      │
+           retrieve_memory     assess ───┤
+                 │                │      │
+                 └────────────────┤      │
+                                  │      │
+        ┌────────┬────────┬───────┴──────┘
+        ▼        ▼        ▼        ▼
+     accept  rejected  failed_validation  not_extractable
+        │        │        │        │
+        └────────┴────────┴────────┴──→ END
 """
 
 from __future__ import annotations
@@ -45,6 +45,7 @@ from .routing import (
     NODE_RETRIEVE_MEMORY,
     route_after_assessment,
     route_after_extractability,
+    route_after_generation,
     route_after_retrieval,
 )
 from .state import (
@@ -87,7 +88,11 @@ def build_workflow(
         route_after_extractability,
         [NODE_GENERATE, NODE_MARK_NOT_EXTRACTABLE],
     )
-    builder.add_edge(NODE_GENERATE, NODE_RETRIEVE_MEMORY)
+    builder.add_conditional_edges(
+        NODE_GENERATE,
+        partial(route_after_generation, workflow_config=config),
+        [NODE_RETRIEVE_MEMORY, NODE_ASSESS, NODE_MARK_NOT_EXTRACTABLE],
+    )
     builder.add_conditional_edges(
         NODE_RETRIEVE_MEMORY,
         partial(route_after_retrieval, workflow_config=config),
@@ -96,7 +101,13 @@ def build_workflow(
     builder.add_conditional_edges(
         NODE_ASSESS,
         partial(route_after_assessment, workflow_config=config),
-        [NODE_ACCEPT, NODE_GENERATE, NODE_MARK_REJECTED, NODE_MARK_FAILED_VALIDATION],
+        [
+            NODE_ACCEPT,
+            NODE_GENERATE,
+            NODE_MARK_REJECTED,
+            NODE_MARK_FAILED_VALIDATION,
+            NODE_MARK_NOT_EXTRACTABLE,
+        ],
     )
     builder.add_edge(NODE_ACCEPT, END)
     builder.add_edge(NODE_MARK_NOT_EXTRACTABLE, END)
@@ -124,11 +135,10 @@ class _WorkflowNodes:
         if assessment is not None and assessment.decision is AssessmentDecision.REVISE:
             feedback = assessment.feedback
 
-        candidate = self._deps.generator.generate(
-            state["pull_request"], previous_candidate, feedback
-        )
+        outcome = self._deps.generator.generate(state["pull_request"], previous_candidate, feedback)
         return {
-            "candidate_requirement": candidate,
+            "candidate_requirement": outcome.requirement,
+            "generation_refusal": outcome.refusal_reason,
             "generation_attempt": state["generation_attempt"] + 1,
         }
 
@@ -146,13 +156,24 @@ class _WorkflowNodes:
         assessor = self._deps.assessor
         assert assessor is not None
         candidate = state["candidate_requirement"]
-        assert candidate is not None
+        refusal = state["generation_refusal"]
+        assert candidate is not None or refusal is not None
 
-        result = assessor.assess(state["pull_request"], candidate, state["retrieved_requirements"])
+        # Lo storico dei tentativi già valutati permette al valutatore di
+        # restare coerente con sé stesso e di accorgersi se il ciclo non
+        # converge (Decisione 3.5, §19).
+        result = assessor.assess(
+            state["pull_request"],
+            candidate,
+            state["retrieved_requirements"],
+            state["iteration_history"],
+            refusal,
+        )
         record = IterationRecord(
             attempt=state["generation_attempt"],
             candidate=candidate,
             assessment=result,
+            refusal_reason=refusal,
         )
         return {
             "assessment": result,

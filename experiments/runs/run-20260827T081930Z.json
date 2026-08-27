@@ -1,0 +1,489 @@
+{
+  "run": {
+    "generated_at": "2026-08-27T08:19:30.001275+00:00",
+    "input_file": "experiments/samples/sample-scrapy_scrapy.json",
+    "pull_requests": 9,
+    "prompt_version": "v1",
+    "workflow": {
+      "assessment_enabled": true,
+      "memory_enabled": false,
+      "max_generation_attempts": 3
+    },
+    "llm": {
+      "generation": {
+        "model": "claude-haiku-4-5",
+        "resolved_model": "claude-haiku-4-5-20251001",
+        "max_tokens": 1024,
+        "effort": null
+      },
+      "assessment": {
+        "model": "claude-haiku-4-5",
+        "resolved_model": "claude-haiku-4-5-20251001",
+        "max_tokens": 2048,
+        "effort": null
+      }
+    },
+    "usage": {
+      "per_agent": {
+        "generation": {
+          "model": "claude-haiku-4-5",
+          "calls": 19,
+          "input_tokens": 37618,
+          "output_tokens": 709,
+          "estimated_cost_usd": 0.041163
+        },
+        "assessment": {
+          "model": "claude-haiku-4-5",
+          "calls": 19,
+          "input_tokens": 43277,
+          "output_tokens": 4233,
+          "estimated_cost_usd": 0.064442
+        }
+      },
+      "total_calls": 38,
+      "total_input_tokens": 80895,
+      "total_output_tokens": 4942,
+      "total_estimated_cost_usd": 0.105605,
+      "pricing_reference_date": "2026-08-26"
+    }
+  },
+  "summary": {
+    "FAILED_VALIDATION": 4,
+    "ACCEPTED": 2,
+    "REJECTED": 2,
+    "ERROR": 1
+  },
+  "results": [
+    {
+      "pr_id": "scrapy-scrapy-pr-6869",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6869,
+      "timestamp": "2025-06-06T13:17:48+00:00",
+      "title": "Fix: Dangerous Code Execution Function Could Allow External Attacks in scrapy/shell.py",
+      "final_status": "FAILED_VALIDATION",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 960 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 3,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall prevent arbitrary code execution through external input in the shell module.",
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement names a specific file (shell module) which is an implementation detail. Removing it leaves a valid behaviour, so the requirement is stated at the wrong level.",
+              "The requirement is overly general and does not reflect what the evidence establishes. The evidence identifies a specific mechanism (eval() of dynamic content) and a specific condition (content definable by external sources), not arbitrary code execution prevention in general."
+            ],
+            "unsupported_claims": [
+              "arbitrary code execution",
+              "shell module"
+            ],
+            "missing_information": [
+              "the specific mechanism: eval() is applied to external input"
+            ],
+            "revision_instructions": [
+              "Remove the reference to the shell module: it is implementation detail.",
+              "Replace 'arbitrary code execution through external input' with a requirement that reflects the evidence: that dynamically evaluated content must not be definable by external sources, or equivalently, that evaluated content must be controlled by the application, not by external inputs."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "The system shall prevent external input from being evaluated as code.",
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement is stated at too general a level. The evidence identifies a specific function (eval()) in a specific file (scrapy/shell.py) that was the subject of remediation, but the requirement does not ground itself in that context.",
+              "The requirement uses 'external input' without clarifying what counts as external in this system. The evidence does not establish a general policy about all external input, only a remediation of a specific dangerous pattern."
+            ],
+            "unsupported_claims": [
+              "a general policy preventing external input from being evaluated"
+            ],
+            "missing_information": [
+              "the specific function or feature that was remediated (eval in shell.py)",
+              "what 'external input' means in this context - the evidence only establishes that eval() was being used dangerously"
+            ],
+            "revision_instructions": [
+              "Narrow the scope to the specific behaviour change: the evidence documents remediation of eval() in scrapy/shell.py, not a system-wide policy on external input evaluation.",
+              "State the behaviour at the level the evidence supports: that dynamic content in the specific affected code path is no longer evaluated unsafely, or equivalently, that the specific dangerous use of eval() has been eliminated."
+            ]
+          }
+        },
+        {
+          "attempt": 3,
+          "candidate": "The system shall not use eval() to execute dynamically constructed code in the shell module.",
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement names a specific function (eval()) which is an implementation detail. Removing it leaves no behaviour statement.",
+              "The requirement prescribes a mechanism (not using eval()) rather than stating the security behaviour that must be guaranteed."
+            ],
+            "unsupported_claims": [
+              "eval()",
+              "dynamically constructed code",
+              "the shell module"
+            ],
+            "missing_information": [],
+            "revision_instructions": [
+              "Remove the reference to eval() and the shell module: these are implementation details, not observable behaviours.",
+              "State instead the security behaviour that must hold: that external input cannot be executed as code, or cannot cause arbitrary code execution. The evidence establishes that a vulnerability exists where external input could reach code execution; the requirement should state what must be guaranteed about external input."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6870",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6870,
+      "timestamp": "2025-06-06T13:19:55+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 978 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall prevent user-supplied input from being used to load arbitrary code modules.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall prevent user-supplied input from being used to load arbitrary code modules.",
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6875",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6875,
+      "timestamp": "2025-06-07T03:44:46+00:00",
+      "title": "Fix typo in cmdline.py comment: 'a argument' -> 'an argument'",
+      "final_status": "REJECTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 579 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system's documentation and comments shall use correct English grammar and spelling.",
+          "assessment": {
+            "decision": "REJECT",
+            "issues": [
+              "The evidence describes a comment-only change with no effect on code logic or functionality. The candidate requirement describes a quality attribute of documentation, not an observable required behaviour of the system.",
+              "A requirement must state what the system does, provides, or guarantees from outside the code. A requirement that documentation be well-formed is a constraint on the development process or codebase quality, not a behaviour observable from the system's public interface."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6879",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6879,
+      "timestamp": "2025-06-09T02:36:45+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 978 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall prevent user input from being used to dynamically load arbitrary code modules.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall prevent user input from being used to dynamically load arbitrary code modules.",
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6880",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6880,
+      "timestamp": "2025-06-09T02:45:09+00:00",
+      "title": "Fix: Unsafe Data Processing Method Allows Malicious Code Execution in scrapy/exporters.py",
+      "final_status": "FAILED_VALIDATION",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 989 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 3,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall prevent malicious code execution through unsafe deserialization of data.",
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement describes a security outcome at too high a level of abstraction for the evidence. The evidence specifies that pickle deserialization is the vulnerability being addressed; the requirement speaks only of 'unsafe deserialization' generically.",
+              "The requirement does not state what the system actually does to prevent the vulnerability. The evidence indicates a replacement serialization mechanism was applied, but the requirement omits this observable change."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [
+              "The specific serialization mechanism change: the evidence states that pickle is being replaced with JSON or similar text-based format, but the requirement does not capture this shift in how data is serialized/deserialized."
+            ],
+            "revision_instructions": [
+              "Specify the observable change in behaviour: that the system uses a safe serialization format (such as JSON) instead of pickle for data deserialization, rather than stating only a security outcome.",
+              "Ground the requirement in the specific vulnerability addressed: the evidence focuses on pickle deserialization specifically, not deserialization in general."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "The system shall deserialize data using a text-based serialization format instead of pickle.",
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement prescribes a mechanism (text-based serialization format) rather than stating the required behaviour.",
+              "The evidence does not specify which text-based format was chosen or should be used.",
+              "The requirement names the mechanism (pickle vs text-based format) rather than the security property being achieved."
+            ],
+            "unsupported_claims": [
+              "text-based serialization format",
+              "instead of pickle"
+            ],
+            "missing_information": [
+              "The specific format used (JSON or other), though the evidence mentions JSON as an example but does not confirm what was implemented."
+            ],
+            "revision_instructions": [
+              "Remove the mechanism details (pickle, text-based serialization format): the evidence establishes the security property, not the implementation technique chosen.",
+              "State the behaviour the fix guarantees at the level of the public interface: what the system does to prevent code execution vulnerabilities when deserializing data, without naming the serialization library or format."
+            ]
+          }
+        },
+        {
+          "attempt": 3,
+          "candidate": "The system shall prevent arbitrary code execution when deserializing data.",
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement prescribes a mechanism (preventing arbitrary code execution during deserialization) rather than stating the observable behaviour that results from fixing the vulnerability.",
+              "The evidence describes a change from pickle to an alternative serialization format, but the requirement does not reflect what the system will actually do - it states only what it will not permit."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [
+              "The evidence indicates that pickle was replaced with JSON or a similar text-based format, which is the actual functional change and should appear in the requirement."
+            ],
+            "revision_instructions": [
+              "Restate the requirement to describe what the system shall do (use an alternative serialization format) rather than what it shall prevent.",
+              "Include the mechanism change if it is the observable behaviour: the use of a text-based serialization format instead of pickle for data that was previously pickled."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6881",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6881,
+      "timestamp": "2025-06-09T02:51:14+00:00",
+      "title": "Fix: Unsafe XML Processing Library Could Allow Malicious Attacks in scrapy/http/request/rpc.py",
+      "final_status": "FAILED_VALIDATION",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 852 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 3,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall use a safe XML-RPC processing library to prevent malicious attacks through XML processing vulnerabilities.",
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement names a specific library (defusedxml) indirectly through 'safe XML-RPC processing library', which is an implementation detail. Removing this reference still leaves a meaningful behaviour statement about preventing attacks.",
+              "The requirement states a prevention goal ('prevent malicious attacks') which is a quality attribute or outcome, rather than a specific required behaviour that can be observed at the system's interface."
+            ],
+            "unsupported_claims": [
+              "malicious attacks through XML processing vulnerabilities - the evidence describes a vulnerability class but does not establish what attacks the system must now prevent or how they would be observable"
+            ],
+            "missing_information": [
+              "the scope: the evidence identifies a specific file (scrapy/http/request/rpc.py) and suggests the change applies to XML-RPC processing in that context, but the requirement does not clarify whether this applies system-wide or only to that module"
+            ],
+            "revision_instructions": [
+              "Remove 'safe' and the reference to a specific library category: these are implementation details. State instead what the system must do with XML-RPC processing.",
+              "Replace the prevention goal with an observable behaviour. The evidence establishes that a library change was made to handle XML-RPC; state what the system now does with XML-RPC input, not what attacks it prevents."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "The system shall process XML-RPC requests using a security-hardened XML parser.",
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement names a specific library (defusedxml) indirectly by calling it 'security-hardened', which is an implementation detail. The evidence establishes that a safer parsing mechanism should be used, but does not specify the library.",
+              "The requirement uses the term 'XML-RPC requests' but the evidence indicates the change affects how XML is processed in general within the RPC module, not necessarily a behaviour that processes requests from external callers."
+            ],
+            "unsupported_claims": [
+              "security-hardened XML parser (the evidence names defusedxml as the mechanism, not as a behavioural characteristic)"
+            ],
+            "missing_information": [],
+            "revision_instructions": [
+              "Remove 'security-hardened' as a characterization of the mechanism; state instead the behaviour that results: protection from XML vulnerabilities.",
+              "Clarify the scope: the evidence shows the vulnerability is in how XML is processed within the RPC code, but does not establish that the system processes XML-RPC requests from external callers. State the behaviour at the level the evidence supports."
+            ]
+          }
+        },
+        {
+          "attempt": 3,
+          "candidate": "The system shall process XML using a mechanism that is protected against XML vulnerabilities.",
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement names a library (defusedxml) is removed by the removal test, but the evidence specifies that defusedxml.xmlrpc is the required mechanism, not just any protected mechanism. The evidence is prescriptive about the solution.",
+              "The requirement uses the vague term 'mechanism' and 'protected against XML vulnerabilities' which obscures what behaviour is actually required. The evidence indicates a specific library change, not a general security posture."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [
+              "The evidence specifies that the XML processing relates to xmlrpc functionality, not XML processing in general.",
+              "The evidence identifies this as a remediation of unsafe xmlrpc use, replacing it with defusedxml.xmlrpc, which is more specific than 'a mechanism that is protected'."
+            ],
+            "revision_instructions": [
+              "Specify that xmlrpc processing is the object, not XML processing in general.",
+              "Replace 'mechanism that is protected against XML vulnerabilities' with a statement of what the system now does or guarantees about xmlrpc. Consider whether the observable behaviour is that the system no longer exposes certain vulnerabilities, or that it uses a specific library - but state the behaviour, not the library choice."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6899",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6899,
+      "timestamp": "2025-06-21T01:51:04+00:00",
+      "title": "Fix typing of dynamic `request` attribute on `Failure` with a cast subclass",
+      "final_status": "REJECTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 937 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 2,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall allow static type checkers to correctly infer the type of the `request` attribute on `Failure` objects without raising type errors.",
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement names implementation details (static type checkers, the `request` attribute, `Failure` objects) that should be abstraction-independent. Removing these names leaves no meaningful behaviour.",
+              "The requirement describes a typing mechanism rather than observable system behaviour. Static type checking is a development-time concern, not a runtime requirement that an external observer can verify."
+            ],
+            "unsupported_claims": [
+              "static type checkers",
+              "the `request` attribute",
+              "`Failure` objects"
+            ],
+            "missing_information": [],
+            "revision_instructions": [
+              "Reconsider whether this change establishes a required behaviour at all. The evidence states that runtime behaviour is unchanged and the purpose is to satisfy static analysis tools during development. This is a quality attribute of the codebase, not a functional requirement of the system as observed by its callers or users.",
+              "If a functional requirement exists, state it at the level of what callers of the public interface can observe, independent of typing mechanisms or internal implementation details."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "The system shall not establish a functional requirement for this change, as the Pull Request addresses only static type checking during development and does not alter observable runtime behaviour.",
+          "assessment": {
+            "decision": "REJECT",
+            "issues": [
+              "The candidate is not a requirement at all—it is a meta-statement asserting that no requirement can be written. A requirement states what the system must do; this statement refuses to state one."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6936",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6936,
+      "timestamp": "2025-07-03T00:58:14+00:00",
+      "title": "feat(settings): Change default SCHEDULER_PRIORITY_QUEUE (closes #6924)",
+      "final_status": "FAILED_VALIDATION",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 600 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 3,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall use DownloaderAwarePriorityQueue as the default scheduler priority queue.",
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement names a specific implementation (DownloaderAwarePriorityQueue) rather than stating the behaviour that queue provides.",
+              "The evidence describes a change of mechanism (which queue is default), not a user-facing behaviour. The requirement should express what the queue enables or guarantees, not which queue is used."
+            ],
+            "unsupported_claims": [
+              "DownloaderAwarePriorityQueue"
+            ],
+            "missing_information": [],
+            "revision_instructions": [
+              "Remove the name of the queue implementation. It is an internal mechanism whose selection is an implementation decision.",
+              "State instead the behaviour or capability that the queue provides to the scheduler, which the evidence only implies but does not explicitly describe. Determine from the context what problem this queue solves or what guarantee it provides."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "The system shall prioritize scheduler requests based on downloader availability.",
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement prescribes a mechanism (DownloaderAwarePriorityQueue) rather than stating the observable behaviour. The evidence does not establish what 'downloader availability' means or how the prioritization changes the system's observable output.",
+              "The evidence describes a configuration change with backward compatibility confirmed, but does not specify what new prioritization behaviour users or callers will observe."
+            ],
+            "unsupported_claims": [
+              "prioritize scheduler requests based on downloader availability"
+            ],
+            "missing_information": [],
+            "revision_instructions": [
+              "Remove the mechanism reference (DownloaderAwarePriorityQueue). The evidence does not establish what observable change in scheduler behaviour results from this configuration change.",
+              "State the behaviour at the level the evidence supports: the evidence establishes only that a default configuration was changed. Without knowing what the new queue does differently or how it affects scheduling outcomes, a grounded requirement cannot be written from this evidence alone."
+            ]
+          }
+        },
+        {
+          "attempt": 3,
+          "candidate": "The system shall use DownloaderAwarePriorityQueue as the default scheduler priority queue.",
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement names a specific implementation (DownloaderAwarePriorityQueue) rather than stating the behaviour it provides. The evidence shows that a mechanism was changed, but does not explain what problem it solves or what observable behaviour users or callers should expect from this queue instead of the previous default."
+            ],
+            "unsupported_claims": [
+              "DownloaderAwarePriorityQueue"
+            ],
+            "missing_information": [],
+            "revision_instructions": [
+              "Remove the specific queue name. It is an implementation detail. State instead the observable behaviour that distinguishes this queue from the previous default - what it does differently, in terms of scheduling or priority handling that a caller or user would notice."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6947",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6947,
+      "timestamp": "2025-07-10T15:21:39+00:00",
+      "title": "Ban more imports that import twisted.internet.reactor.",
+      "error": "AgentResponseError: Risposta non valida dall'agente \"assessment\": JSON non valido (Expecting ',' delimiter). Ricevuto: \"```json {   \"decision\": \"REVISE\",   \"issues\": [     \"The requirement uses implementation terminology ('imports') without stating the observable behaviour it produces.\",     \"The requirement does not s...\""
+    }
+  ]
+}
