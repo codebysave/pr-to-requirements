@@ -119,6 +119,13 @@ frase fino a non lasciare più niente.
 **La lezione:** un valutatore troppo debole non è "permissivo". È *rigido*, e la
 rigidità senza giudizio distrugge i requisiti invece di migliorarli.
 
+> **Aggiornamento del 27 agosto (pomeriggio).** Questa lezione va corretta: vale
+> su *questo* campione, non su Haiku in generale. Sullo stesso identico codice e
+> con gli stessi prompt, ma su un corpus di 46 Pull Request scritte da persone,
+> Haiku→Haiku accetta il 74% invece del 33% e il ciclo si accende su 4 casi su 46
+> invece di 5 su 9. Non è rigido: **non ha un criterio stabile**, e si lascia
+> spingere dalla direzione dell'evidenza. Il §9 riporta la verifica.
+
 ### 4.2 Haiku -> Opus — il maestro severo e l'allievo che non sa scrivere
 
 Salto netto: da 3 a 6 requisiti accettati, cambiando **soltanto il valutatore**.
@@ -400,6 +407,13 @@ sicurezza** con lo stesso testo di boilerplate. Non è un campione
 rappresentativo: è quello che avevamo per far girare il sistema. Le differenze
 fra modelli misurate qui potrebbero non reggere su Pull Request scritte da umani.
 
+> **Aggiornamento del 27 agosto (pomeriggio).** Non "potrebbero": **non
+> reggono**. La verifica su un secondo corpus (§9) mostra che il campione sposta
+> l'esito più del modello. Le cinque prove di questo documento restano valide
+> come confronto *fra loro* — la variabile cambiata era una sola — ma i valori
+> assoluti sono legati al campione scrapy e non vanno citati come proprietà dei
+> modelli.
+
 ### 7.5 Un limite tecnico da alzare
 
 `max_tokens = 2048` per il valutatore è troppo basso: nella prova 3 ha tagliato
@@ -436,6 +450,133 @@ tecniche (verificare che la pipeline giri) perché costa un quinto.
 
 ---
 
+## 9. Verifica su un secondo corpus — e cosa ci ha costretto a correggere
+
+*Aggiunto il 27 agosto, pomeriggio. Report:
+`experiments/runs/run-20260827T140858Z.json`.*
+
+Le cinque prove dei paragrafi precedenti girano tutte sullo stesso campione. Per
+capire quanto contasse il campione, abbiamo lanciato **Haiku→Haiku su un corpus
+diverso**: 46 Pull Request di `All-Hands-AI/OpenHands`, scritte da persone,
+media 1.422 caratteri fra titolo e corpo. Codice, prompt e modelli identici.
+
+### 9.1 Il corpus conta più del modello
+
+| | scrapy (9 PR) | OpenHands (46 PR) |
+|---|---|---|
+| Accettati | 3 (33%) | **34 (74%)** |
+| Non estraibili | 6 (67%) | 11 (24%) |
+| Rifiutati | 0 | 1 |
+| PR che entrano nel ciclo | 5 su 9 (55%) | **4 su 46 (8,7%)** |
+| Chiamate per PR | 3,1 | 2,26 |
+| Costo | $0,11 | $0,38 |
+
+Cambiando **soltanto il corpus**, lo stesso modello passa dal 33% al 74% di
+accettazione. È uno scarto più grande di qualunque differenza fra modelli
+misurata al §3.
+
+La spiegazione sta nel materiale: su scrapy 5 Pull Request su 9 erano generate da
+uno scanner di sicurezza e dicevano «è stata rilevata una vulnerabilità e la
+remediation automatica ha applicato le modifiche necessarie» senza mai dire
+*quali*. Su un'evidenza così, rifiutare è il comportamento corretto.
+
+**Conseguenza metodologica:** i numeri assoluti delle cinque prove sono una
+proprietà del campione, non dei modelli. Il confronto *fra* le cinque prove resta
+valido, perché la variabile cambiata era una sola.
+
+### 9.2 I difetti non spariscono, si spostano
+
+Il conteggio migliora, la qualità no. Su OpenHands Haiku accetta cose che i
+criteri della Decisione 3.1 escludono:
+
+- **#9601** — *"The system shall use the RuntimeStatus enum for all runtime status
+  codes instead of hardcoded strings."* Puro meccanismo: nessun test black-box
+  distingue un enum da una stringa. E «instead of hardcoded strings» descrive la
+  modifica, non il sistema (§8.2).
+- **#9616** — *"When the linter runs, the system shall report an error if it
+  detects string literals that have not been localized."* Qui il «sistema» è il
+  linter. È una regola di sviluppo, la stessa categoria che Opus aveva rifiutato
+  su scrapy #6947. Nella stessa esecuzione, però, **#9639** (upgrade di Node)
+  viene correttamente scartato come «parametro di configurazione, non
+  comportamento richiesto».
+- **#9693** — *"Where a configuration field specifies whether to initialize a git
+  repository, the system shall initialize a git repository according to that
+  configuration."* Tautologia, stessa forma vuota di `apply a default priority
+  queue implementation` (§4.1). Passata al primo colpo, mentre **#9724**, sulla
+  stessa funzionalità, viene revisionata e ne esce un requisito preciso.
+- **#9661**, **#9633**, **#9634** — contengono «properly» e «correctly», che non
+  sono verificabili.
+- **#9586** — tre obblighi in una sola frase.
+
+Le **11 rinunce**, invece, sono quasi tutte fondate: template vuoti, aggiornamenti
+di metadati, version bump, type hint, fix descritti in modo troppo vago. Ne emerge
+un'asimmetria utile: **quando Haiku rifiuta ha quasi sempre ragione, quando
+accetta spesso no.** Andrebbe usato come filtro negativo, non come produttore.
+
+### 9.3 L'esperimento naturale: cinque componenti UI
+
+Il corpus contiene cinque Pull Request praticamente identiche — stesso template,
+circa 530 caratteri, titolo `feat(ui): <nome> component`. Non l'avevamo
+progettato, ma è l'esperimento controllato migliore che abbiamo.
+
+| PR | Componente | Esito | Tentativi |
+|---|---|---|---|
+| #9590 | spinner | **NOT_EXTRACTABLE** | 1 |
+| #9591 | dialog | **REJECTED** | 1 |
+| #9632 | toast | **ACCEPTED**, mantiene «toast component» | 1 |
+| #9673 | tab | **ACCEPTED**, rimosso «tab component» | 3 |
+| #9712 | select | **ACCEPTED**, rimosso «select component» | 3 |
+
+**Cinque input equivalenti, quattro esiti diversi, in un'unica esecuzione.**
+
+E il valutatore si contraddice apertamente. Su **#9591**:
+
+> *Un componente dialog è un blocco costruttivo interno. Il requisito non dice
+> cosa utenti o chiamanti vedono fare al sistema.*
+
+Su **#9673**, nello stesso report:
+
+> *Il ragionamento dello scrittore presuppone che la Pull Request debba descrivere
+> il comportamento a parole. Non è così: il fatto che un componente tab sia stato
+> implementato stabilisce il comportamento per riferimento a ciò che un componente
+> del genere fa. Un requisito può essere fondato nella natura dell'artefatto, non
+> solo in una descrizione esplicita.*
+
+Le due affermazioni sono incompatibili. E la seconda apre una domanda che **non
+abbiamo mai deciso**: *il significato convenzionale di un artefatto nominato conta
+come evidenza?* Se sì, «tab component» fonda un requisito; se no, nessuno dei
+cinque lo fonda. Il sistema ha risposto in entrambi i modi.
+
+C'è poi un'incoerenza secca e non difendibile: #9632 conserva «toast component»
+nel requisito finale, mentre #9673 e #9712 sono stati costretti in due giri a
+togliere «tab component» e «select component» perché «nominano il meccanismo».
+
+### 9.4 Il percorso di rinuncia funziona
+
+Tre delle quattro attivazioni del ciclo partono da una **rinuncia del generatore
+ribaltata dal valutatore** — la funzionalità aggiunta il 27 agosto mattina. Il
+caso migliore è **#9617**: il generatore rinuncia («è un refactoring interno, il
+comportamento visibile non cambia»), il valutatore dissente distinguendo il
+meccanismo dal comportamento che abilita, e ne esce
+
+> *The system shall present user-facing text in the frontend according to the
+> user's language selection or locale.*
+
+È la prima volta che quel percorso produce valore misurabile. Il rovescio è che lo
+stesso meccanismo ha prodotto anche i casi discutibili di #9673 e #9712.
+
+### 9.5 Cosa cambia per il piano
+
+1. **Il gold standard va costruito su OpenHands, non su scrapy.** Le schede in
+   `experiments/gold-standard/` sono tarate sulle 9 Pull Request sbagliate.
+2. **Serve una regola esplicita sui componenti nominati**, in un senso o
+   nell'altro. Oggi il sistema decide caso per caso.
+3. Le cinque prove del §3 **non vanno ripetute**: hanno già dato quello che
+   potevano dare. La domanda successiva non è più «quale modello», è «rispetto a
+   quale riferimento».
+
+---
+
 ## Appendice — Dove sono i dati
 
 | Prova | File |
@@ -445,6 +586,13 @@ tecniche (verificare che la pipeline giri) perché costa un quinto.
 | 3. Opus -> Sonnet | `experiments/runs/run-20260827T132820Z.json` |
 | 4. Opus -> Opus | `experiments/runs/run-20260827T130619Z.json` |
 | 5. Sonnet -> Opus | `experiments/runs/run-20260827T133248Z.json` |
+
+Le cinque prove usano `experiments/samples/sample-scrapy_scrapy.json` (9 PR). La
+verifica del §9 usa un campione diverso:
+
+| Verifica | File |
+|---|---|
+| 6. Haiku -> Haiku su OpenHands (46 PR) | `experiments/runs/run-20260827T140858Z.json` |
 
 Ogni file contiene, per ciascuna Pull Request, tutti i tentativi con il testo del
 candidato e il feedback integrale del valutatore. Le citazioni di questo

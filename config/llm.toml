@@ -21,4 +21,8 @@ max_tokens = 1024
 
 [assessment]
 model = "claude-haiku-4-5"
-max_tokens = 2048
+# 4096 e non 2048: nell'esecuzione del 2026-08-27 con Sonnet valutatore la
+# risposta è stata troncata a metà JSON e la Pull Request è finita in ERROR.
+# Il valutatore, quando ha correzioni da motivare, scrive molto più del
+# generatore: il suo limite va tenuto largo.
+max_tokens = 4096

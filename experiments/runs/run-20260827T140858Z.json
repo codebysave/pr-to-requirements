@@ -1,0 +1,1401 @@
+{
+  "run": {
+    "generated_at": "2026-08-27T14:08:58.577032+00:00",
+    "input_file": "experiments/samples/sample-All-Hands-AI_OpenHands.json",
+    "pull_requests": 46,
+    "prompt_version": "v1",
+    "workflow": {
+      "assessment_enabled": true,
+      "memory_enabled": false,
+      "max_generation_attempts": 3
+    },
+    "llm": {
+      "generation": {
+        "model": "claude-haiku-4-5",
+        "resolved_model": "claude-haiku-4-5-20251001",
+        "max_tokens": 1024,
+        "effort": null
+      },
+      "assessment": {
+        "model": "claude-haiku-4-5",
+        "resolved_model": "claude-haiku-4-5-20251001",
+        "max_tokens": 2048,
+        "effort": null
+      }
+    },
+    "usage": {
+      "per_agent": {
+        "generation": {
+          "model": "claude-haiku-4-5",
+          "calls": 52,
+          "input_tokens": 145348,
+          "output_tokens": 2127,
+          "estimated_cost_usd": 0.155983
+        },
+        "assessment": {
+          "model": "claude-haiku-4-5",
+          "calls": 52,
+          "input_tokens": 197793,
+          "output_tokens": 5153,
+          "estimated_cost_usd": 0.223558
+        }
+      },
+      "total_calls": 104,
+      "total_input_tokens": 343141,
+      "total_output_tokens": 7280,
+      "total_estimated_cost_usd": 0.379541,
+      "pricing_reference_date": "2026-08-26"
+    }
+  },
+  "summary": {
+    "ACCEPTED": 34,
+    "NOT_EXTRACTABLE": 11,
+    "REJECTED": 1
+  },
+  "results": [
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9581",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9581,
+      "timestamp": "2025-07-07T11:51:47+00:00",
+      "title": "fix(frontend): NaN is shown on the conversation card",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 1537 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall not display NaN on the conversation card.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall not display NaN on the conversation card.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9586",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9586,
+      "timestamp": "2025-07-07T15:30:48+00:00",
+      "title": "Added run_in_loop method",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 3092 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall execute a coroutine in a specified event loop, automatically detecting whether the coroutine's loop differs from the current loop and using direct execution when loops match or cross-loop execution when they differ.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall execute a coroutine in a specified event loop, automatically detecting whether the coroutine's loop differs from the current loop and using direct execution when loops match or cross-loop execution when they differ.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9590",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9590,
+      "timestamp": "2025-07-07T17:21:51+00:00",
+      "title": "feat(ui): spinner component",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 535 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence states that a spinner component was implemented but does not describe what the system must do with it or how users or callers will interact with it.",
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The evidence describes the addition of a component to the codebase but establishes no required behaviour of the system. A spinner component is a mechanism; the evidence does not specify what the system must do when a spinner is present, what state it represents, what triggers it, or what observable effect it produces for users or callers. No functional requirement can be grounded without at least one of these details."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9591",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9591,
+      "timestamp": "2025-07-07T17:54:54+00:00",
+      "title": "feat(ui): dialog component",
+      "final_status": "REJECTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 532 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall provide a dialog component that can be used in the user interface.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "REJECT",
+            "issues": [
+              "The evidence establishes no required behaviour of the system. It describes the implementation of a component (a mechanism), not what the system must do when observed from outside.",
+              "A dialog component is an internal building block. The requirement does not state what users or callers see the system do as a result of having it."
+            ],
+            "unsupported_claims": [
+              "any required behaviour that would be observable from outside the system"
+            ],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9593",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9593,
+      "timestamp": "2025-07-07T19:07:02+00:00",
+      "title": "Create publishing job for npm package",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 865 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The Pull Request provides no description of what behaviour the publishing job must provide or guarantee; it only mentions creating the job and provides setup instructions without stating what the system must do.",
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The Pull Request title states only that a publishing job will be created, but provides no description of what the job does, what it publishes, under what conditions it runs, or what behaviour is guaranteed.",
+              "The Pull Request body is a template with all descriptive fields left blank: no end-user description, no summary of what the PR does, no design decisions, no issue links.",
+              "The only concrete content is a docker run command for local testing, which is a mechanism, not a required behaviour.",
+              "No behaviour of the system - observable from outside the code - can be grounded in the evidence provided."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9596",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9596,
+      "timestamp": "2025-07-07T20:02:50+00:00",
+      "title": "chore(ui): Fix late redirects in settings page",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 1121 caratteri: la valutazione prosegue",
+      "accepted_requirement": "When a user refreshes the browser while viewing the Credits or API Keys pages under Settings, the system shall remain on the page being viewed rather than redirecting to the User Settings page.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When a user refreshes the browser while viewing the Credits or API Keys pages under Settings, the system shall remain on the page being viewed rather than redirecting to the User Settings page.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9601",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9601,
+      "timestamp": "2025-07-08T01:57:11+00:00",
+      "title": "All Runtime Status Codes should be in the RuntimeStatus enum",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 2991 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall use the RuntimeStatus enum for all runtime status codes instead of hardcoded strings.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall use the RuntimeStatus enum for all runtime status codes instead of hardcoded strings.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9603",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9603,
+      "timestamp": "2025-07-08T02:39:27+00:00",
+      "title": "fix(frontend): The terminal is still shown when connecting to an agent.",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 1360 caratteri: la valutazione prosegue",
+      "accepted_requirement": "When a user creates a new conversation, the system shall not display the terminal until after the agent is fully connected and ready.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When a user creates a new conversation, the system shall not display the terminal until after the agent is fully connected and ready.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9606",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9606,
+      "timestamp": "2025-07-08T03:30:00+00:00",
+      "title": "fix(frontend): The suggested tasks section only filters the tasks by the repository’s title.",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 1975 caratteri: la valutazione prosegue",
+      "accepted_requirement": "When filtering tasks in the Suggested Tasks section, the system shall consider both the repository title and its Git provider to uniquely identify repositories.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When filtering tasks in the Suggested Tasks section, the system shall consider both the repository title and its Git provider to uniquely identify repositories.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9608",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9608,
+      "timestamp": "2025-07-08T05:06:21+00:00",
+      "title": "refactor(frontend): Show the git providers on the suggested tasks",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 2105 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall display the Git provider icon alongside each repository title in the Suggested Tasks section.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall display the Git provider icon alongside each repository title in the Suggested Tasks section.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9614",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9614,
+      "timestamp": "2025-07-08T11:57:43+00:00",
+      "title": "fix(frontend): Jupyter tab requires page refresh to display content",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 1821 caratteri: la valutazione prosegue",
+      "accepted_requirement": "When a user navigates to the Jupyter tab after executing IPython commands, the system shall immediately display the executed commands and their output without requiring a page refresh.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When a user navigates to the Jupyter tab after executing IPython commands, the system shall immediately display the executed commands and their output without requiring a page refresh.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9616",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9616,
+      "timestamp": "2025-07-08T13:20:28+00:00",
+      "title": "chore(eslint): Extend eslint rules to error on `i18next/on no-literal-string`",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 1951 caratteri: la valutazione prosegue",
+      "accepted_requirement": "When the linter runs, the system shall report an error if it detects string literals that have not been localized.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When the linter runs, the system shall report an error if it detects string literals that have not been localized.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9617",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9617,
+      "timestamp": "2025-07-08T13:49:16+00:00",
+      "title": "fix: replace string literals with i18n translations",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 1339 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall present user-facing text in the frontend according to the user's language selection or locale.",
+      "generation_attempts": 2,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence describes a code change to use internationalization keys instead of hardcoded strings, but does not establish what behaviour the system must guarantee to an external observer—it describes an internal refactoring that leaves user-facing behaviour unchanged.",
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The writer's reasoning conflates two distinct things: the mechanism of change (replacing strings with i18n keys) and the behaviour it enables. The evidence does support an observable behaviour that an external observer—a user of the frontend in different languages—can verify.",
+              "The evidence states 'Ensure proper internationalization support across the frontend', which expresses a required behaviour: the system must present user-facing text in the appropriate language. This is testable from outside without inspecting source code: a user can observe that interface strings respond to language selection."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": [
+              "The evidence establishes that the system must support internationalization across the frontend. Recognize that replacing hardcoded strings with i18n keys is the mechanism by which this behaviour is achieved, not the behaviour itself.",
+              "State the required behaviour: the system must present user-facing text according to the user's language selection or locale. This is observable and testable without reading the source code."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "The system shall present user-facing text in the frontend according to the user's language selection or locale.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9619",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9619,
+      "timestamp": "2025-07-08T14:45:22+00:00",
+      "title": "chore: Update codeowners",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 852 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence describes only a change to code ownership metadata without establishing any observable behaviour that the system must guarantee.",
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The evidence describes only a change to CODEOWNERS metadata. The pull request title explicitly states 'chore: Update codeowners', and the body is a template with no description of functional changes, no end-user friendly description, and no explanation of what behaviour changes. A CODEOWNERS file is a configuration artifact that assigns review responsibility to team members; updating it does not establish any required behaviour that can be observed from outside the system - it is an administrative change with no impact on what the system does or provides to its users."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9632",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9632,
+      "timestamp": "2025-07-09T13:08:24+00:00",
+      "title": "feat(ui): toast component",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 531 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall provide a toast component for displaying temporary notifications to users.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall provide a toast component for displaying temporary notifications to users.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9633",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9633,
+      "timestamp": "2025-07-09T13:59:35+00:00",
+      "title": "Fixes for docker nested runtime",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 980 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall correctly map file store paths that contain a tilde (~) character when running in a nested Docker environment.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall correctly map file store paths that contain a tilde (~) character when running in a nested Docker environment.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9634",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9634,
+      "timestamp": "2025-07-09T14:05:13+00:00",
+      "title": "Fixes for docker nested runtime",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 1905 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall properly resolve and mount file store paths containing home directory references in the Docker nested runtime.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall properly resolve and mount file store paths containing home directory references in the Docker nested runtime.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9636",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9636,
+      "timestamp": "2025-07-09T14:23:12+00:00",
+      "title": "Feature/dynamic spinner variant",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 859 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The Pull Request provides no description of the problem being solved or the functionality being introduced; the template sections for these are blank.",
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The Pull Request template includes sections for 'End-user friendly description of the problem this fixes or functionality this introduces' and 'Summarize what the PR does, explaining any non-trivial design decisions', but both are blank.",
+              "The title alone ('Feature/dynamic spinner variant') names a component and a change type but does not state what behaviour the system must exhibit or what the user-facing effect is.",
+              "Without a description of the problem or the functionality introduced, no required behaviour can be established from the evidence."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9637",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9637,
+      "timestamp": "2025-07-09T14:47:42+00:00",
+      "title": "add log-level",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 874 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall allow users to set the log level through a command-line argument.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall allow users to set the log level through a command-line argument.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9638",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9638,
+      "timestamp": "2025-07-09T14:56:49+00:00",
+      "title": "Feature/clean dynamic spinner",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 481 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The Pull Request provides no description of what the change does, what problem it solves, or what behaviour the system must exhibit; it contains only unchecked checkboxes and empty sections.",
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The Pull Request contains only a template with unchecked checkboxes and empty sections. No description of the problem, the solution, the design decisions, or the resulting system behaviour is provided. The title 'Feature/clean dynamic spinner' names a component and suggests an action (cleaning), but does not establish what behaviour the system must have or what problem it solves. Without evidence of required behaviour, no functional requirement can be grounded."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9639",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9639,
+      "timestamp": "2025-07-09T15:59:50+00:00",
+      "title": "chore(frontend): Ugprade Node requirement to v22 LTS",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 982 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence describes a change to a build configuration (Node.js version requirement) but does not establish any observable behaviour that the system must guarantee; it only states that a version constraint was updated.",
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The evidence describes a change to the build configuration: updating the minimum Node.js version in package.json and removing a version from the CI matrix. No observable behaviour of the system is established. A version constraint is a configuration parameter, not a required behaviour. The system's external behaviour—what it does, provides, or guarantees—is unaffected by this change; only the toolchain requirement changed. No black-box test could verify this change without inspecting configuration files rather than observing system behaviour."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9650",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9650,
+      "timestamp": "2025-07-10T14:30:23+00:00",
+      "title": "Show all verified OpenHands models at once when OpenHands provider is selected",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 1217 caratteri: la valutazione prosegue",
+      "accepted_requirement": "When the OpenHands provider is selected in the CLI, the system shall display all verified OpenHands models at once.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When the OpenHands provider is selected in the CLI, the system shall display all verified OpenHands models at once.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9661",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9661,
+      "timestamp": "2025-07-10T21:07:18+00:00",
+      "title": "Fixes or vscode token / url not being present",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 2043 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall ensure that the VSCode server token and URL are properly available to users when accessing the integrated VSCode editor functionality.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall ensure that the VSCode server token and URL are properly available to users when accessing the integrated VSCode editor functionality.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9666",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9666,
+      "timestamp": "2025-07-11T14:00:58+00:00",
+      "title": "Fix issue #9655: [Bug]: CodeActAgent is incompatible with xAI Grok-4 due to hardcoded stop parameter",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 1757 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall not include the stop parameter in API calls to the xAI Grok-4 model.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall not include the stop parameter in API calls to the xAI Grok-4 model.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9667",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9667,
+      "timestamp": "2025-07-11T14:23:21+00:00",
+      "title": "hotfix(ui): Agent message that includes codeblocks overflows",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 1218 caratteri: la valutazione prosegue",
+      "accepted_requirement": "When an agent message contains code blocks, the system shall display the message without overflow.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When an agent message contains code blocks, the system shall display the message without overflow.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9672",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9672,
+      "timestamp": "2025-07-11T17:34:48+00:00",
+      "title": "Fix: VSCode using Temp Directory in Nested Mode",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 927 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence provides only a vague indication of the problem ('prevent confusion with temp directory') and describes a 'check' without explaining what behaviour the system must guarantee or what condition it prevents.",
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The Pull Request provides no functional behaviour that can be observed from outside the system. The title mentions 'VSCode using Temp Directory in Nested Mode' and the body states 'Added check to prevent confusion with temp directory', but neither specifies what the system must do, what condition is checked, what outcome is guaranteed, or how a user or caller would observe the effect.",
+              "The evidence lacks essential details: what is the confusion being prevented, under what circumstances does it occur, what does the check do when it detects the condition, and what is the resulting behaviour the system guarantees? Without these, no black-box test can be written.",
+              "The Pull Request body is largely empty (design decisions section is blank, no issue link), which leaves no other source of information about the required behaviour."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9673",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9673,
+      "timestamp": "2025-07-11T17:49:09+00:00",
+      "title": "feat(ui): tab component",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 523 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall allow users to select and switch between multiple content panels.",
+      "generation_attempts": 3,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence states that a tab component was implemented but does not describe what behaviour the system must provide when users interact with tabs.",
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The evidence is minimal, but it does establish that a tab component exists and can be interacted with. A tab component is a UI element with defined behaviour: it allows selection among multiple panels, typically by clicking on tab labels, and displays the corresponding content. This behaviour is grounded in the artefact itself - a 'tab component' has a recognisable purpose in UI design.",
+              "The writer's reasoning assumes that the Pull Request must describe the behaviour in words. It does not: the fact that a tab component was implemented establishes the behaviour by reference to what such a component does. A requirement can be grounded in the nature of the artefact, not only in explicit description."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": [
+              "A tab component is a UI control with defined behaviour: it allows users to select and switch between multiple content panels. State this behaviour as a requirement, grounded in what the implementation provides."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "The system shall allow users to select and switch between multiple content panels using a tab component.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement names 'tab component', which is an implementation mechanism. Removing it leaves 'The system shall allow users to select and switch between multiple content panels', which is a valid behaviour at a higher level of abstraction.",
+              "The requirement states the mechanism rather than the behaviour it provides."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": [
+              "Remove the reference to 'tab component': this names the implementation mechanism rather than the behaviour.",
+              "State the behaviour alone: what the user can do when interacting with the system to access multiple content panels."
+            ]
+          }
+        },
+        {
+          "attempt": 3,
+          "candidate": "The system shall allow users to select and switch between multiple content panels.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9676",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9676,
+      "timestamp": "2025-07-11T22:36:32+00:00",
+      "title": "Fix issue where user gets stuck on TOS page",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 1474 caratteri: la valutazione prosegue",
+      "accepted_requirement": "If a user encounters an error while accepting the Terms of Service, the system shall redirect the user to the root path rather than leaving them on the Terms of Service page.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "If a user encounters an error while accepting the Terms of Service, the system shall redirect the user to the root path rather than leaving them on the Terms of Service page.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9684",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9684,
+      "timestamp": "2025-07-13T17:06:39+00:00",
+      "title": "Fix event stream regression by improving search_events to not rely on cached cur_id",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 3042 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall return all existing events when retrieving conversation events via the REST API, regardless of whether new events were added after the EventStore instance was created or whether multiple EventStore instances exist for the same conversation.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall return all existing events when retrieving conversation events via the REST API, regardless of whether new events were added after the EventStore instance was created or whether multiple EventStore instances exist for the same conversation.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9693",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9693,
+      "timestamp": "2025-07-14T15:31:00+00:00",
+      "title": "Introduced config field to determine whether to init a git repo",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 1155 caratteri: la valutazione prosegue",
+      "accepted_requirement": "Where a configuration field specifies whether to initialize a git repository, the system shall initialize a git repository according to that configuration.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "Where a configuration field specifies whether to initialize a git repository, the system shall initialize a git repository according to that configuration.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9698",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9698,
+      "timestamp": "2025-07-14T22:10:49+00:00",
+      "title": "Set vscode to use the correct workspace directory",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 929 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence states that a fix was applied to vscode's workspace directory usage, but does not specify what the correct behaviour should be or what problem the incorrect behaviour caused.",
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The Pull Request title and body state that a fix was applied ('Set vscode to use the correct workspace directory') but provide no information about what the correct behaviour is, what was wrong before, or what observable difference results from the change.",
+              "The end-user description ('Fix for vscode using the correct workspace directory') restates the problem domain without establishing any required behaviour.",
+              "No design decisions are explained, no issues are linked, and no technical detail is given that would ground a requirement in observable system behaviour.",
+              "Without knowing what 'correct' means in this context—what vscode should do with the workspace directory, what it was doing before, or what a caller or user would observe—no requirement can be written that the evidence supports."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9708",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9708,
+      "timestamp": "2025-07-15T14:05:43+00:00",
+      "title": "Fix Likert Scale displaying \"Star Rating\" text instead of star icons",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 2029 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall display star icons in the Likert Scale component, showing filled stars for selected ratings and outline stars for unselected ratings.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall display star icons in the Likert Scale component, showing filled stars for selected ratings and outline stars for unselected ratings.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9712",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9712,
+      "timestamp": "2025-07-15T14:53:37+00:00",
+      "title": "feat(ui): select component",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 532 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall allow users to select a value from a list of options.",
+      "generation_attempts": 3,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence states that a select component was implemented but does not describe what behaviour the system must provide when users interact with it.",
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The evidence does establish a required behaviour: a select component is a UI control with well-known interactions. The writer is correct that the Pull Request does not detail those interactions, but the absence of detail does not mean the behaviour is absent.",
+              "A select component has an observable, testable behaviour from outside the code: it allows a user to choose from a list of options and returns the chosen value. This is grounded in the title and the statement that the component was implemented.",
+              "The evidence is general, not detailed, but a general requirement is appropriate when general evidence is all that is available. The requirement should state what the system must do at the level the evidence supports."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": [
+              "A select component has intrinsic behaviour: it presents options to the user and allows selection of one. State this behaviour, without inventing specifics the evidence does not provide such as the number of options, the interaction style, or how the selection is submitted."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "The system shall allow users to select a value from a list of options using a select component.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement names the implementation mechanism (select component) rather than stating the behaviour it provides. Removing 'select component' leaves 'The system shall allow users to select a value from a list of options', which is a complete behaviour statement."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": [
+              "Remove the reference to 'select component': this names the mechanism, not the behaviour. The evidence supports the behaviour of value selection from options, independent of which UI control implements it."
+            ]
+          }
+        },
+        {
+          "attempt": 3,
+          "candidate": "The system shall allow users to select a value from a list of options.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9714",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9714,
+      "timestamp": "2025-07-15T15:20:53+00:00",
+      "title": "Fix VSCode extension installation in remote environments",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 1284 caratteri: la valutazione prosegue",
+      "accepted_requirement": "When the CLI is running in a VSCode remote environment, the system shall skip automatic VSCode extension installation and inform the user how to install the extension manually.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When the CLI is running in a VSCode remote environment, the system shall skip automatic VSCode extension installation and inform the user how to install the extension manually.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9718",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9718,
+      "timestamp": "2025-07-15T16:38:49+00:00",
+      "title": "Feat: Add current working directory to LLM instructions",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 1709 caratteri: la valutazione prosegue",
+      "accepted_requirement": "When the LLM receives instructions, the system shall include the current working directory in the initial system instructions so the LLM knows where to place generated files.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When the LLM receives instructions, the system shall include the current working directory in the initial system instructions so the LLM knows where to place generated files.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9724",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9724,
+      "timestamp": "2025-07-15T19:20:25+00:00",
+      "title": "Fix: Keep the existing behavior in the docker command.",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 1301 caratteri: la valutazione prosegue",
+      "accepted_requirement": "Where the INIT_GIT_IN_EMPTY_WORKSPACE environment variable is defined, the system shall initialize a git repository in the workspace when the docker command is executed without a selected repository.",
+      "generation_attempts": 2,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When the docker command is executed without a selected repository, the system shall initialize a git repository in the workspace.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement states the behaviour unconditionally, but the evidence indicates it should occur only when a specific environment variable is set. The evidence says the system needs to add INIT_GIT_IN_EMPTY_WORKSPACE to preserve existing behaviour, meaning git init happens conditionally, not always.",
+              "The requirement omits the condition that the environment variable must be defined, which is functional information the evidence provides."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [
+              "the condition that the INIT_GIT_IN_EMPTY_WORKSPACE environment variable must be set, which the evidence establishes as the trigger for this behaviour"
+            ],
+            "revision_instructions": [
+              "Restate the requirement so that git initialization occurs only when the INIT_GIT_IN_EMPTY_WORKSPACE environment variable is defined, as the evidence describes."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "Where the INIT_GIT_IN_EMPTY_WORKSPACE environment variable is defined, the system shall initialize a git repository in the workspace when the docker command is executed without a selected repository.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9728",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9728,
+      "timestamp": "2025-07-15T22:00:19+00:00",
+      "title": "Fix dictionary changed size during iteration error in override_provider_tokens_with_custom_secret",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 2867 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall remove provider tokens that have corresponding custom secrets without raising a runtime error.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall remove provider tokens that have corresponding custom secrets without raising a runtime error.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9729",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9729,
+      "timestamp": "2025-07-15T22:24:03+00:00",
+      "title": "Fix newline display in frontend UI",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 2703 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall display single newlines in chat messages and other text content as line breaks rather than collapsing them into spaces.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall display single newlines in chat messages and other text content as line breaks rather than collapsing them into spaces.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9741",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9741,
+      "timestamp": "2025-07-16T15:26:45+00:00",
+      "title": "Fix file duplication in system prompt",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 1972 caratteri: la valutazione prosegue",
+      "accepted_requirement": "When the agent modifies a file, the system shall edit the existing file rather than creating a new file with a different suffix.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When the agent modifies a file, the system shall edit the existing file rather than creating a new file with a different suffix.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9748",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9748,
+      "timestamp": "2025-07-16T16:42:07+00:00",
+      "title": "Feat add cwd to context 2",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 853 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The Pull Request provides no description of what functionality is introduced or what problem is solved, only a template with empty sections and a Docker command.",
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The Pull Request body contains only an empty template with checkboxes and placeholder sections. The 'End-user friendly description' section is blank, the summary section is blank, and the issues section is blank.",
+              "The only substantive content is a Docker command, which describes how to run the code but not what behaviour the change introduces.",
+              "No required behaviour can be identified from the evidence provided."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9752",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9752,
+      "timestamp": "2025-07-16T22:32:45+00:00",
+      "title": "Add conditional rendering of auth providers based on server config",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 970 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall render login buttons only for authentication providers that are configured on the server.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall render login buttons only for authentication providers that are configured on the server.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9754",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9754,
+      "timestamp": "2025-07-17T04:08:47+00:00",
+      "title": "Fix type hint: add | None to first element of create_default_mcp_server_config return tuple",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 916 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence describes a change to type annotations only, which is a static typing concern that cannot be observed from outside the code and therefore does not establish a functional requirement about system behaviour.",
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The evidence describes a change to type annotations only. Type hints are read during static analysis and checking, not observed from outside the system during execution. A black-box test cannot fail before the change and pass after it by observing external behaviour, because the change affects only what the type checker reports, not what the system does. The evidence does not establish that any external behaviour changed or must change."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9760",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9760,
+      "timestamp": "2025-07-17T13:09:17+00:00",
+      "title": "Fix: Add navigation to conversation page after clicking Launch button on task suggestions",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 1511 caratteri: la valutazione prosegue",
+      "accepted_requirement": "When a user clicks the Launch button on a suggested task and a conversation is successfully created, the system shall navigate the user to the conversation page.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When a user clicks the Launch button on a suggested task and a conversation is successfully created, the system shall navigate the user to the conversation page.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9770",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9770,
+      "timestamp": "2025-07-17T16:31:22+00:00",
+      "title": "chore: bump to 1.0.0-beta.5",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 855 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The Pull Request is a version bump with no description of what functionality changed or what problems were fixed, making it impossible to identify any required behaviour.",
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The Pull Request provides only a version number change (1.0.0-beta.5) with no description of functionality, fixes, or behaviour changes.",
+              "The end-user friendly description, problem statement, and design decisions sections are all empty.",
+              "No issues are linked that would provide context for the changes.",
+              "A version bump alone is a build/release action, not a statement of required behaviour that can be observed from outside the system."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9778",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9778,
+      "timestamp": "2025-07-17T22:10:36+00:00",
+      "title": "Fix MCP tool timeout causing agent to stall indefinitely",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 1336 caratteri: la valutazione prosegue",
+      "accepted_requirement": "When an MCP tool call times out, the system shall return an error observation to the agent instead of stalling indefinitely.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When an MCP tool call times out, the system shall return an error observation to the agent instead of stalling indefinitely.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9779",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9779,
+      "timestamp": "2025-07-17T22:20:19+00:00",
+      "title": "Fix MCP tool timeout causing agent to stall indefinitely",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 1612 caratteri: la valutazione prosegue",
+      "accepted_requirement": "When an MCP tool call times out and raises an exception, the system shall return an error observation to the agent instead of stalling, allowing the agent to continue processing.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When an MCP tool call times out and raises an exception, the system shall return an error observation to the agent instead of stalling, allowing the agent to continue processing.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    }
+  ]
+}
