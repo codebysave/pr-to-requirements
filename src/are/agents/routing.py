@@ -30,6 +30,22 @@ def route_after_extractability(state: RequirementState) -> str:
     return NODE_MARK_NOT_EXTRACTABLE
 
 
+def route_after_generation(state: RequirementState, workflow_config: WorkflowConfig) -> str:
+    """Instrada l'esito della generazione.
+
+    Una rinuncia motivata non attraversa il recupero dalla memoria, che
+    presuppone un candidato da confrontare: va direttamente al valutatore, che
+    la conferma o la respinge. Senza valutatore attivo non c'è chi possa
+    verificarla, e la Pull Request si chiude come non estraibile.
+    """
+
+    if state["generation_refusal"] is not None:
+        if workflow_config.assessment_enabled:
+            return NODE_ASSESS
+        return NODE_MARK_NOT_EXTRACTABLE
+    return NODE_RETRIEVE_MEMORY
+
+
 def route_after_retrieval(state: RequirementState, workflow_config: WorkflowConfig) -> str:
     """Con il valutatore attivo si passa all'assessment; senza, il candidato
     del Generation Agent diventa direttamente l'output (configurazione delle
@@ -52,6 +68,8 @@ def route_after_assessment(state: RequirementState, workflow_config: WorkflowCon
     if result is None:
         raise ValueError("Routing invocato prima dell'assessment.")
 
+    if result.decision is AssessmentDecision.CONFIRM_NOT_EXTRACTABLE:
+        return NODE_MARK_NOT_EXTRACTABLE
     if result.decision is AssessmentDecision.ACCEPT:
         return NODE_ACCEPT
     if result.decision is AssessmentDecision.REJECT:

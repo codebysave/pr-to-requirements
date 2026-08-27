@@ -11,6 +11,7 @@ from are.agents import (
     Extractability,
     ExtractabilityResult,
     FinalStatus,
+    GenerationOutcome,
     RetrievedRequirement,
     WorkflowConfig,
     WorkflowDependencies,
@@ -63,7 +64,21 @@ class ScriptedGenerator:
 
     def generate(self, pull_request, previous_candidate, feedback):
         self.calls.append((previous_candidate, feedback))
-        return f"The system shall allow users to export reports. (v{len(self.calls)})"
+        return GenerationOutcome(
+            requirement=f"The system shall allow users to export reports. (v{len(self.calls)})"
+        )
+
+
+class RefusingGenerator:
+    """Rinuncia sempre, con motivazione."""
+
+    def __init__(self, reason: str = "the evidence establishes no behaviour"):
+        self.reason = reason
+        self.calls = 0
+
+    def generate(self, pull_request, previous_candidate, feedback):
+        self.calls += 1
+        return GenerationOutcome(refusal_reason=self.reason)
 
 
 class ScriptedAssessor:
@@ -72,9 +87,15 @@ class ScriptedAssessor:
     def __init__(self, decisions: Sequence[AssessmentResult]):
         self.decisions = list(decisions)
         self.calls: list[tuple[str, tuple[RetrievedRequirement, ...]]] = []
+        self.histories: list[tuple] = []
+        self.refusals: list[str | None] = []
 
-    def assess(self, pull_request, candidate, retrieved_requirements):
+    def assess(
+        self, pull_request, candidate, retrieved_requirements, history=(), generation_refusal=None
+    ):
         self.calls.append((candidate, tuple(retrieved_requirements)))
+        self.histories.append(tuple(history))
+        self.refusals.append(generation_refusal)
         return self.decisions[len(self.calls) - 1]
 
 
@@ -259,3 +280,98 @@ def test_build_workflow_requires_assessor_when_assessment_enabled() -> None:
 
     with pytest.raises(ValueError, match="assessor"):
         build_workflow(dependencies, WorkflowConfig(assessment_enabled=True))
+
+
+def test_assessor_receives_the_history_of_previous_attempts() -> None:
+    """Senza i propri verdetti precedenti il valutatore si contraddice."""
+    assessor = ScriptedAssessor([REVISE, REVISE, ACCEPT])
+
+    run_workflow(assessor=assessor)
+
+    primo, secondo, terzo = assessor.histories
+    assert primo == ()
+    # Al secondo giro vede il primo tentativo con il verdetto che aveva dato.
+    assert len(secondo) == 1
+    assert secondo[0].attempt == 1
+    assert secondo[0].assessment is REVISE
+    assert "(v1)" in secondo[0].candidate
+    # Al terzo li vede entrambi, in ordine.
+    assert [record.attempt for record in terzo] == [1, 2]
+
+
+# --- rinuncia motivata del generatore ---------------------------------------
+
+CONFIRM = AssessmentResult(AssessmentDecision.CONFIRM_NOT_EXTRACTABLE)
+
+
+def test_refusal_is_submitted_to_the_assessor() -> None:
+    """La rinuncia non chiude da sola: la valuta il revisore."""
+    generator = RefusingGenerator("the change leaves behaviour unchanged")
+    assessor = ScriptedAssessor([CONFIRM])
+
+    final = run_workflow(generator=generator, assessor=assessor)
+
+    assert assessor.calls[0][0] is None  # nessun candidato da giudicare
+    assert assessor.refusals[0] == "the change leaves behaviour unchanged"
+    assert final["final_status"] is FinalStatus.NOT_EXTRACTABLE
+
+
+def test_refusal_skips_memory_retrieval() -> None:
+    """Senza candidato non c'è nulla da confrontare con la memoria."""
+    retriever = RecordingRetriever()
+
+    run_workflow(
+        generator=RefusingGenerator(),
+        assessor=ScriptedAssessor([CONFIRM]),
+        retriever=retriever,
+        config=WorkflowConfig(memory_enabled=True),
+    )
+
+    assert retriever.calls == []
+
+
+def test_assessor_may_reject_the_refusal_and_send_it_back() -> None:
+    """Se il revisore dissente, il generatore riprova con la spiegazione."""
+    generator = ScriptedGenerator()
+    refusing = RefusingGenerator()
+
+    class PrimaRinunciaPoiGenera:
+        def __init__(self):
+            self.chiamate = 0
+
+        def generate(self, pull_request, previous_candidate, feedback):
+            self.chiamate += 1
+            if self.chiamate == 1:
+                return refusing.generate(pull_request, previous_candidate, feedback)
+            return generator.generate(pull_request, previous_candidate, feedback)
+
+    misto = PrimaRinunciaPoiGenera()
+    final = run_workflow(generator=misto, assessor=ScriptedAssessor([REVISE, ACCEPT]))
+
+    assert misto.chiamate == 2
+    assert final["final_status"] is FinalStatus.ACCEPTED
+    # Il feedback del revisore raggiunge il generatore al secondo giro.
+    assert generator.calls[0][1] is REVISE.feedback
+
+
+def test_refusal_is_recorded_in_the_history() -> None:
+    assessor = ScriptedAssessor([CONFIRM])
+
+    final = run_workflow(generator=RefusingGenerator("nothing observable"), assessor=assessor)
+
+    record = final["iteration_history"][0]
+    assert record.candidate is None
+    assert record.refusal_reason == "nothing observable"
+    assert record.assessment is CONFIRM
+
+
+def test_refusal_without_assessor_ends_as_not_extractable() -> None:
+    """Senza valutatore nessuno può verificare la rinuncia: si chiude lì."""
+    final = run_workflow(
+        generator=RefusingGenerator(),
+        assessor=None,
+        config=WorkflowConfig(assessment_enabled=False),
+    )
+
+    assert final["final_status"] is FinalStatus.NOT_EXTRACTABLE
+    assert final["accepted_requirement"] is None

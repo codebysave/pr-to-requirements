@@ -23,7 +23,6 @@ from are.llm import LLMClient
 from .prompts import (
     ASSESSMENT_AGENT,
     DEFAULT_PROMPT_VERSION,
-    EXTRACTABILITY_AGENT,
     GENERATION_AGENT,
     load_prompt,
 )
@@ -31,14 +30,13 @@ from .state import (
     AssessmentDecision,
     AssessmentFeedback,
     AssessmentResult,
-    Extractability,
-    ExtractabilityResult,
+    GenerationOutcome,
+    IterationRecord,
     RetrievedRequirement,
 )
 
 logger = logging.getLogger(__name__)
 
-MAX_REASON_LENGTH = 500
 _PREVIEW_LENGTH = 200
 
 
@@ -127,6 +125,29 @@ def _format_pull_request(pull_request: PullRequestRecord) -> str:
     return f"PULL REQUEST TITLE:\n{pull_request.title}\n\nPULL REQUEST BODY:\n{pull_request.body}"
 
 
+def _format_history(history: Sequence[IterationRecord]) -> str:
+    """Riassume i tentativi già valutati: candidato prodotto e verdetto dato."""
+
+    blocchi: list[str] = []
+    for record in history:
+        if record.candidate is None:
+            righe = [f"Attempt {record.attempt}: no requirement produced - {record.refusal_reason}"]
+        else:
+            righe = [f'Attempt {record.attempt}: "{record.candidate}"']
+        assessment = record.assessment
+        if assessment is not None:
+            righe.append(f"  You decided: {assessment.decision.value}")
+            for etichetta, valori in (
+                ("You reported", assessment.feedback.issues),
+                ("You flagged as unsupported", assessment.feedback.unsupported_claims),
+                ("You asked for", assessment.feedback.revision_instructions),
+            ):
+                for valore in valori:
+                    righe.append(f"  {etichetta}: {valore}")
+        blocchi.append("\n".join(righe))
+    return "\n\n".join(blocchi)
+
+
 def _format_feedback(feedback: AssessmentFeedback) -> str:
     blocks: list[str] = []
     for label, values in (
@@ -138,43 +159,6 @@ def _format_feedback(feedback: AssessmentFeedback) -> str:
         if values:
             blocks.append(f"{label}:\n" + "\n".join(f"- {value}" for value in values))
     return "\n\n".join(blocks) if blocks else "No specific feedback provided."
-
-
-class LLMExtractabilityChecker:
-    """Verifica preliminare di estraibilità tramite LLM (Decisione 3.5, §6)."""
-
-    def __init__(self, client: LLMClient, prompt_version: str = DEFAULT_PROMPT_VERSION) -> None:
-        self._client = client
-        self._prompt_version = prompt_version
-        self._system = load_prompt(EXTRACTABILITY_AGENT, prompt_version)
-
-    @property
-    def prompt_version(self) -> str:
-        return self._prompt_version
-
-    def check(self, pull_request: PullRequestRecord) -> ExtractabilityResult:
-        logger.info("  [GATE]    verifico se la PR consente di identificare un comportamento...")
-        user_message = _format_pull_request(pull_request)
-        response = self._client.complete(system=self._system, user_message=user_message)
-        _log_exchange("GATE", self._system, user_message, response.text)
-        data = parse_json_object(response.text, EXTRACTABILITY_AGENT)
-
-        raw_decision = _require_non_empty_string(
-            data, "extractability", EXTRACTABILITY_AGENT, response.text
-        ).upper()
-        try:
-            decision = Extractability(raw_decision)
-        except ValueError as exc:
-            raise AgentResponseError(
-                EXTRACTABILITY_AGENT,
-                f'esito "{raw_decision}" non riconosciuto',
-                response.text,
-            ) from exc
-
-        raw_reason = data.get("reason", "")
-        reason = raw_reason.strip()[:MAX_REASON_LENGTH] if isinstance(raw_reason, str) else ""
-        logger.info("  [GATE]    -> %s: %s", decision.value, reason or "(nessuna motivazione)")
-        return ExtractabilityResult(decision=decision, reason=reason)
 
 
 class LLMRequirementGenerator:
@@ -194,7 +178,7 @@ class LLMRequirementGenerator:
         pull_request: PullRequestRecord,
         previous_candidate: str | None,
         feedback: AssessmentFeedback | None,
-    ) -> str:
+    ) -> GenerationOutcome:
         if feedback is None:
             logger.info("  [GENERA]  scrivo il requisito dalla sola evidenza della PR...")
         else:
@@ -205,9 +189,17 @@ class LLMRequirementGenerator:
         _log_exchange("GENERA", self._system, user_message, response.text)
 
         data = parse_json_object(response.text, GENERATION_AGENT)
+
+        # La rinuncia motivata è un esito legittimo (Decisione 3.1, §11.10):
+        # sarà il valutatore a confermarla o a respingerla.
+        motivo = data.get("cannot_ground")
+        if isinstance(motivo, str) and motivo.strip():
+            logger.info("  [GENERA]  -> nessun requisito ricostruibile: %s", motivo.strip())
+            return GenerationOutcome(refusal_reason=motivo.strip())
+
         requisito = _require_non_empty_string(data, "requirement", GENERATION_AGENT, response.text)
         logger.info('  [GENERA]  -> "%s"', requisito)
-        return requisito
+        return GenerationOutcome(requirement=requisito)
 
     def _build_message(
         self,
@@ -244,16 +236,23 @@ class LLMRequirementAssessor:
         pull_request: PullRequestRecord,
         candidate: str,
         retrieved_requirements: Sequence[RetrievedRequirement],
+        history: Sequence[IterationRecord] = (),
+        generation_refusal: str | None = None,
     ) -> AssessmentResult:
+        contesto = []
+        if history:
+            contesto.append(f"{len(history)} tentativi precedenti")
         if retrieved_requirements:
-            logger.info(
-                "  [VALUTA]  esamino il requisito, con %d requisiti storici a confronto...",
-                len(retrieved_requirements),
-            )
+            contesto.append(f"{len(retrieved_requirements)} requisiti storici")
+        cosa = "la rinuncia del redattore" if generation_refusal else "il requisito candidato"
+        if contesto:
+            logger.info("  [VALUTA]  esamino %s (%s)...", cosa, ", ".join(contesto))
         else:
-            logger.info("  [VALUTA]  esamino il requisito candidato...")
+            logger.info("  [VALUTA]  esamino %s...", cosa)
 
-        user_message = self._build_message(pull_request, candidate, retrieved_requirements)
+        user_message = self._build_message(
+            pull_request, candidate, retrieved_requirements, history, generation_refusal
+        )
         response = self._client.complete(system=self._system, user_message=user_message)
         _log_exchange("VALUTA", self._system, user_message, response.text)
         data = parse_json_object(response.text, ASSESSMENT_AGENT)
@@ -304,13 +303,22 @@ class LLMRequirementAssessor:
     def _build_message(
         self,
         pull_request: PullRequestRecord,
-        candidate: str,
+        candidate: str | None,
         retrieved_requirements: Sequence[RetrievedRequirement],
+        history: Sequence[IterationRecord] = (),
+        generation_refusal: str | None = None,
     ) -> str:
-        sections = [
-            _format_pull_request(pull_request),
-            f"CANDIDATE REQUIREMENT:\n{candidate}",
-        ]
+        sections = [_format_pull_request(pull_request)]
+        # Lo storico precede il candidato: prima si ricorda cosa si è già
+        # chiesto, poi si guarda che cosa è stato prodotto in risposta.
+        if history:
+            sections.append("PREVIOUS ATTEMPTS:\n" + _format_history(history))
+        if generation_refusal is not None:
+            sections.append(
+                f"THE WRITER PRODUCED NO REQUIREMENT. Their stated reason:\n{generation_refusal}"
+            )
+        else:
+            sections.append(f"CANDIDATE REQUIREMENT:\n{candidate}")
         if retrieved_requirements:
             lines = [
                 f"- [{item.requirement_id}] {item.statement} "

@@ -6,6 +6,10 @@ from .exceptions import (
     WorkflowConfigError,
     WorkflowConfigFileError,
 )
+from .extractability import (
+    DEFAULT_MIN_EVIDENCE_CHARACTERS,
+    DeterministicExtractabilityChecker,
+)
 from .graph import build_workflow
 from .ports import (
     AcceptedRequirementStore,
@@ -24,6 +28,7 @@ from .state import (
     Extractability,
     ExtractabilityResult,
     FinalStatus,
+    GenerationOutcome,
     IterationRecord,
     RequirementState,
     RetrievedRequirement,
@@ -31,14 +36,17 @@ from .state import (
 )
 
 __all__ = [
+    "DEFAULT_MIN_EVIDENCE_CHARACTERS",
     "AcceptedRequirementStore",
     "AssessmentDecision",
     "AssessmentFeedback",
     "AssessmentResult",
+    "DeterministicExtractabilityChecker",
     "Extractability",
     "ExtractabilityChecker",
     "ExtractabilityResult",
     "FinalStatus",
+    "GenerationOutcome",
     "InvalidWorkflowConfigError",
     "IterationRecord",
     "MemoryRetriever",

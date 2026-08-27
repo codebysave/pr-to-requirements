@@ -15,7 +15,6 @@ DEFAULT_PROMPT_VERSION = "v1"
 # La cartella `prompts/` sta nella radice del repository, accanto a `src/`.
 DEFAULT_PROMPTS_DIR = Path(__file__).resolve().parents[3] / "prompts"
 
-EXTRACTABILITY_AGENT = "extractability"
 GENERATION_AGENT = "generation"
 ASSESSMENT_AGENT = "assessment"
 

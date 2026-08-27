@@ -19,12 +19,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from are.agents import (
+    DeterministicExtractabilityChecker,
     WorkflowDependencies,
     build_workflow,
     load_workflow_config,
 )
 from are.agents.llm_agents import (
-    LLMExtractabilityChecker,
     LLMRequirementAssessor,
     LLMRequirementGenerator,
 )
@@ -87,10 +87,12 @@ def main(argv: list[str] | None = None) -> int:
     generation_client = AnthropicLLMClient(llm_config.generation)
     assessment_client = AnthropicLLMClient(llm_config.assessment)
 
-    # Il gate di estraibilità è una fase della pipeline, non un terzo agente:
-    # riusa la configurazione del Generation Agent (Decisione 3.5, §4.3).
+    # La verifica di estraibilità è deterministica: nessun modello, nessun
+    # costo, esito sempre uguale (Decisione 3.5, §4.3).
     dependencies = WorkflowDependencies(
-        extractability_checker=LLMExtractabilityChecker(generation_client, args.prompt_version),
+        extractability_checker=DeterministicExtractabilityChecker(
+            workflow_config.min_evidence_characters
+        ),
         generator=LLMRequirementGenerator(generation_client, args.prompt_version),
         assessor=(
             LLMRequirementAssessor(assessment_client, args.prompt_version)
