@@ -29,6 +29,7 @@ from are.agents.llm_agents import (
     LLMRequirementGenerator,
 )
 from are.agents.prompts import DEFAULT_PROMPT_VERSION
+from are.db import SqliteRequirementRepository
 from are.env import load_environment
 from are.input import PullRequestInputError, PullRequestLoader
 from are.llm import (
@@ -50,6 +51,7 @@ from are.runner import PipelineRunner, build_run_report, save_run_report, summar
 DEFAULT_LLM_CONFIG = Path("config/llm.toml")
 DEFAULT_WORKFLOW_CONFIG = Path("config/workflow.toml")
 DEFAULT_OUTPUT_DIR = Path("experiments/runs")
+DEFAULT_MEMORY_DIR = Path("experiments/memory")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -87,6 +89,13 @@ def main(argv: list[str] | None = None) -> int:
     generation_client = AnthropicLLMClient(llm_config.generation)
     assessment_client = AnthropicLLMClient(llm_config.assessment)
 
+    # Un solo timestamp per l'esecuzione: nomina il report, nomina il database
+    # e identifica le righe che questa run scrive in memoria, così i tre
+    # artefatti restano agganciati fra loro.
+    run_stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    memory_path = Path(args.memory_db) if args.memory_db else _default_memory_path(run_stamp)
+    memory = SqliteRequirementRepository(memory_path, run_stamp)
+
     # La verifica di estraibilità è deterministica: nessun modello, nessun
     # costo, esito sempre uguale (Decisione 3.5, §4.3).
     dependencies = WorkflowDependencies(
@@ -99,21 +108,32 @@ def main(argv: list[str] | None = None) -> int:
             if workflow_config.assessment_enabled
             else None
         ),
+        store=memory,
     )
 
     graph = build_workflow(dependencies, workflow_config)
     runner = PipelineRunner(graph, chronological=True)
 
+    # Archiviazione e recupero sono due funzioni distinte con due interruttori
+    # distinti: il database viene sempre scritto, mentre `memory_enabled`
+    # governa soltanto il recupero dei requisiti affini, che è ciò che cambia
+    # l'input del valutatore.
     print(
         f"Elaborazione di {len(pull_requests)} Pull Request "
         f"(assessment={workflow_config.assessment_enabled}, "
-        f"memory={workflow_config.memory_enabled})"
+        f"recupero dalla memoria={workflow_config.memory_enabled})"
     )
     print(
         f"Modelli: generazione={llm_config.generation.model}, "
-        f"valutazione={llm_config.assessment.model}\n"
+        f"valutazione={llm_config.assessment.model}"
     )
-    results = runner.run(pull_requests)
+    print(f"Memoria: {memory_path}\n")
+
+    try:
+        results = runner.run(pull_requests)
+        stored_requirements = memory.count()
+    finally:
+        memory.close()
 
     usage = {
         "generation": (llm_config.generation.model, generation_client.usage),
@@ -137,11 +157,17 @@ def main(argv: list[str] | None = None) -> int:
             },
             "llm": _describe_llm_config(llm_config, resolved_models),
             "usage": _describe_usage(usage),
+            "memory": {
+                "database": str(memory_path),
+                "run_id": run_stamp,
+                "stored_requirements": stored_requirements,
+            },
         },
     )
-    output_path = save_run_report(report, args.output or _default_output_path())
+    output_path = save_run_report(report, args.output or _default_output_path(run_stamp))
 
     _print_summary(results, output_path, usage)
+    print(f"Requisiti in memoria dopo l'esecuzione: {stored_requirements} ({memory_path})")
     return 0
 
 
@@ -192,6 +218,12 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument(
         "--output",
         help="file JSON del report (default: experiments/runs/run-<timestamp>.json)",
+    )
+    parser.add_argument(
+        "--memory-db",
+        help="database SQLite dei requisiti accettati; indicarne uno esistente per "
+        "accumulare fra esecuzioni diverse "
+        "(default: experiments/memory/run-<timestamp>.db, nuovo a ogni esecuzione)",
     )
     parser.add_argument(
         "--llm-config",
@@ -348,9 +380,20 @@ def _describe_usage(usage: dict[str, tuple[str, UsageStats]]) -> dict[str, objec
     }
 
 
-def _default_output_path() -> Path:
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+def _default_output_path(stamp: str) -> Path:
     return DEFAULT_OUTPUT_DIR / f"run-{stamp}.json"
+
+
+def _default_memory_path(stamp: str) -> Path:
+    """Un database nuovo per ogni esecuzione, salvo indicazione contraria.
+
+    È la scelta che rende le esecuzioni confrontabili: una run che partisse con
+    la memoria già popolata da quella precedente avrebbe un vantaggio, e il
+    confronto non direbbe più nulla. Con `--memory-db` si punta invece a un
+    database condiviso, che è il modo in cui il sistema funzionerebbe davvero.
+    """
+
+    return DEFAULT_MEMORY_DIR / f"run-{stamp}.db"
 
 
 def _print_summary(

@@ -1,0 +1,213 @@
+{
+  "run": {
+    "generated_at": "2026-08-28T14:20:44.218351+00:00",
+    "input_file": "experiments/samples/sample-All-Hands-AI_OpenHands.json",
+    "pull_requests": 5,
+    "prompt_version": "v1",
+    "workflow": {
+      "assessment_enabled": true,
+      "memory_enabled": false,
+      "max_generation_attempts": 3
+    },
+    "llm": {
+      "generation": {
+        "model": "claude-haiku-4-5",
+        "resolved_model": "claude-haiku-4-5-20251001",
+        "max_tokens": 1024,
+        "effort": null
+      },
+      "assessment": {
+        "model": "claude-haiku-4-5",
+        "resolved_model": "claude-haiku-4-5-20251001",
+        "max_tokens": 4096,
+        "effort": null
+      }
+    },
+    "usage": {
+      "per_agent": {
+        "generation": {
+          "model": "claude-haiku-4-5",
+          "calls": 6,
+          "input_tokens": 16468,
+          "output_tokens": 242,
+          "estimated_cost_usd": 0.017678
+        },
+        "assessment": {
+          "model": "claude-haiku-4-5",
+          "calls": 6,
+          "input_tokens": 22495,
+          "output_tokens": 712,
+          "estimated_cost_usd": 0.026055
+        }
+      },
+      "total_calls": 12,
+      "total_input_tokens": 38963,
+      "total_output_tokens": 954,
+      "total_estimated_cost_usd": 0.043733,
+      "pricing_reference_date": "2026-08-26"
+    },
+    "memory": {
+      "database": "experiments\\memory\\run-20260828T142024Z.db",
+      "run_id": "20260828T142024Z",
+      "stored_requirements": 3
+    }
+  },
+  "summary": {
+    "ACCEPTED": 3,
+    "NOT_EXTRACTABLE": 2
+  },
+  "results": [
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9581",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9581,
+      "timestamp": "2025-07-07T11:51:47+00:00",
+      "title": "fix(frontend): NaN is shown on the conversation card",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 1537 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall not display NaN on the conversation card.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall not display NaN on the conversation card.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9586",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9586,
+      "timestamp": "2025-07-07T15:30:48+00:00",
+      "title": "Added run_in_loop method",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 3092 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall provide a utility function that executes a coroutine in its target event loop, automatically handling cases where the coroutine was created in a different event loop than the current one.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall provide a utility function that executes a coroutine in its target event loop, automatically handling cases where the coroutine was created in a different event loop than the current one.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9590",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9590,
+      "timestamp": "2025-07-07T17:21:51+00:00",
+      "title": "feat(ui): spinner component",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 535 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall provide a spinner component for use in the user interface.",
+      "generation_attempts": 2,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence states that a spinner component was implemented but does not describe what behaviour the system must exhibit when using or displaying it.",
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The evidence does establish a required behaviour, though it is stated minimally. A spinner component must be available for use - this is a functional capability observable from the system's public interface (UI). The writer's reasoning is too strict: the evidence need not detail all aspects of the behaviour to ground a requirement at an appropriate level of abstraction."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": [
+              "The evidence supports a general requirement that a spinner component is now available in the UI for use. This is a behaviour - a capability the system provides - even though the evidence does not specify when it should be displayed, what it looks like, or how it interacts with other elements. Write a requirement that names this capability at the level the evidence supports it, without inventing details about usage patterns or visual properties that the evidence does not mention."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "The system shall provide a spinner component for use in the user interface.",
+          "refusal_reason": null,
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9591",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9591,
+      "timestamp": "2025-07-07T17:54:54+00:00",
+      "title": "feat(ui): dialog component",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 532 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence describes the addition of a dialog component but does not establish what behaviour the system must exhibit when using it, only that the component was implemented.",
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The evidence states only that a dialog component was implemented, without describing any required behaviour of the system when using or interacting with the component. The PR title and body provide no functional specification: they do not explain what the dialog does, what user actions it responds to, what it displays, or what effects it produces. A component's existence is an implementation detail, not a required behaviour. Without evidence of what the system must do with this component, no behaviour can be grounded."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9593",
+      "repository": "All-Hands-AI/OpenHands",
+      "pr_number": 9593,
+      "timestamp": "2025-07-07T19:07:02+00:00",
+      "title": "Create publishing job for npm package",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 865 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The Pull Request provides no description of what the publishing job should do, what behaviour it enables, or what problem it solves; the end-user friendly description and summary fields are empty.",
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The Pull Request provides no description of the intended behaviour, the problem being solved, or the functionality being introduced. Both the end-user description and the summary fields are empty.",
+              "The title alone ('Create publishing job for npm package') names a mechanism (a publishing job) but does not state what behaviour it enables or what guarantee it provides to users or callers.",
+              "Without evidence of the required behaviour - what the system must do, provide, or guarantee - no requirement can be grounded in this Pull Request."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    }
+  ]
+}
