@@ -13,6 +13,113 @@ soltanto lo stato delle caselle — `[✔]` fatto, `[ ]` da fare — e la frecci
 
 ---
 
+## 2026-08-27 (pomeriggio) — Secondo corpus, limite del valutatore alzato, analisi estesa
+
+**Branch:** `chore/openhands-corpus`
+
+### 1. Perché questa modifica
+
+La voce precedente si chiudeva con un limite dichiarato: le cinque prove sui
+modelli giravano tutte sullo stesso campione di 9 Pull Request, di cui 5
+generate da uno scanner automatico. Non sapevamo quanto di quei risultati
+dipendesse dal campione. Questa modifica lo misura.
+
+### 2. Il secondo corpus
+
+Aggiunto `experiments/samples/sample-All-Hands-AI_OpenHands.json`: **46 Pull
+Request** di `All-Hands-AI/OpenHands`, scritte da persone, media 1.422 caratteri
+fra titolo e corpo, nessuna sotto la soglia del gate. È materiale molto più
+onesto del campione scrapy.
+
+Eseguito con Haiku su entrambi gli agenti, a codice e prompt invariati
+(`experiments/runs/run-20260827T140858Z.json`).
+
+### 3. Il risultato: il corpus conta più del modello
+
+| | scrapy (9 PR) | OpenHands (46 PR) |
+|---|---|---|
+| Accettati | 3 (33%) | 34 (74%) |
+| Non estraibili | 6 (67%) | 11 (24%) |
+| Rifiutati | 0 | 1 |
+| PR che entrano nel ciclo | 5 su 9 (55%) | 4 su 46 (8,7%) |
+| Costo | $0,11 | $0,38 |
+
+Cambiando **soltanto il corpus**, lo stesso modello passa dal 33% al 74% di
+accettazione: uno scarto più grande di qualunque differenza fra modelli
+misurata nella voce precedente.
+
+Conseguenza metodologica: i **valori assoluti** delle cinque prove sono una
+proprietà del campione, non dei modelli. Il confronto *fra* le cinque prove
+resta valido, perché la variabile cambiata era una sola.
+
+### 4. I difetti non spariscono, si spostano
+
+Su scrapy Haiku rifiutava troppo; su OpenHands accetta troppo. Cinque
+accettazioni non superano i criteri della Decisione 3.1 — fra cui un requisito
+di puro meccanismo (`use the RuntimeStatus enum instead of hardcoded strings`),
+uno che descrive il comportamento del linter invece che del prodotto, e una
+tautologia sulla configurazione. Le 11 rinunce sono invece quasi tutte fondate.
+
+Ne emerge un'asimmetria utile: **quando Haiku rifiuta ha quasi sempre ragione,
+quando accetta spesso no.**
+
+### 5. L'esperimento naturale dei cinque componenti UI
+
+Il corpus contiene cinque Pull Request quasi identiche (`feat(ui): <nome>
+component`, ~530 caratteri, stesso template) che hanno ricevuto **quattro esiti
+diversi nella stessa esecuzione**: una `NOT_EXTRACTABLE`, una `REJECTED`, una
+accettata al primo colpo conservando il nome del componente, due accettate dopo
+due giri con il nome del componente rimosso.
+
+Il valutatore si contraddice apertamente sul punto: su una PR scrive che un
+componente UI «è un blocco costruttivo interno», su un'altra che «un requisito
+può essere fondato nella natura dell'artefatto, non solo in una descrizione
+esplicita». Resta aperta una domanda mai decisa: **il significato convenzionale
+di un artefatto nominato conta come evidenza?**
+
+È il risultato più solido della giornata e va portato alla tutor.
+
+### 6. Limite di token del valutatore alzato
+
+`max_tokens` dell'assessment passa da 2048 a **4096** in `config/llm.toml`, con
+la motivazione scritta nel file: a 2048 una risposta di Sonnet era stata
+troncata a metà JSON e la Pull Request era finita in `ERROR`. La modifica era
+stata rimandata di proposito per non rendere incomparabili le cinque prove.
+
+### 7. Documento di analisi esteso
+
+`experiments/analisi/confronto-modelli.md` guadagna il §9 con la verifica, e due
+**aggiornamenti datati** ai paragrafi che generalizzavano troppo (§4.1 su Haiku,
+§7.4 sul campione). La conclusione operativa è che il gold standard va costruito
+sul corpus OpenHands e non su scrapy: le schede attuali sono tarate sulle Pull
+Request sbagliate.
+
+### 8. Verifiche eseguite
+
+- `uv run ruff check .` e `ruff format` — puliti;
+- `uv run pytest` — **164 test passati** (nessun test nuovo: la modifica è di
+  configurazione e documentazione, il codice non cambia);
+- 11 esecuzioni reali nella giornata, 136 Pull Request elaborate, **$3,40** di
+  costo complessivo.
+
+### 9. Stato del sistema dopo questa modifica
+
+```text
+[✔] Preprocessing del dataset       (script esterno al sistema)
+[✔] Input Loader                    are.input
+[✔] Configurazione + client LLM     are.llm
+[✔] Workflow LangGraph (agenti)     are.agents
+[✔] Pipeline Runner                 are.runner
+[ ] Memoria persistente (SQLite)    are.db
+[ ] Server MCP                      are.mcp_server
+[ ] Valutazione sperimentale                         ← gold standard da rifare su OpenHands
+```
+
+Nessuna casella nuova: la modifica misura il sistema esistente e ne corregge la
+documentazione. Il prossimo componente da costruire è la memoria persistente.
+
+---
+
 ## 2026-08-27 — Gate deterministico, rifiuto motivato, memoria del valutatore e confronto fra modelli
 
 **Branch:** `feat/deterministic-gate`
