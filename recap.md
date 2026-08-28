@@ -13,6 +13,267 @@ soltanto lo stato delle caselle — `[✔]` fatto, `[ ]` da fare — e la frecci
 
 ---
 
+## 2026-08-28 — Memoria persistente su SQLite: archiviazione dei requisiti validati
+
+**Branch:** `feat/memory-persistence`
+
+### 1. Perché questa modifica
+
+Fino a ieri ogni esecuzione produceva un report JSON e finiva lì: la run
+successiva ripartiva da zero e nessun requisito sopravviveva. La Decisione 3.3
+prevede una memoria persistente con due funzioni distinte, che conviene tenere
+separate:
+
+- **archivio** — i requisiti accettati si accumulano e diventano l'esito del
+  sistema nel tempo;
+- **contesto per il valutatore** — i requisiti affini vengono recuperati e
+  mostrati all'Assessment Agent prima del giudizio.
+
+Questa voce copre **soltanto la prima**. La seconda arriva dopo, per una ragione
+scritta al punto 7.
+
+### 2. Cosa esisteva già
+
+Quasi tutto il cablaggio era pronto dai passi precedenti: i protocolli
+`MemoryRetriever` e `AcceptedRequirementStore` in `ports.py` con implementazioni
+inerti, il tipo `RetrievedRequirement`, il nodo `retrieve_memory` nel grafo, la
+chiamata a `store_accepted` nel nodo di accettazione, e l'elaborazione in ordine
+cronologico nel Runner.
+
+Mancavano soltanto le implementazioni concrete. **Il grafo, il routing e gli
+agenti non sono stati toccati.**
+
+### 3. Il repository SQLite
+
+Nuovo pacchetto `src/are/db/`:
+
+- `models.py` — `StoredRequirement`, `RequirementRelation`, `RelationType`;
+- `repository.py` — `SqliteRequirementRepository`, che implementa il protocollo
+  `AcceptedRequirementStore` e offre `store_accepted`, `get_by_id`,
+  `list_requirements`, `count`, `save_relation`, `get_relations`;
+- `__init__.py` — API pubblica del pacchetto.
+
+Nessuna dipendenza nuova: `sqlite3` è nella libreria standard di Python.
+
+### 4. Le scelte fatte sullo schema
+
+Quattro decisioni che vale la pena aver scritto:
+
+- **Due date distinte.** `source_pr_timestamp` è la data della Pull Request,
+  `created_at` è il momento dell'inserimento. Il filtro storico previsto dalla
+  Decisione 3.3 §2 usa la **prima**: filtrare sulla seconda ricostruirebbe
+  l'ordine in cui abbiamo lanciato gli script, non la storia del progetto. Le
+  date sono normalizzate a UTC, così l'ordinamento lessicografico delle stringhe
+  ISO coincide con quello cronologico.
+- **Nessun vincolo di unicità sulla coppia (repository, numero PR).** Oggi la
+  pipeline produce al massimo un requisito per Pull Request, ma inciderlo nello
+  schema costringerebbe a una migrazione se un giorno ne producesse due.
+- **L'evidenza viene salvata**: titolo e corpo della Pull Request finiscono nella
+  riga. Costa una sessantina di KB su 46 requisiti e rende il database
+  **autosufficiente** — si legge un requisito e si vede da cosa nasce, senza il
+  file JSON di partenza a fianco. Per un allegato di tesi è la differenza fra un
+  artefatto leggibile e una tabella di stringhe.
+- **`run_id`, unica aggiunta rispetto alla Decisione 3.3.** Identifica
+  l'esecuzione che ha scritto ogni riga: senza, in un database condiviso fra più
+  run non si potrebbe sapere quale esecuzione ha prodotto cosa, né ripulire
+  selettivamente. Coincide con il timestamp che nomina il report.
+
+Le colonne `embedding` ed `embedding_model` esistono ma restano vuote: crearle
+adesso costa zero ed evita una migrazione quando arriverà il retriever.
+
+### 5. Il cablaggio, e i due interruttori
+
+`__main__.py` costruisce il repository e lo passa nelle `WorkflowDependencies`.
+Nuova opzione `--memory-db` per puntare a un database esistente; senza, ogni
+esecuzione ne crea uno nuovo in `experiments/memory/run-<timestamp>.db`.
+
+Il default è deliberato: una run che partisse con la memoria già popolata dalla
+precedente avrebbe un vantaggio e il confronto fra esecuzioni non direbbe più
+nulla. Chi vuole accumulare lo chiede esplicitamente.
+
+Da qui in avanti il sistema ha **due interruttori indipendenti** per le due
+funzioni del punto 1:
+
+- il **database viene sempre scritto** (l'archivio non altera il comportamento
+  degli agenti);
+- **`memory_enabled` governa soltanto il recupero**, cioè l'unica cosa che
+  cambia l'input del valutatore. Resta a `false`.
+
+Il report di ogni esecuzione registra ora percorso del database, `run_id` e
+numero di requisiti archiviati.
+
+### 6. Prova reale
+
+Esecuzione con Haiku su 5 Pull Request del campione OpenHands
+(`experiments/runs/run-20260828T142024Z.json`, $0,044): 3 requisiti accettati,
+3 righe scritte in memoria, con tracciabilità corretta alla Pull Request di
+origine, date coerenti e relazioni vuote come previsto.
+
+Nota emersa dalla prova, più importante della prova stessa: sulle stesse 5 Pull
+Request, con lo stesso modello e gli stessi prompt di ieri e senza alcuna
+modifica al codice fra le due esecuzioni, la PR #9590 è passata da
+`NOT_EXTRACTABLE` ad `ACCEPTED` e la #9591 da `REJECTED` a `NOT_EXTRACTABLE`.
+**Il 40% degli esiti si è spostato senza che nulla di osservabile cambiasse.**
+
+Entrambe appartengono al gruppo dei cinque componenti UI: i quattro esiti diversi
+su cinque input equivalenti non erano quindi un incidente di una singola
+esecuzione. La misura è stata scritta in `confronto-modelli.md` §7.2, e ne è
+seguito un aggiornamento datato al §8: con una sola replica per configurazione,
+differenze di uno o due requisiti su nove rientrano nella banda di rumore, quindi
+la raccomandazione su quale coppia di modelli usare resta un'indicazione
+operativa e non un risultato. Reggono invece il numero di revisioni e la qualità
+dei requisiti finali, che sono osservazioni sul comportamento del ciclo e non
+conteggi al margine.
+
+### 7. Cosa non fa ancora, e perché
+
+- **Il retriever semantico non esiste.** Richiede una decisione sugli embedding
+  (fornitore esterno o modello locale) ancora aperta.
+- **La tabella delle relazioni è predisposta ma vuota**: nessun componente della
+  pipeline rileva oggi duplicati o conflitti. Le operazioni ci sono, il
+  produttore no.
+- **Il prompt del valutatore non nomina i requisiti recuperati.** L'agente li
+  serializza già nel messaggio, ma il prompt non dice cosa farne: accendere il
+  recupero senza aggiungere quella sezione significherebbe iniettare testo senza
+  istruzioni. È la ragione per cui `memory_enabled` resta a `false`.
+- **Il recupero rende il sistema dipendente dall'ordine** di elaborazione: va
+  documentato nella Decisione 3.7 come variabile sperimentale prima di
+  accenderlo, non dopo aver visto i risultati.
+
+### 8. Verifiche eseguite
+
+- `uv run ruff check .` e `ruff format` — puliti;
+- `uv run pytest` — **184 test passati** (20 nuovi: scrittura e rilettura,
+  tracciabilità, filtri per repository e per data, confronto fra fusi orari
+  diversi, relazioni e vincoli di integrità, persistenza su file). I test girano
+  su un database in memoria e non lasciano file;
+- una esecuzione reale end-to-end con ispezione del database prodotto.
+
+### 9. Stato del sistema dopo questa modifica
+
+```text
+[✔] Preprocessing del dataset       (script esterno al sistema)
+[✔] Input Loader                    are.input
+[✔] Configurazione + client LLM     are.llm
+[✔] Workflow LangGraph (agenti)     are.agents
+[✔] Pipeline Runner                 are.runner
+[ ] Memoria persistente (SQLite)    are.db          ← archiviazione fatta, recupero da fare
+[ ] Server MCP                      are.mcp_server
+[ ] Valutazione sperimentale                         ← gold standard da rifare su OpenHands
+```
+
+La casella resta aperta di proposito: metà del componente è in funzione e
+verificata, l'altra metà dipende da una decisione non ancora presa.
+
+---
+
+## 2026-08-27 (pomeriggio) — Secondo corpus, limite del valutatore alzato, analisi estesa
+
+**Branch:** `chore/openhands-corpus`
+
+### 1. Perché questa modifica
+
+La voce precedente si chiudeva con un limite dichiarato: le cinque prove sui
+modelli giravano tutte sullo stesso campione di 9 Pull Request, di cui 5
+generate da uno scanner automatico. Non sapevamo quanto di quei risultati
+dipendesse dal campione. Questa modifica lo misura.
+
+### 2. Il secondo corpus
+
+Aggiunto `experiments/samples/sample-All-Hands-AI_OpenHands.json`: **46 Pull
+Request** di `All-Hands-AI/OpenHands`, scritte da persone, media 1.422 caratteri
+fra titolo e corpo, nessuna sotto la soglia del gate. È materiale molto più
+onesto del campione scrapy.
+
+Eseguito con Haiku su entrambi gli agenti, a codice e prompt invariati
+(`experiments/runs/run-20260827T140858Z.json`).
+
+### 3. Il risultato: il corpus conta più del modello
+
+| | scrapy (9 PR) | OpenHands (46 PR) |
+|---|---|---|
+| Accettati | 3 (33%) | 34 (74%) |
+| Non estraibili | 6 (67%) | 11 (24%) |
+| Rifiutati | 0 | 1 |
+| PR che entrano nel ciclo | 5 su 9 (55%) | 4 su 46 (8,7%) |
+| Costo | $0,11 | $0,38 |
+
+Cambiando **soltanto il corpus**, lo stesso modello passa dal 33% al 74% di
+accettazione: uno scarto più grande di qualunque differenza fra modelli
+misurata nella voce precedente.
+
+Conseguenza metodologica: i **valori assoluti** delle cinque prove sono una
+proprietà del campione, non dei modelli. Il confronto *fra* le cinque prove
+resta valido, perché la variabile cambiata era una sola.
+
+### 4. I difetti non spariscono, si spostano
+
+Su scrapy Haiku rifiutava troppo; su OpenHands accetta troppo. Cinque
+accettazioni non superano i criteri della Decisione 3.1 — fra cui un requisito
+di puro meccanismo (`use the RuntimeStatus enum instead of hardcoded strings`),
+uno che descrive il comportamento del linter invece che del prodotto, e una
+tautologia sulla configurazione. Le 11 rinunce sono invece quasi tutte fondate.
+
+Ne emerge un'asimmetria utile: **quando Haiku rifiuta ha quasi sempre ragione,
+quando accetta spesso no.**
+
+### 5. L'esperimento naturale dei cinque componenti UI
+
+Il corpus contiene cinque Pull Request quasi identiche (`feat(ui): <nome>
+component`, ~530 caratteri, stesso template) che hanno ricevuto **quattro esiti
+diversi nella stessa esecuzione**: una `NOT_EXTRACTABLE`, una `REJECTED`, una
+accettata al primo colpo conservando il nome del componente, due accettate dopo
+due giri con il nome del componente rimosso.
+
+Il valutatore si contraddice apertamente sul punto: su una PR scrive che un
+componente UI «è un blocco costruttivo interno», su un'altra che «un requisito
+può essere fondato nella natura dell'artefatto, non solo in una descrizione
+esplicita». Resta aperta una domanda mai decisa: **il significato convenzionale
+di un artefatto nominato conta come evidenza?**
+
+È il risultato più solido della giornata e va portato alla tutor.
+
+### 6. Limite di token del valutatore alzato
+
+`max_tokens` dell'assessment passa da 2048 a **4096** in `config/llm.toml`, con
+la motivazione scritta nel file: a 2048 una risposta di Sonnet era stata
+troncata a metà JSON e la Pull Request era finita in `ERROR`. La modifica era
+stata rimandata di proposito per non rendere incomparabili le cinque prove.
+
+### 7. Documento di analisi esteso
+
+`experiments/analisi/confronto-modelli.md` guadagna il §9 con la verifica, e due
+**aggiornamenti datati** ai paragrafi che generalizzavano troppo (§4.1 su Haiku,
+§7.4 sul campione). La conclusione operativa è che il gold standard va costruito
+sul corpus OpenHands e non su scrapy: le schede attuali sono tarate sulle Pull
+Request sbagliate.
+
+### 8. Verifiche eseguite
+
+- `uv run ruff check .` e `ruff format` — puliti;
+- `uv run pytest` — **164 test passati** (nessun test nuovo: la modifica è di
+  configurazione e documentazione, il codice non cambia);
+- 11 esecuzioni reali nella giornata, 136 Pull Request elaborate, **$3,40** di
+  costo complessivo.
+
+### 9. Stato del sistema dopo questa modifica
+
+```text
+[✔] Preprocessing del dataset       (script esterno al sistema)
+[✔] Input Loader                    are.input
+[✔] Configurazione + client LLM     are.llm
+[✔] Workflow LangGraph (agenti)     are.agents
+[✔] Pipeline Runner                 are.runner
+[ ] Memoria persistente (SQLite)    are.db
+[ ] Server MCP                      are.mcp_server
+[ ] Valutazione sperimentale                         ← gold standard da rifare su OpenHands
+```
+
+Nessuna casella nuova: la modifica misura il sistema esistente e ne corregge la
+documentazione. Il prossimo componente da costruire è la memoria persistente.
+
+---
+
 ## 2026-08-27 — Gate deterministico, rifiuto motivato, memoria del valutatore e confronto fra modelli
 
 **Branch:** `feat/deterministic-gate`

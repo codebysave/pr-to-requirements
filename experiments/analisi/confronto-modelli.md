@@ -389,9 +389,29 @@ Non sappiamo se in un'altra esecuzione avrebbe bocciato il nome della classe.
 **Con una sola esecuzione per configurazione non possiamo distinguere la
 differenza fra modelli dal rumore del singolo campionamento.**
 
+> **Prova diretta, 28 agosto.** Non è più un'ipotesi. Rilanciando Haiku→Haiku
+> sulle **prime 5 Pull Request di OpenHands** — stesso modello, stessi prompt,
+> stesso input del giorno prima, nessuna modifica al codice fra le due
+> esecuzioni — due esiti su cinque sono cambiati:
+>
+> | PR | 27 agosto | 28 agosto |
+> |---|---|---|
+> | #9590 (spinner) | `NOT_EXTRACTABLE` | **`ACCEPTED`** |
+> | #9591 (dialog) | `REJECTED` | **`NOT_EXTRACTABLE`** |
+>
+> Il 40% degli esiti si è spostato senza che nulla di osservabile cambiasse.
+> Entrambe le Pull Request appartengono al gruppo dei cinque componenti UI del
+> §9.3, il che rafforza quella tabella: i quattro esiti diversi su cinque input
+> equivalenti non erano un incidente di una singola esecuzione, sono il
+> comportamento normale del sistema su quel tipo di evidenza.
+>
+> Report: `experiments/runs/run-20260828T142024Z.json`.
+
 Conseguenza pratica: la variabilità non si può più sopprimere, **va misurata**,
 ripetendo la stessa configurazione più volte. Va nel piano di valutazione
-(Decisione 3.7).
+(Decisione 3.7), e con una priorità più alta di quella che gli avevamo dato:
+finché non sappiamo quanto è ampia la banda di rumore, **nessun confronto fra
+due configurazioni è interpretabile**, comprese le cinque prove del §3.
 
 ### 7.3 Non sappiamo se il divario è la causa o una coincidenza
 
@@ -429,6 +449,15 @@ incomparabili fra loro.
 generatore + Opus valutatore**, perché è l'unica in cui il ciclo di revisione fa
 il lavoro per cui l'abbiamo costruito. Haiku -> Haiku resta utile per le prove
 tecniche (verificare che la pipeline giri) perché costa un quinto.
+
+> **Aggiornamento del 28 agosto.** Questa raccomandazione va presa come
+> un'indicazione operativa provvisoria, non come un risultato. La prova del
+> §7.2 mostra che il 40% degli esiti può cambiare fra due esecuzioni identiche:
+> con una sola replica per configurazione, differenze di uno o due requisiti su
+> nove — cioè quasi tutte quelle della tabella al §3 — rientrano nella banda di
+> rumore. Quello che regge è il dato qualitativo: **il numero di revisioni** e
+> **la qualità dei requisiti finali**, che sono osservazioni sul comportamento
+> del ciclo e non conteggi al margine.
 
 **Per la tesi.** Abbiamo tre osservazioni riproducibili e non ovvie:
 

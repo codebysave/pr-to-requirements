@@ -696,6 +696,111 @@ prodotto il sistema — non possiamo dire se quella configurazione è davvero
 migliore o se semplicemente ci piace di più. Le schede sono pronte da stamattina.
 Tocca a noi.
 
+### Giovedì 27 agosto — sera
+
+Prima di chiudere ci è venuto un dubbio, e per fortuna l'abbiamo tolto subito.
+
+Tutte e cinque le prove del pomeriggio giravano sulle stesse nove Pull Request.
+E se quei risultati dipendessero dalle nove Pull Request invece che dai modelli?
+
+Abbiamo preso un secondo progetto — quarantasei Pull Request scritte da persone
+vere, non da un programma automatico come metà di quelle di prima — e abbiamo
+rilanciato il sistema **senza cambiare nulla**: stesso codice, stesse istruzioni,
+stesso modello economico.
+
+Il risultato ci ha ribaltato una conclusione. Sulle nove Pull Request di prima
+quel modello accettava un requisito su tre; su queste quarantasei ne accetta
+tre su quattro. **Il materiale in ingresso sposta i risultati più del modello.**
+
+Il motivo, guardandolo, è ovvio: in quel primo gruppo cinque Pull Request su nove
+erano generate da uno strumento di sicurezza automatico e dicevano «è stato
+rilevato un problema e le modifiche necessarie sono state applicate» senza mai
+dire *quali*. Su un testo così, rifiutare è la risposta giusta. Non era il
+modello a essere severo: era il materiale a non dire niente.
+
+Il difetto però non è sparito, si è spostato. Prima rifiutava troppo, adesso
+accetta troppo: fra i requisiti approvati ce ne sono cinque che secondo le nostre
+stesse regole non dovrebbero passare — uno descrive come è scritto il codice
+invece di cosa fa il programma, un altro parla di uno strumento di sviluppo e non
+del prodotto, un altro ancora è una frase vera per definizione e quindi vuota.
+
+E poi il regalo della serata. In quelle quarantasei ce ne sono cinque
+praticamente gemelle: stesso titolo nella forma, stessa lunghezza, stesso
+modulo compilato allo stesso modo. Le abbiamo trovate per caso, ed è
+l'esperimento controllato migliore che potessimo desiderare, perché non l'abbiamo
+costruito noi. **Hanno ricevuto quattro esiti diversi nella stessa esecuzione.** E
+su due di esse il valutatore ha scritto due frasi che si contraddicono
+apertamente: su una dice che quel tipo di componente non ha un comportamento
+osservabile, sull'altra dice che il comportamento si deduce dal nome stesso del
+componente.
+
+Non lo consideriamo un bug da correggere in fretta. È il fenomeno che stiamo
+studiando, colto in flagrante, e la tabella di quei cinque casi è la cosa più
+convincente da portare alla tutor.
+
+Un effetto pratico immediato, però, c'è: le schede del gold standard che avevamo
+preparato la mattina sono tarate sulle nove Pull Request sbagliate. Vanno rifatte
+sulle quarantasei. Meglio scoprirlo adesso che dopo averle compilate.
+
+---
+
+## 28 agosto — La memoria
+
+### Venerdì 28 agosto
+
+Fino a ieri il sistema aveva un difetto che nessuno di noi aveva notato perché
+era ovvio: **ogni esecuzione ripartiva da zero**. Produceva i requisiti, scriveva
+il suo resoconto, e finiva lì. Il giorno dopo non ricordava nulla.
+
+Oggi abbiamo costruito la memoria. Tecnicamente è un database, ma la cosa
+comoda è che è **un file solo**: niente da installare, niente servizio da
+avviare, lo copi come una foto e lo apri con un programmino gratuito per
+guardarci dentro come fosse un foglio di calcolo. Per una tesi è perfetto,
+perché il risultato del lavoro diventa un allegato che si può consegnare.
+
+La memoria serve a due cose diverse, e abbiamo fatto solo la prima.
+
+**La prima è l'archivio.** I requisiti approvati adesso restano. Ognuno porta con
+sé da quale Pull Request nasce, quando quella Pull Request è stata aperta, quando
+noi l'abbiamo salvato, e il testo completo da cui è stato ricavato. Quest'ultima
+cosa l'abbiamo voluta apposta: apri il file e capisci da solo perché quel
+requisito dice quello che dice, senza dover andare a cercare altrove.
+
+**La seconda è dare contesto al valutatore**: prima di giudicare una frase nuova,
+mostrargli quelle simili già approvate, così può accorgersi di un doppione o di
+una contraddizione. Questa l'abbiamo lasciata spenta di proposito, per tre motivi
+che abbiamo preferito affrontare prima invece che dopo.
+
+Il primo è che per capire che due frasi dicono la stessa cosa con parole diverse
+serve uno strumento in più, e va scelto quale.
+
+Il secondo l'abbiamo scoperto controllando il codice, ed è il tipo di cosa che si
+paga cara se non la vedi: il valutatore avrebbe ricevuto quei requisiti simili
+**senza alcuna istruzione su cosa farne**, perché nelle sue istruzioni non se ne
+parla. Nella migliore delle ipotesi li avrebbe ignorati; nella peggiore avrebbe
+bocciato una frase solo perché somiglia a un'altra — e somigliare non è un
+difetto, due Pull Request diverse possono legittimamente produrre requisiti
+vicini.
+
+Il terzo è più sottile e riguarda la tesi. Con la memoria accesa il sistema
+diventa **dipendente dall'ordine**: valutando la quarantesima Pull Request si
+porta dietro quello che hanno prodotto le trentanove precedenti. È realistico —
+nella vita vera i requisiti si accumulano — ma significa che due esecuzioni sullo
+stesso materiale in ordine diverso possono dare risultati diversi. Va scritto nel
+piano di valutazione prima di vedere i numeri, non dopo.
+
+Alla fine abbiamo fatto una prova piccola, cinque Pull Request, quattro centesimi.
+Tre requisiti approvati, tre righe salvate. Abbiamo aperto il file e controllato
+riga per riga che ci fosse tutto.
+
+E lì è saltata fuori un'altra conferma, non cercata: sulle stesse cinque Pull
+Request, con lo stesso modello e le stesse istruzioni di ieri, **due hanno
+cambiato esito**. Una che ieri era stata scartata oggi è stata approvata, e
+viceversa. Non abbiamo toccato niente che possa spiegarlo. È esattamente il
+fenomeno di ieri sera, e adesso sappiamo che non era un caso isolato di
+un'esecuzione: è il comportamento normale del sistema, e va misurato ripetendo
+le prove.
+
 ---
 
 ## Situazione a fine agosto
@@ -713,25 +818,32 @@ Cosa c'è:
 - due agenti che si parlano davvero: il secondo ricorda cosa ha già detto, e il
   primo può dichiarare di non riuscire invece di inventare;
 - il conteggio dei consumi e la stima dei costi per ogni esecuzione;
-- un documento che spiega cosa cambia al cambiare dei modelli, con gli esempi;
-- le schede per costruire il gold standard, pronte da compilare;
-- centosessantaquattro controlli automatici che verificano tutto senza costi.
+- **la memoria**: i requisiti approvati non si perdono più, restano in un file
+  che si apre e si legge, ciascuno con la Pull Request da cui nasce;
+- **due gruppi di Pull Request** su cui provare il sistema, uno piccolo e uno di
+  quarantasei scritte da persone;
+- un documento che spiega cosa cambia al cambiare dei modelli, con gli esempi
+  veri e la verifica sul secondo gruppo;
+- centottantaquattro controlli automatici che verificano tutto senza costi.
 
 Cosa manca:
 
 - il gold standard: decidere noi, caso per caso, quale sia l'esito corretto per
-  le nove Pull Request del campione — è la cosa che blocca tutto il resto,
-  perché senza non possiamo dire se una modifica migliora o solo cambia;
+  le quarantasei Pull Request — è la cosa che blocca tutto il resto, perché
+  senza non possiamo dire se una modifica migliora o solo cambia. Le schede
+  preparate il 27 vanno rifatte: erano tarate sul gruppo sbagliato;
 - ripetere le esecuzioni più volte, ora che la variabilità non si può più
   spegnere, per capire quanto delle differenze fra modelli sia vera differenza
-  e quanto sia rumore;
-- la memoria dei requisiti già approvati e il modo per consultarla;
-- la scelta definitiva del progetto e delle Pull Request da usare: nove sono
-  poche, e cinque di quelle nove le ha scritte un programma automatico con lo
-  stesso testo di base;
+  e quanto sia rumore — e abbiamo visto due volte che ce n'è parecchia;
+- la seconda metà della memoria: mostrare al valutatore i requisiti già
+  approvati che somigliano a quello che sta giudicando;
+- decidere una regola su un punto che il sistema oggi risolve a caso: il nome
+  di un componente conosciuto basta da solo a stabilire cosa il sistema deve
+  fare, oppure no?
+- il modo per consultare la memoria dall'esterno;
 - l'esecuzione delle prove finali e la raccolta dei risultati.
 
 Prossimo passo concreto: **compilare le schede del gold standard**, ognuno la
 propria, senza guardare cosa ha prodotto il sistema. È un lavoro noioso di
-mezza giornata, ed è l'unico che trasforma tutte le impressioni raccolte finora
-in qualcosa di misurabile.
+un paio di giorni, ed è l'unico che trasforma tutte le impressioni raccolte
+finora in qualcosa di misurabile.
