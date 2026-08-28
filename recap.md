@@ -109,11 +109,21 @@ Esecuzione con Haiku su 5 Pull Request del campione OpenHands
 3 righe scritte in memoria, con tracciabilità corretta alla Pull Request di
 origine, date coerenti e relazioni vuote come previsto.
 
-Nota emersa dalla prova: sulle stesse 5 Pull Request, con lo stesso modello e
-gli stessi prompt di ieri, la PR #9590 è passata da `NOT_EXTRACTABLE` ad
-`ACCEPTED` e la #9591 da `REJECTED` a `NOT_EXTRACTABLE`. È un'ulteriore conferma
-diretta della non determinatezza già documentata in
-`experiments/analisi/confronto-modelli.md` §7.2.
+Nota emersa dalla prova, più importante della prova stessa: sulle stesse 5 Pull
+Request, con lo stesso modello e gli stessi prompt di ieri e senza alcuna
+modifica al codice fra le due esecuzioni, la PR #9590 è passata da
+`NOT_EXTRACTABLE` ad `ACCEPTED` e la #9591 da `REJECTED` a `NOT_EXTRACTABLE`.
+**Il 40% degli esiti si è spostato senza che nulla di osservabile cambiasse.**
+
+Entrambe appartengono al gruppo dei cinque componenti UI: i quattro esiti diversi
+su cinque input equivalenti non erano quindi un incidente di una singola
+esecuzione. La misura è stata scritta in `confronto-modelli.md` §7.2, e ne è
+seguito un aggiornamento datato al §8: con una sola replica per configurazione,
+differenze di uno o due requisiti su nove rientrano nella banda di rumore, quindi
+la raccomandazione su quale coppia di modelli usare resta un'indicazione
+operativa e non un risultato. Reggono invece il numero di revisioni e la qualità
+dei requisiti finali, che sono osservazioni sul comportamento del ciclo e non
+conteggi al margine.
 
 ### 7. Cosa non fa ancora, e perché
 
