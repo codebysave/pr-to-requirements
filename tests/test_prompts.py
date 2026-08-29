@@ -47,10 +47,10 @@ def test_both_prompts_forbid_referring_to_the_change_itself() -> None:
         assert "Pull Request" in prompt, agent
 
 
-def test_assessment_prompt_lists_the_three_decisions() -> None:
+def test_assessment_prompt_lists_every_decision() -> None:
     prompt = load_prompt(ASSESSMENT_AGENT)
 
-    for decision in ("ACCEPT", "REVISE", "REJECT"):
+    for decision in ("ACCEPT", "REVISE", "REJECT", "CONFIRM_NOT_EXTRACTABLE"):
         assert decision in prompt
 
 
@@ -147,6 +147,42 @@ def test_all_prompts_share_an_identical_definitions_block() -> None:
     blocchi = {agent: _extract_block(load_prompt(agent), "definitions") for agent in AGENTS}
 
     assert len(set(blocchi.values())) == 1, "le definizioni divergono fra i prompt"
+
+
+def test_both_prompts_state_that_a_name_is_not_evidence() -> None:
+    """Il nome di un artefatto non fonda il suo comportamento (Decisione 3.1, §9.2).
+
+    Il principio era già nelle definizioni ("your own knowledge of similar
+    systems is not evidence"), ma nessun passo della procedura lo faceva
+    scattare: un componente nominato veniva trattato come se l'evidenza ne
+    descrivesse il comportamento, e cinque Pull Request equivalenti hanno
+    ricevuto quattro esiti diversi. Il criterio deve restare esplicito, o torna
+    a essere un principio che nessuno applica.
+    """
+
+    for agent in AGENTS:
+        prompt = load_prompt(agent)
+
+        # Estensione del removal test, nel blocco condiviso.
+        assert "added or implemented" in prompt, agent
+        assert "equally true of any system" in prompt, agent
+
+    # Ciascun agente deve poi sapere che cosa farne.
+    assert "only names an artefact" in load_prompt(GENERATION_AGENT)
+    assert "nothing beneath the name" in load_prompt(ASSESSMENT_AGENT)
+
+
+def test_assessment_procedure_steps_are_numbered_consecutively() -> None:
+    """La procedura decide con il primo passo che scatta: l'ordine è sostanza.
+
+    Un passo inserito senza rinumerare i successivi produce due passi con lo
+    stesso numero, e il modello non ha più un ordine da seguire.
+    """
+
+    procedura = _extract_block(load_prompt(ASSESSMENT_AGENT), "procedure")
+    numeri = [int(n) for n in re.findall(r"^(\d+)\.", procedura, re.MULTILINE)]
+
+    assert numeri == list(range(1, len(numeri) + 1)), numeri
 
 
 def test_prompts_use_the_expected_structure() -> None:

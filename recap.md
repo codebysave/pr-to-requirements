@@ -13,6 +13,128 @@ soltanto lo stato delle caselle — `[✔]` fatto, `[ ]` da fare — e la frecci
 
 ---
 
+## 2026-08-29 — Il nome di un artefatto non è evidenza, e rilettura dei due prompt
+
+**Branch:** `docs/named-artefact-question`
+
+### 1. Perché questa modifica
+
+Il corpus OpenHands contiene cinque Pull Request strutturalmente identiche
+(`feat(ui): <nome> component`, circa 530 caratteri, stesso modulo compilato allo
+stesso modo). In una sola esecuzione hanno ricevuto **quattro esiti diversi**, e
+il valutatore ha motivato due di essi con affermazioni incompatibili fra loro:
+su una Pull Request che un componente di interfaccia non ha comportamento
+osservabile, su un'altra che «un requisito può essere fondato nella natura
+dell'artefatto».
+
+L'incoerenza non era un difetto di implementazione: era l'assenza di un
+criterio. Il sistema non può essere coerente su una domanda a cui non avevamo
+mai risposto.
+
+### 2. La regola adottata
+
+> Il significato convenzionale di un artefatto nominato non costituisce
+> evidenza. Quando, rimosso il nome, l'evidenza non stabilisce più alcun
+> comportamento osservabile, la Pull Request non è estraibile.
+
+Tre ragioni, scritte per esteso nella nuova **Decisione 3.1 §9.2**: il requisito
+che ne deriverebbe è vero di qualunque sistema dotato di quell'artefatto e non
+trasporta informazione dall'evidenza; se il modello colma le lacune con la
+propria conoscenza del dominio la misura sperimentale riguarda quella conoscenza
+e non le Pull Request; ed è il caso complementare del *removal test* già
+adottato.
+
+La policy è **provvisoria**: il nuovo punto 4 di
+`docs/meetings/open-questions-for-tutor-updated.md` la sottopone alla tutor
+insieme all'alternativa, e dichiara che cosa costerebbe invertirla.
+
+### 3. Il punto delicato: una scappatoia nel removal test
+
+Il *removal test* diceva: rimossi i nomi, se non resta nulla allora il
+cambiamento di meccanismo era lo scopo della Pull Request e nominarlo è
+legittimo. Applicata a «Implements tab component» quella frase **autorizzava**
+esattamente il caso da escludere — ed è la porta da cui il valutatore era
+passato.
+
+Il blocco `<definitions>`, condiviso dai due agenti, ora distingue i due casi in
+base a ciò che dice l'evidenza: quando dichiara che cosa cambia per un
+osservatore (un valore predefinito diverso, un risultato diverso, un effetto
+visibile) nominare il meccanismo resta legittimo; quando dichiara soltanto che
+l'artefatto è stato aggiunto, non c'è requisito da fondare.
+
+### 4. Dove è stata inserita
+
+- **Decisione 3.1 §9.2** — la regola, le motivazioni, la tabella dei casi che
+  restano estraibili e la traduzione operativa.
+- **Blocco `<definitions>`** — la distinzione del punto 3, identica nei due
+  prompt.
+- **Generation Agent** — un controllo in più al passo 4 della procedura, il caso
+  aggiunto fra quelli in cui rispondere `cannot_ground`, e un esempio.
+- **Assessment Agent** — un passo dedicato nella procedura, con esito `REJECT` e
+  non `REVISE` perché è un difetto di fondatezza; una precisazione nella sezione
+  che tratta le rinunce del redattore («un nome non è un'affermazione generale
+  di comportamento»); un esempio.
+
+Gli esempi sono inventati e neutri, come impone il test anti-contaminazione.
+
+### 5. Cosa ha rivelato la rilettura completa dei due prompt
+
+- **Il Generation Agent non aveva alcun esempio di rinuncia.** Sette esempi su
+  sette producevano un requisito, mentre il formato `cannot_ground` era
+  descritto solo a parole. L'esempio aggiunto colma la lacuna.
+- **Un passo della procedura di valutazione era ambiguo**: «*A comment ... is
+  not a requirement. If so, REJECT*», dove «if so» segue una frase negativa.
+  Corretto in «*If it is not, REJECT*».
+- **Un test asseriva tre decisioni su quattro**, ignorando
+  `CONFIRM_NOT_EXTRACTABLE`. Corretto.
+- **Nuovo test sulla numerazione della procedura**: i passi decidono in ordine e
+  il primo che scatta vince, quindi un passo inserito senza rinumerare i
+  successivi ne produrrebbe due con lo stesso numero.
+
+### 6. Due rettifiche a voci precedenti di questo recap
+
+- **Voce del 28 agosto.** Affermava che il prompt del valutatore non nomina i
+  requisiti recuperati dalla memoria. È **falso**: la sezione
+  `<historical_requirements>` esiste, corrisponde all'intestazione prodotta
+  dall'agente e stabilisce che la somiglianza con un requisito storico non
+  determina da sola l'esito. Resta un difetto minore, cioè che non è richiamata
+  dalla `<procedure>`. La decisione di tenere spento il recupero non cambia:
+  regge sulle altre due ragioni.
+- **Voce del 27 agosto.** Diceva che i pattern EARS sono «consigliati e non
+  obbligatori», in contrasto con la Decisione 3.1 §6 e con entrambi i prompt,
+  dove l'uso di uno dei cinque è obbligatorio e la non conformità comporta
+  `REVISE`.
+
+### 7. Verifiche eseguite
+
+- `uv run ruff check .` e `ruff format` — puliti;
+- `uv run pytest` — **186 test passati** (2 nuovi: presenza del criterio in
+  entrambi i prompt, numerazione consecutiva della procedura di valutazione);
+- il test che verifica l'identità byte per byte del blocco `<definitions>`
+  continua a passare dopo la modifica.
+
+Nessuna esecuzione reale: la regola andrà verificata sulle cinque Pull Request
+dell'esempio, e servirà **più di una replica**, dato che su quei casi abbiamo
+già misurato esiti che cambiano fra esecuzioni identiche.
+
+### 8. Stato del sistema dopo questa modifica
+
+```text
+[✔] Preprocessing del dataset       (script esterno al sistema)
+[✔] Input Loader                    are.input
+[✔] Configurazione + client LLM     are.llm
+[✔] Workflow LangGraph (agenti)     are.agents
+[✔] Pipeline Runner                 are.runner
+[ ] Memoria persistente (SQLite)    are.db          ← archiviazione fatta, recupero da fare
+[ ] Server MCP                      are.mcp_server
+[ ] Valutazione sperimentale                         ← gold standard da rifare su OpenHands
+```
+
+Nessuna casella cambia: la modifica riguarda i criteri applicati dagli agenti,
+non i componenti del sistema.
+
+---
+
 ## 2026-08-28 — Memoria persistente su SQLite: archiviazione dei requisiti validati
 
 **Branch:** `feat/memory-persistence`
@@ -132,10 +254,15 @@ conteggi al margine.
 - **La tabella delle relazioni è predisposta ma vuota**: nessun componente della
   pipeline rileva oggi duplicati o conflitti. Le operazioni ci sono, il
   produttore no.
-- **Il prompt del valutatore non nomina i requisiti recuperati.** L'agente li
-  serializza già nel messaggio, ma il prompt non dice cosa farne: accendere il
-  recupero senza aggiungere quella sezione significherebbe iniettare testo senza
-  istruzioni. È la ragione per cui `memory_enabled` resta a `false`.
+- **Il prompt del valutatore tratta già i requisiti recuperati**, nella sezione
+  `<historical_requirements>`, che corrisponde all'intestazione prodotta
+  dall'agente (`PREVIOUSLY VALIDATED REQUIREMENTS`) e stabilisce che la
+  relazione con un requisito storico non determina da sola l'esito. *Rettifica
+  del 29 agosto: la prima stesura di questa voce affermava il contrario. La
+  sezione esiste; resta un difetto minore, cioè che non è richiamata dalla
+  `<procedure>`, l'elenco ordinato che decide l'esito.*
+- Il recupero resta comunque disattivato per le altre due ragioni: la decisione
+  sugli embedding e la dipendenza dall'ordine.
 - **Il recupero rende il sistema dipendente dall'ordine** di elaborazione: va
   documentato nella Decisione 3.7 come variabile sperimentale prima di
   accenderlo, non dopo aver visto i risultati.
@@ -350,10 +477,14 @@ Decisione 3.5, §10.4.
 ### 5. Precisazioni ai documenti di design
 
 - **Decisione 3.1 §6.5** — introdotto il **quinto pattern EARS** (*optional
-  feature*: `Where <feature is included>, the system shall <response>`), che
-  mancava. I pattern restano **consigliati e non obbligatori**: sono una guida
-  alla forma, e imporli produrrebbe frasi forzate dove l'evidenza non ha una
-  condizione da mettere in testa.
+  feature*: `Where <feature is present>, the system shall <response>`), che
+  mancava e che è il pattern corretto per i valori predefiniti. L'uso di uno
+  dei cinque resta **obbligatorio** per il Generation Agent (§6), ma la
+  mancata conformità è un difetto di **formulazione**: comporta `REVISE` e non
+  `REJECT`, perché un requisito fondato ma mal formattato è recuperabile.
+  *Rettifica del 29 agosto: la prima stesura di questa voce diceva
+  «consigliati e non obbligatori», in contrasto con il §6 della Decisione 3.1
+  e con entrambi i prompt.*
 - **Decisione 3.1 §8.1** — il test black-box come criterio operativo di
   «comportamento richiesto».
 - **Decisione 3.1 §8.2** — il requisito descrive il **sistema**, non la

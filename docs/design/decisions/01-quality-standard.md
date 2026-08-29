@@ -566,6 +566,77 @@ Quando la stessa insufficienza di evidenza emerge soltanto durante la valutazion
 decisione appropriata è `REJECT` e non `REVISE`: nessuna riscrittura può fondare un
 requisito su un'evidenza che non lo contiene.
 
+### 9.2 Il nome di un artefatto non è evidenza del suo comportamento
+
+> **Aggiornamento (agosto 2026).** Regola introdotta dopo le prove sul corpus
+> `All-Hands-AI/OpenHands`, dove cinque Pull Request strutturalmente identiche hanno
+> ricevuto quattro esiti diversi in una sola esecuzione. La policy è **provvisoria** e
+> va confermata con la tutor: si veda il punto 4 di
+> `docs/meetings/open-questions-for-tutor-updated.md`, che ne discute anche
+> l'alternativa.
+
+Alcune Pull Request non descrivono alcun comportamento: si limitano a dichiarare che un
+artefatto dal significato convenzionalmente noto è stato aggiunto o implementato. Il
+caso tipico ha questa forma:
+
+```text
+Titolo: feat(ui): tab component
+Corpo:  Implements tab component
+```
+
+Il criterio adottato è:
+
+> Il significato convenzionale di un artefatto nominato **non costituisce evidenza**.
+> Quando, rimosso il nome dell'artefatto, l'evidenza non stabilisce più alcun
+> comportamento osservabile, la Pull Request non è estraibile.
+
+Tre ragioni motivano la scelta.
+
+**Il requisito che ne deriverebbe non riguarda questo sistema.** La frase *«The system
+shall allow users to switch between multiple content panels»* è vera di qualunque
+software dotato di schede: è la definizione del termine, non un requisito ricostruito da
+quella Pull Request. Non trasporta informazione proveniente dall'evidenza, e viola
+quindi il §7 sul grounding.
+
+**È una condizione di validità della misura sperimentale.** Il progetto misura quanta
+informazione sui requisiti sia ricostruibile dal titolo e dal body. Se il modello colma
+le lacune con la propria conoscenza del dominio, la misura riguarda quella conoscenza e
+non il contenuto delle Pull Request (Decisione 3.7).
+
+**È il caso complementare del removal test** (§4, §8.1). Il removal test stabilisce che,
+rimossi i nomi di libreria, funzione o modulo, se resta un comportamento allora quei
+nomi erano dettaglio implementativo. Qui non resta nulla: il comportamento apparente
+proveniva interamente dal nome.
+
+#### Cosa la regola non esclude
+
+La regola vieta di fondare un requisito **soltanto** sul nome. Restano estraibili le
+Pull Request che nominano un artefatto **e** dichiarano che cosa cambia per un
+osservatore: un valore predefinito diverso, un risultato diverso, un effetto visibile
+dall'esterno.
+
+| Evidenza | Esito | Ragione |
+|---|---|---|
+| *Implements toast component* | non estraibile | soltanto il nome |
+| *Add `--log-level` to CLI arguments* | estraibile | nomina un'interfaccia osservabile |
+| *The default retry policy is changed from fixed-interval to exponential backoff* | estraibile | dichiara quale valore predefinito cambia e in che cosa |
+
+Il terzo caso mostra perché la regola non entra in conflitto con il §6.5: quando il
+cambiamento di meccanismo è esso stesso l'oggetto della Pull Request **e l'evidenza lo
+dichiara**, nominarlo resta legittimo.
+
+#### Traduzione operativa
+
+Il criterio è recepito nei prompt dei due agenti:
+
+- il blocco `<definitions>`, condiviso da entrambi, estende il removal test al caso in
+  cui rimosso il nome non resti nulla, distinguendo l'effetto dichiarato dall'effetto
+  riconosciuto;
+- il Generation Agent lo elenca fra i casi in cui rispondere `cannot_ground`;
+- l'Assessment Agent lo applica come passo dedicato della procedura, con esito `REJECT`
+  e non `REVISE`, perché è un difetto di fondatezza e nessuna riscrittura può sanarlo;
+- entrambi i prompt contengono un esempio del caso.
+
 ---
 
 ## 10. Pull Request miste
