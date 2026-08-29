@@ -774,13 +774,14 @@ che abbiamo preferito affrontare prima invece che dopo.
 Il primo è che per capire che due frasi dicono la stessa cosa con parole diverse
 serve uno strumento in più, e va scelto quale.
 
-Il secondo l'abbiamo scoperto controllando il codice, ed è il tipo di cosa che si
-paga cara se non la vedi: il valutatore avrebbe ricevuto quei requisiti simili
-**senza alcuna istruzione su cosa farne**, perché nelle sue istruzioni non se ne
-parla. Nella migliore delle ipotesi li avrebbe ignorati; nella peggiore avrebbe
-bocciato una frase solo perché somiglia a un'altra — e somigliare non è un
-difetto, due Pull Request diverse possono legittimamente produrre requisiti
-vicini.
+Il secondo riguarda le istruzioni del valutatore. Rileggendole con calma
+abbiamo visto che una sezione dedicata c'è già, e dice la cosa giusta: confronta
+il requisito nuovo con quelli vecchi, segnala doppioni o contraddizioni, ma non
+bocciare una frase solo perché somiglia a un'altra — due Pull Request diverse
+possono legittimamente produrre requisiti vicini. Quello che manca è che quella
+sezione non compare nell'elenco ordinato di controlli che il valutatore segue
+per decidere: è un'istruzione che sta lì di lato, e non sappiamo se la userebbe
+davvero. Prima di accendere il recupero vogliamo agganciarla alla procedura.
 
 Il terzo è più sottile e riguarda la tesi. Con la memoria accesa il sistema
 diventa **dipendente dall'ordine**: valutando la quarantesima Pull Request si
@@ -800,6 +801,60 @@ viceversa. Non abbiamo toccato niente che possa spiegarlo. È esattamente il
 fenomeno di ieri sera, e adesso sappiamo che non era un caso isolato di
 un'esecuzione: è il comportamento normale del sistema, e va misurato ripetendo
 le prove.
+
+---
+
+## 29 agosto — La regola che mancava
+
+### Sabato 29 agosto
+
+Oggi abbiamo risolto il caso dei cinque componenti gemelli, quello che ci aveva
+colpito l'altra sera: cinque Pull Request praticamente identiche, quattro esiti
+diversi.
+
+Il problema, riguardandolo con calma, non era che il sistema sbagliasse. Era che
+gli avevamo chiesto di rispondere a una domanda su cui **non avevamo mai deciso
+noi**: se una Pull Request dice soltanto «ho fatto un componente tab», il fatto
+che tutti sappiano cos'è un tab basta per scrivere un requisito?
+
+Abbiamo deciso di no. Il motivo che ci ha convinti è semplice: la frase che ne
+uscirebbe — «il sistema permette di passare da un pannello all'altro» — è vera
+di *qualunque* programma che abbia le schede. Non dice niente su questo
+programma. È la definizione della parola. E soprattutto, se il modello riempie
+i buchi con quello che sa già lui, quello che misuriamo non è più quanto si
+capisce dalle Pull Request, ma quanto ne sa il modello — e la domanda della
+tesi si svuota.
+
+La scelta però non è ovvia, e l'abbiamo scritta come tale: una persona
+competente, leggendo «ho fatto un tab», qualcosa lo capirebbe lo stesso. Per
+questo l'abbiamo messa fra le domande da fare alla tutor, con tutti e due i
+ragionamenti e con l'indicazione di quanto costerebbe cambiare idea. Poco: si
+cancellano tre paragrafi.
+
+**La parte interessante è stata trovare da dove passava l'errore.** Nelle
+istruzioni c'era già una regola che diceva, più o meno: togli dal requisito i
+nomi tecnici; se non resta niente, allora quel nome era il punto della Pull
+Request ed è giusto tenerlo. Scritta così, applicata a «ho fatto un tab», quella
+regola **autorizzava** proprio il caso che volevamo escludere. Non era una
+dimenticanza: era una porta lasciata aperta. Adesso la regola distingue i due
+casi, in base a cosa dice davvero il testo.
+
+**Poi abbiamo riletto tutte le istruzioni dei due agenti da capo**, cercando
+altre contraddizioni. Ne sono uscite quattro cose piccole ma vere: mancava
+completamente un esempio di come si dice «non ce la faccio» (c'erano sette
+esempi e tutti e sette scrivevano un requisito); una frase della procedura era
+scritta in modo ambiguo e poteva essere letta al contrario; un controllo
+automatico verificava tre casi su quattro; e abbiamo aggiunto un controllo che
+si accorge se i passi della procedura vengono numerati male, perché l'ordine in
+cui vanno applicati è sostanza e non forma.
+
+**Infine, due correzioni a cose che avevamo scritto noi nei giorni scorsi.**
+Avevamo annotato che il valutatore non sa cosa farsene dei requisiti recuperati
+dalla memoria: falso, una sezione dedicata c'era già e dice la cosa giusta.
+E avevamo scritto che seguire uno degli schemi di frase è consigliato: in realtà
+nel documento di progetto e nelle istruzioni è obbligatorio. Le abbiamo corrette
+entrambe, lasciando scritto che si trattava di una rettifica — un diario che si
+riscrive di nascosto non serve a niente.
 
 ---
 
