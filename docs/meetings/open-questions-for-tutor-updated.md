@@ -413,6 +413,128 @@ Vogliamo quindi chiarire:
 
 ---
 
+## 4. Il nome di un artefatto conosciuto vale come evidenza?
+
+### Questione aperta
+
+Alcune Pull Request non descrivono un comportamento: si limitano a **nominare un artefatto il cui significato è convenzionalmente noto**.
+
+Il caso reale che ha sollevato la questione è la Pull Request #9673 del corpus `All-Hands-AI/OpenHands`. Tolto il modulo con le caselle da spuntare, il contenuto integrale è:
+
+```text
+Titolo: feat(ui): tab component
+
+Descrizione per l'utente finale: Implements tab component
+Riassunto di cosa fa la PR:      Implements tab component
+```
+
+Tre parole, ripetute due volte. Nessuna indicazione su cosa il sistema debba fare.
+
+Da questa evidenza si può scrivere un requisito come:
+
+> The system shall allow users to select and switch between multiple content panels.
+
+Ma quella frase **non proviene dalla Pull Request**: proviene da ciò che chi legge già sa di un componente *tab*. La domanda è se questa conoscenza convenzionale possa essere considerata parte dell'evidenza.
+
+---
+
+### Perché non è un caso isolato
+
+Il corpus contiene **cinque Pull Request strutturalmente identiche** (`feat(ui): <nome> component`, circa 530 caratteri, stesso modulo compilato allo stesso modo): tab, select, toast, spinner, dialog.
+
+Non avendo una regola, il sistema ha prodotto **quattro esiti diversi nella stessa esecuzione**:
+
+| PR | Componente | Esito |
+|---|---|---|
+| #9590 | spinner | `NOT_EXTRACTABLE` |
+| #9591 | dialog | `REJECTED` |
+| #9632 | toast | `ACCEPTED`, con il nome del componente conservato |
+| #9673 | tab | `ACCEPTED`, dopo due giri, con il nome rimosso |
+| #9712 | select | `ACCEPTED`, dopo due giri, con il nome rimosso |
+
+L'Assessment Agent ha inoltre motivato le proprie decisioni con due affermazioni **incompatibili fra loro**, nello stesso report.
+
+Sulla #9591:
+
+> *L'evidenza non stabilisce alcun comportamento richiesto. Descrive l'implementazione di un componente — un meccanismo — non cosa il sistema deve fare visto dall'esterno. Un componente dialog è un blocco costruttivo interno.*
+
+Sulla #9673:
+
+> *Il fatto che un componente tab sia stato implementato stabilisce il comportamento per riferimento a ciò che un componente del genere fa. Un requisito può essere fondato nella natura dell'artefatto, non solo in una descrizione esplicita.*
+
+L'incoerenza non è un difetto di implementazione: è la conseguenza dell'assenza di un criterio. Il sistema non può essere coerente su una domanda a cui non abbiamo mai risposto.
+
+---
+
+### Policy provvisoria adottata
+
+Per la configurazione corrente adottiamo la **risposta negativa**:
+
+> Il significato convenzionale di un artefatto nominato **non costituisce evidenza**. Se, rimuovendo il nome dell'artefatto, l'evidenza non stabilisce più alcun comportamento osservabile, la Pull Request è `NOT_EXTRACTABLE`.
+
+Le cinque Pull Request dell'esempio ricadono quindi tutte in `NOT_EXTRACTABLE`.
+
+Tre ragioni motivano la scelta.
+
+**1. Il requisito che ne deriverebbe non riguarda questo sistema.** La frase «il sistema deve permettere all'utente di passare fra più pannelli di contenuto» è vera di *qualunque* software dotato di schede. È la definizione del termine, non un requisito ricostruito da quella Pull Request: non trasporta informazione proveniente dall'evidenza.
+
+**2. È una condizione di validità della domanda di ricerca.** Il progetto misura *quanta informazione sui requisiti è ricostruibile dalle Pull Request*. Se il modello colma le lacune dell'evidenza con la propria conoscenza generale del dominio, la misura riguarda la conoscenza del modello e non il contenuto delle Pull Request, e il risultato sperimentale perde significato.
+
+**3. È coerente con un criterio già adottato.** La Decisione 3.1 contiene già il *removal test*: rimosso il nome di una libreria o di un modulo, se resta un comportamento allora quel nome era dettaglio implementativo. La regola qui proposta ne è il caso complementare: rimosso il nome, se **non** resta alcun comportamento, non c'è requisito da scrivere.
+
+---
+
+### Cosa la policy non esclude
+
+La regola vieta di fondare un requisito **soltanto** sul nome. Non esclude le Pull Request che nominano un artefatto **e** indicano un punto di contatto osservabile.
+
+Confronto fra due Pull Request del corpus, entrambe con il corpo quasi vuoto:
+
+| PR | Contenuto utile | Esito secondo la policy |
+|---|---|---|
+| #9632 | «Implements toast component» | `NOT_EXTRACTABLE` — solo il nome |
+| #9637 | «Add `--log-level` to CLI arguments» | `EXTRACTABLE` — nomina un'interfaccia osservabile |
+
+Nel secondo caso l'evidenza dice *dove* il comportamento si manifesta: un'opzione della riga di comando è verificabile dall'esterno senza ricorrere a conoscenza convenzionale.
+
+---
+
+### L'argomento contrario, che riteniamo legittimo
+
+Un analista dei requisiti che legge «implements tab component» inferirebbe comunque che l'utente potrà passare da un pannello all'altro, e nessuno considererebbe quell'inferenza arbitraria. Adottando la policy negativa si scarta informazione che una persona competente utilizzerebbe, e si classificano come non estraibili Pull Request che introducono funzionalità realmente visibili all'utente finale.
+
+La scelta è quindi **prudenziale e non ovvia**: privilegia la validità della misura rispetto alla copertura del dataset.
+
+---
+
+### Reversibilità
+
+La policy è deliberatamente localizzata, così da poter essere invertita rapidamente se la tutor ritiene preferibile la risposta positiva. L'inversione richiede la modifica di:
+
+- un paragrafo della Decisione 3.1;
+- il blocco `<definitions>` condiviso dai due prompt, dove il criterio si innesta accanto al *removal test* già presente;
+- un passo della procedura del prompt di Assessment;
+- un esempio per prompt.
+
+Non sono coinvolti il grafo, il routing, gli agenti né la memoria persistente. L'effetto atteso dell'inversione, sul corpus attuale, è il passaggio delle cinque Pull Request da `NOT_EXTRACTABLE` a `EXTRACTABLE`, con requisiti espressi al livello di astrazione che l'artefatto nominato consente.
+
+---
+
+### Da discutere con la tutor
+
+- se il significato convenzionale di un artefatto nominato debba essere considerato parte dell'evidenza oppure conoscenza esterna;
+- se la risposta debba dipendere dal grado di standardizzazione del termine (un componente di interfaccia molto diffuso rispetto a un artefatto specifico di un dominio);
+- se un requisito valido per qualunque sistema dotato di quell'artefatto debba comunque essere considerato un risultato utile della ricostruzione;
+- quale delle due politiche renda più difendibile la validità della misura sperimentale;
+- se la distinzione fra «nome soltanto» e «nome più punto di contatto osservabile» sia sufficientemente netta per essere applicata in modo ripetibile dagli annotatori del gold standard;
+- se la classificazione di questi casi debba essere registrata come categoria a sé nel dataset, per poterne misurare separatamente l'impatto.
+
+**Policy provvisoria:** il nome da solo non è evidenza; l'esito è `NOT_EXTRACTABLE`.
+
+**Decisione definitiva:** _da definire con la tutor._
+
+---
+
 ## Nuovi punti da aggiungere
 
 Le successive questioni progettuali ancora aperte verranno aggiunte a questo documento mantenendo, quando applicabile, la stessa struttura:
