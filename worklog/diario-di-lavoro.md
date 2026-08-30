@@ -858,6 +858,84 @@ riscrive di nascosto non serve a niente.
 
 ---
 
+## 30 agosto — La memoria comincia a servire a qualcosa
+
+### Domenica 30 agosto — mattina
+
+Prima di tutto abbiamo sistemato una cosa banale ma che ci stava rallentando: il
+modo in cui il sistema racconta quello che sta facendo mentre gira. Le prove le
+facciamo leggendo il terminale, e finora era un muro di righe tutte uguali, con
+le motivazioni degli agenti stampate su righe lunghissime.
+
+Adesso ogni fase è numerata e separata, il testo va a capo, le obiezioni del
+valutatore sono contate («problema 1 di 3») e si vede quanto costa ogni singola
+chiamata invece del solo totale finale. Provandolo abbiamo anche scoperto che il
+costo per chiamata risultava sempre «non disponibile», perché il fornitore
+restituisce il nome del modello con la data attaccata e il nostro listino aveva
+solo il nome. Sistemato.
+
+### Domenica 30 agosto — pomeriggio
+
+Poi la cosa vera della giornata: **abbiamo finito la memoria.**
+
+Fino a ieri il sistema archiviava i requisiti approvati ma non li faceva vedere a
+nessuno. Adesso, prima di giudicare un requisito nuovo, il valutatore riceve
+quelli già approvati e può accorgersi che è un doppione, che ne contraddice uno,
+o che è una versione più precisa di un altro. È esattamente quello che la
+proposta di stage chiede al database di permettere.
+
+**Un solo file invece di tanti.** Prima ogni esecuzione ne creava uno nuovo.
+Adesso è uno solo, e ogni requisito porta scritto da quale esecuzione viene: il
+recupero filtra su quello, quindi ogni prova si comporta come se partisse da zero
+pur restando tutto in un unico file da aprire e sfogliare. Serviva, perché se una
+prova vedesse i risultati di quella precedente, confrontare due modelli non
+direbbe più niente.
+
+**Niente embedding, per ora.** La decisione di progetto prevedeva uno strumento
+che misura quanto due frasi si somigliano, per scegliere quali requisiti mostrare.
+Discutendone ci siamo accorti che a questa scala non serve: i requisiti sono
+poche decine e si possono mostrare **tutti**. E c'è di più — quello strumento
+distingue male una frase dal suo contrario, mentre metà dei nostri requisiti dice
+«il sistema **non** deve...», e riconoscere una contraddizione è esattamente
+distinguere una cosa dal suo opposto. Il modello che legge il testo quel «non» lo
+vede. Abbiamo scritto la scelta con tutte e due le facce e l'abbiamo messa fra le
+domande per la tutor.
+
+**E poi il regalo.** Nel nostro campione ci sono due Pull Request con titolo e
+corpo **identici parola per parola** — il dataset contiene lo stesso cambiamento
+due volte. Ce ne eravamo accorti giorni fa e l'avevamo usato per misurare quanto
+il sistema si ripete. Oggi è diventato il caso di prova perfetto: se la memoria
+funziona, elaborando la seconda il sistema deve tirare fuori la prima.
+
+Ha funzionato. Il valutatore ha scritto:
+
+> *Questo requisito duplica un requisito già validato della Pull Request #6870,
+> che esprime lo stesso comportamento con parole leggermente diverse.*
+
+Due cose ci hanno fatto piacere. La prima è che ha **nominato la Pull Request**,
+non ha detto genericamente «è un doppione»: così l'affermazione si può
+controllare. La seconda è che l'ha **approvato lo stesso**. Somigliare a un
+requisito esistente non è un difetto — due Pull Request diverse possono
+legittimamente portare alla stessa cosa — ed era la regola che avevamo scritto
+nelle istruzioni un'ora prima.
+
+E il controllo opposto, quello che di solito ci si dimenticherebbe: le Pull
+Request che hanno visto requisiti vecchi **senza** esserne parenti non si sono
+inventate niente. Una ha segnalato una somiglianza spiegando perché in realtà è
+un caso diverso; le altre due hanno taciuto. Se avesse trovato parentele
+dappertutto, la funzionalità sarebbe stata peggio che inutile.
+
+**Un difetto scoperto per caso.** Una Pull Request su nove è andata in errore. Il
+generatore aveva prodotto una risposta corretta e poi aveva continuato a
+ragionare da solo — «aspetta, ripensandoci...» — e il nostro codice, leggendo la
+risposta, si portava dietro anche quel pezzo e non la capiva più. Non c'entrava
+con il lavoro di oggi: era un difetto che avevamo da sempre e che oggi ci è
+costato un caso. Corretto.
+
+Alla fine tutto questo è costato **dieci centesimi**.
+
+---
+
 ## Situazione a fine agosto
 
 Cosa c'è:
@@ -873,13 +951,15 @@ Cosa c'è:
 - due agenti che si parlano davvero: il secondo ricorda cosa ha già detto, e il
   primo può dichiarare di non riuscire invece di inventare;
 - il conteggio dei consumi e la stima dei costi per ogni esecuzione;
-- **la memoria**: i requisiti approvati non si perdono più, restano in un file
-  che si apre e si legge, ciascuno con la Pull Request da cui nasce;
+- **la memoria, completa**: i requisiti approvati non si perdono più, restano in
+  un unico file che si apre e si legge, e vengono mostrati al valutatore quando
+  giudica una Pull Request successiva, così può accorgersi di doppioni e
+  contraddizioni;
 - **due gruppi di Pull Request** su cui provare il sistema, uno piccolo e uno di
   quarantasei scritte da persone;
 - un documento che spiega cosa cambia al cambiare dei modelli, con gli esempi
   veri e la verifica sul secondo gruppo;
-- centottantaquattro controlli automatici che verificano tutto senza costi.
+- duecentoventi controlli automatici che verificano tutto senza costi.
 
 Cosa manca:
 
@@ -890,12 +970,14 @@ Cosa manca:
 - ripetere le esecuzioni più volte, ora che la variabilità non si può più
   spegnere, per capire quanto delle differenze fra modelli sia vera differenza
   e quanto sia rumore — e abbiamo visto due volte che ce n'è parecchia;
-- la seconda metà della memoria: mostrare al valutatore i requisiti già
-  approvati che somigliano a quello che sta giudicando;
+- confrontare il sistema **con e senza memoria**: accendere il recupero cambia
+  quello che il valutatore legge su ogni Pull Request, quindi sono due
+  condizioni da misurare separatamente, non una migliore dell'altra;
 - decidere una regola su un punto che il sistema oggi risolve a caso: il nome
   di un componente conosciuto basta da solo a stabilire cosa il sistema deve
   fare, oppure no?
-- il modo per consultare la memoria dall'esterno;
+- il modo per consultare la memoria dall'esterno, cioè il pezzo che la proposta
+  di stage nomina due volte e che è l'ultimo rimasto;
 - l'esecuzione delle prove finali e la raccolta dei risultati.
 
 Prossimo passo concreto: **compilare le schede del gold standard**, ognuno la

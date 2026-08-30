@@ -13,6 +13,179 @@ soltanto lo stato delle caselle — `[✔]` fatto, `[ ]` da fare — e la frecci
 
 ---
 
+## 2026-08-30 (pomeriggio) — Il recupero dalla memoria: il valutatore vede i requisiti già validati
+
+**Branch:** `feat/memory-retrieval`
+
+### 1. Perché questa modifica
+
+La memoria era a metà: archiviava i requisiti accettati ma non li mostrava a
+nessuno. Questa voce completa il componente — il valutatore riceve ora i
+requisiti già validati e può individuare duplicazioni, sovrapposizioni e
+contraddizioni, che è quanto la proposta di stage chiede al database di
+consentire.
+
+### 2. Un solo database, isolato per esecuzione
+
+Prima ogni esecuzione creava un file nuovo. Ora ce n'è **uno solo**,
+`experiments/memory/pr4requirements.db`, e l'isolamento fra esecuzioni è
+affidato alla colonna `run_id`: il recupero vi filtra sopra, quindi ogni run si
+comporta come se partisse da una memoria vuota.
+
+Non è un dettaglio di comodità. Se una run vedesse i requisiti di quella
+precedente partirebbe avvantaggiata, e il confronto fra due configurazioni non
+direbbe più nulla. In cambio resta **un solo artefatto** da aprire e allegare, e
+confrontare due esecuzioni diventa un'interrogazione invece di un confronto fra
+file JSON.
+
+L'opzione `--memory-scope all` rimuove il filtro, restituendo il comportamento
+di una memoria che si accumula davvero nel tempo.
+
+### 3. Recupero esaustivo, senza embedding
+
+Il nuovo `ExhaustiveRequirementRetriever` restituisce **tutti** i requisiti
+validati entro due filtri: stesso progetto, e Pull Request precedenti a quella
+in esame. Non ordina per somiglianza e non calcola punteggi.
+
+La Decisione 3.3 §8 prevedeva un recupero semantico basato su embedding. La
+scelta di non implementarlo ora è motivata e documentata:
+
+- **a questa scala il problema non si presenta.** Un requisito occupa una
+  trentina di token: le poche decine prodotte dal corpus più grande aggiungono
+  circa mille token al messaggio del valutatore, cioè pochi centesimi;
+- **introdurrebbe tre cose da difendere**: una dipendenza esterna, una soglia
+  arbitraria da calibrare, e una nozione di «stesso significato» presa da un
+  modello di terze parti addestrato su testo generico;
+- **gli embedding sbagliano proprio dove serviremmo**: distinguono male una
+  frase dal suo contrario, e buona parte dei requisiti prodotti è in forma
+  negativa. Riconoscere una contraddizione significa esattamente distinguere un
+  requisito dal suo opposto — cosa che il modello leggendo il testo fa, e un
+  embedding no.
+
+La scelta è sottoposta alla tutor come punto 5 delle domande aperte. Le colonne
+per gli embedding restano nello schema: il passaggio futuro non richiederà
+migrazioni.
+
+### 4. Due tipi corretti
+
+- **Tolto `similarity_score`.** Nessuno lo calcola, e il messaggio lo stampava
+  come `1.00` per ogni requisito: avrebbe detto al modello che sono tutti
+  massimamente affini, cioè una cosa falsa.
+- **Aggiunto `source_pr_number`.** Serve subito: permette al valutatore di
+  scrivere «duplica il requisito della Pull Request #6870» invece di un generico
+  «è un duplicato». La differenza è che la prima è verificabile.
+
+### 5. L'aggancio nel prompt
+
+La sezione `<historical_requirements>` esisteva, ma la **procedura** del
+valutatore — l'elenco ordinato dove il primo passo che scatta decide — non la
+richiamava mai. Era un'istruzione lasciata di lato, che il modello poteva
+ignorare senza che ce ne accorgessimo.
+
+Ora la procedura si chiude con un passo esplicito, collocato **fuori** dalla
+catena «il primo che scatta decide», perché il confronto con la memoria si
+riporta ma non deve cambiare l'esito. Alla sezione sono state aggiunte tre
+precisazioni: che i requisiti forniti sono tutti e non una selezione, quindi la
+maggior parte non sarà pertinente; che va nominata la Pull Request di origine; e
+il divieto esplicito di bocciare o chiedere revisioni **solo** perché un
+candidato somiglia a qualcosa già in memoria.
+
+### 6. La traccia nel report
+
+`IterationRecord` porta ora i requisiti storici mostrati in quel tentativo, e il
+report li serializza. Senza, verificare che il recupero abbia pescato quello che
+doveva richiederebbe di leggere il log a occhio su decine di Pull Request.
+
+### 7. La verifica, e il caso che il dataset ci ha regalato
+
+Le Pull Request **#6870 e #6879 del campione scrapy hanno titolo e corpo
+identici byte per byte**: il dataset contiene lo stesso cambiamento due volte.
+È un caso di verifica che non avremmo saputo costruire meglio.
+
+Esecuzione con Haiku sulle 9 Pull Request, $0,10
+(`experiments/runs/run-20260830T112646Z.json`).
+
+**Criterio positivo — superato.** Elaborando la #6879 il sistema ha recuperato
+il requisito accettato per la #6870, e il valutatore lo ha nominato:
+
+> *This requirement duplicates an earlier validated requirement from Pull
+> Request #6870, which states the same behaviour in slightly different
+> language.*
+
+E ha comunque risposto `ACCEPT`: la relazione è stata **registrata, non trattata
+come un difetto della frase**, che era il rischio principale e il divieto scritto
+al punto 5.
+
+**Criterio negativo — superato.** Le Pull Request che hanno visto requisiti
+storici senza esserne parenti non hanno inventato relazioni. La #6880 ha
+segnalato una sovrapposizione **spiegando perché il caso è distinto** (una
+superficie d'attacco diversa); la #6881 e la #6936, che hanno visto tre requisiti
+ciascuna, non hanno detto nulla su di essi.
+
+Il recupero cresce come previsto mentre il lotto procede (0, 1, 2, 3 requisiti),
+e le Pull Request in cui il generatore rinuncia ne mostrano zero: le rinunce
+saltano il recupero, perché non c'è un candidato da confrontare.
+
+### 8. Un difetto trovato dall'esecuzione, e corretto
+
+La Pull Request #6869 è finita in `ERROR`. Il generatore aveva prodotto un JSON
+valido dentro un blocco markdown e aveva poi continuato a ragionare a voce alta
+(«*Wait, let me reconsider...*»). Il parser ritagliava dalla prima graffa aperta
+all'ultima chiusa: con una graffa nel testo in coda, il ritaglio comprendeva
+spazzatura e la risposta — completa e valida — andava persa.
+
+Ora si legge il **primo oggetto JSON completo** ignorando ciò che lo circonda,
+provando in ordine le graffe aperte così che nemmeno della prosa con una graffa
+prima della risposta lo rompa. Le risposte davvero malformate continuano a
+sollevare errore.
+
+Il difetto non era conseguenza di questa modifica: c'era da sempre, e oggi ha
+fatto perdere un caso su nove.
+
+### 9. Decisioni di design aggiornate
+
+- **Decisione 3.3 §8** — aggiornamento datato sul recupero esaustivo e le sue
+  ragioni; **§13.1** — consolidati quattro punti che erano aperti (filtri,
+  riferimento temporale, inizializzazione e isolamento, stato della tabella
+  delle relazioni); **§14** — stato dell'implementazione a fronte del progetto.
+- **Decisione 3.7 §2.1** (nuova) — il recupero rende il sistema dipendente
+  dall'ordine, quindi `memory_enabled` acceso e spento sono **due condizioni
+  sperimentali** da confrontare. Ed è segnalato che l'affermazione del §2 sul
+  miglioramento portato dalla memoria è un'aspettativa scritta prima che il
+  recupero esistesse: la prima misura mostra che il meccanismo funziona, non che
+  la qualità migliori.
+
+### 10. Verifiche eseguite
+
+- `uv run ruff check .` e `ruff format` — puliti;
+- `uv run pytest` — **220 test passati** (33 nuovi): isolamento fra esecuzioni,
+  filtri del retriever, troncamento di salvaguardia, opzione da riga di comando,
+  aggancio nel prompt, traccia nel report, parser resistente al testo in coda, e
+  **sette test di catena completa** che percorrono scrittura, recupero, stato del
+  grafo e messaggio al modello con database vero e agenti finti;
+- una esecuzione reale sul campione scrapy, con verifica automatica dei due
+  criteri.
+
+### 11. Stato del sistema dopo questa modifica
+
+```text
+[✔] Preprocessing del dataset       (script esterno al sistema)
+[✔] Input Loader                    are.input
+[✔] Configurazione + client LLM     are.llm
+[✔] Workflow LangGraph (agenti)     are.agents
+[✔] Pipeline Runner                 are.runner
+[✔] Memoria persistente (SQLite)    are.db          ← questa modifica
+[ ] Server MCP                      are.mcp_server
+[ ] Valutazione sperimentale                         ← gold standard da rifare su OpenHands
+```
+
+La casella della memoria si chiude: archiviazione e recupero sono entrambi in
+funzione e verificati. Resta l'accesso tramite MCP, che sostituirà
+l'implementazione dietro la porta `MemoryRetriever` senza modifiche al grafo né
+agli agenti.
+
+---
+
 ## 2026-08-30 — Log di esecuzione leggibile
 
 **Branch:** `feat/console-output`
