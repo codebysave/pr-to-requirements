@@ -9,7 +9,7 @@
 
 ## 1. Contesto
 
-Il sistema PR4Requirements si basa su due agenti — Requirement Generation Agent e
+Il sistema PR-to-Requirements si basa su due agenti — Requirement Generation Agent e
 Requirement Assessment Agent — entrambi realizzati mediante Large Language Models. La
 scelta del modello (o dei modelli) da utilizzare condiziona la qualità dei requisiti
 generati, il costo del progetto, la riproducibilità degli esperimenti e la struttura

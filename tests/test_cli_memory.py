@@ -75,5 +75,5 @@ def test_the_default_database_is_a_single_shared_file() -> None:
 
     percorso = _default_memory_path()
 
-    assert percorso.name == "pr4requirements.db"
+    assert percorso.name == "pr-to-requirements.db"
     assert percorso.parent.as_posix() == "experiments/memory"

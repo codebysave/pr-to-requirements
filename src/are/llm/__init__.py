@@ -1,4 +1,4 @@
-"""API pubblica del livello di accesso agli LLM di PR4Requirements."""
+"""API pubblica del livello di accesso agli LLM di PR-to-Requirements."""
 
 from .client import API_KEY_ENV_VAR, AnthropicLLMClient, LLMClient, LLMResponse
 from .config import (

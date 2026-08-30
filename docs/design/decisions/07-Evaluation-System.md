@@ -9,11 +9,11 @@
 
 ## 1. Contesto
 
-Dopo aver definito il workflow completo di PR4Requirements, dobbiamo stabilire come valuteremo in maniera indipendente e riproducibile la qualità dei requisiti funzionali prodotti dal sistema.
+Dopo aver definito il workflow completo di PR-to-Requirements, dobbiamo stabilire come valuteremo in maniera indipendente e riproducibile la qualità dei requisiti funzionali prodotti dal sistema.
 
 La domanda principale a cui vogliamo rispondere è:
 
-> **Il requisito funzionale prodotto da PR4Requirements rappresenta correttamente il comportamento ricostruibile dalla Pull Request ed è formulato con una qualità adeguata?**
+> **Il requisito funzionale prodotto da PR-to-Requirements rappresenta correttamente il comportamento ricostruibile dalla Pull Request ed è formulato con una qualità adeguata?**
 
 Per rispondere a questa domanda abbiamo deciso di costruire la valutazione su tre elementi principali:
 
@@ -184,7 +184,7 @@ Applicheremo gli stessi criteri già definiti nel progetto per stabilire:
 
 In caso di disaccordo confronteremo le due annotazioni e definiremo una versione condivisa prima di utilizzare il caso nella valutazione.
 
-Manterremo il gold separato dall'input fornito a PR4Requirements, in modo che non possa essere utilizzato accidentalmente durante la generazione.
+Manterremo il gold separato dall'input fornito a PR-to-Requirements, in modo che non possa essere utilizzato accidentalmente durante la generazione.
 
 ---
 
@@ -405,7 +405,7 @@ Utilizzare la stessa valutazione come prova finale della qualità del sistema si
 Per questo motivo manterremo separata la valutazione sperimentale:
 
 ```text
-PR4Requirements
+PR-to-Requirements
       │
       ▼
 Generated Requirement
@@ -602,7 +602,7 @@ Prima della valutazione finale dovremo definire in modo definitivo:
 
 ## 17. Decisione riassuntiva
 
-Abbiamo deciso di valutare PR4Requirements attraverso il confronto tra l'output finale del sistema e una valutazione esterna costruita sul campione sperimentale.
+Abbiamo deciso di valutare PR-to-Requirements attraverso il confronto tra l'output finale del sistema e una valutazione esterna costruita sul campione sperimentale.
 
 Il piano adottato è:
 
@@ -613,7 +613,7 @@ Campione di Pull Request
 Gold standard umano
         │
         ▼
-PR4Requirements
+PR-to-Requirements
 Generator + Assessment + Memory
         │
         ▼

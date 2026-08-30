@@ -1,4 +1,4 @@
-"""Client LLM di PR4Requirements: astrazione sopra il fornitore (Decisione 3.2).
+"""Client LLM di PR-to-Requirements: astrazione sopra il fornitore (Decisione 3.2).
 
 Gli agenti dipendono soltanto dal protocollo ``LLMClient``; il fornitore
 concreto (oggi Anthropic) resta un dettaglio sostituibile via configurazione.

@@ -1,4 +1,4 @@
-"""API pubblica del nodo di ingresso di PR4Requirements."""
+"""API pubblica del nodo di ingresso di PR-to-Requirements."""
 
 from .exceptions import (
     DuplicatePullRequestIdError,
