@@ -30,11 +30,9 @@ venv/
 Thumbs.db
 
 # --- TEMPORANEO --- rimuovere queste righe per rimettere i file su GitHub.
-# Materiale in revisione, escluso dal repository il 2026-08-30 in attesa di
-# essere sistemato (in particolare le date del diario). I file restano sul
-# disco: per rimetterli basta cancellare questo blocco ed eseguire
-#     git add recap.md worklog/ spiegazione_semplice/
+# Documenti ancora in revisione, esclusi dal repository il 2026-08-30. I file
+# restano sul disco: per rimetterli basta cancellare questo blocco ed eseguire
+#     git add recap.md worklog/ riassunto-facile-della-pipeline.md
 recap.md
 worklog/
-spiegazione_semplice/da-revisionare-con-marco.md
-spiegazione_semplice/modifiche-apportate.md
+riassunto-facile-della-pipeline.md
