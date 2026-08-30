@@ -27,10 +27,13 @@ Flusso:
 
 from __future__ import annotations
 
+import logging
 from functools import partial
 
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
+
+from are import console
 
 from .config import WorkflowConfig
 from .ports import WorkflowDependencies
@@ -54,6 +57,8 @@ from .state import (
     IterationRecord,
     RequirementState,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def build_workflow(
@@ -145,12 +150,30 @@ class _WorkflowNodes:
     def retrieve_memory(self, state: RequirementState) -> dict:
         # Il retrieval è deterministico e ripetuto dopo ogni generazione
         # (Decisione 3.5, §8): una revisione può cambiare i requisiti affini.
+        #
+        # A memoria disattivata la fase non viene nemmeno annunciata: una riga
+        # per ogni Pull Request su una funzionalità spenta è solo rumore.
         if not self._config.memory_enabled:
             return {"retrieved_requirements": ()}
         candidate = state["candidate_requirement"]
         assert candidate is not None
-        results = self._deps.retriever.retrieve(candidate, state["pull_request"])
-        return {"retrieved_requirements": tuple(results)}
+
+        logger.info("%s", console.phase("MEMORIA"))
+        logger.info(
+            "%s",
+            console.note("cerco requisiti gia' validati con cui confrontare il candidato"),
+        )
+        results = tuple(self._deps.retriever.retrieve(candidate, state["pull_request"]))
+        if results:
+            logger.info("%s", console.result(f"{len(results)} requisiti recuperati"))
+            for item in results:
+                logger.info("%s", console.quoted(item.statement))
+        else:
+            logger.info(
+                "%s",
+                console.result("nessun requisito precedente da confrontare", console.OK),
+            )
+        return {"retrieved_requirements": results}
 
     def assess(self, state: RequirementState) -> dict:
         assessor = self._deps.assessor

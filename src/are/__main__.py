@@ -18,6 +18,7 @@ from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
 
+from are import console
 from are.agents import (
     DeterministicExtractabilityChecker,
     WorkflowDependencies,
@@ -65,6 +66,9 @@ def main(argv: list[str] | None = None) -> int:
     for rumoroso in ("httpx", "httpx2", "httpcore", "anthropic"):
         logging.getLogger(rumoroso).setLevel(logging.WARNING)
 
+    # Le risposte dei modelli contengono caratteri che le console Windows non
+    # rappresentano: senza questa protezione una riga di log andrebbe persa.
+    console.make_output_resilient()
     load_environment()
 
     if args.check_api:

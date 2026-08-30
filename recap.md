@@ -13,6 +13,80 @@ soltanto lo stato delle caselle — `[✔]` fatto, `[ ]` da fare — e la frecci
 
 ---
 
+## 2026-08-30 — Log di esecuzione leggibile
+
+**Branch:** `feat/console-output`
+
+### 1. Perché questa modifica
+
+Le prove si fanno leggendo la console, ma il log era una sequenza di righe
+prefissate (`[GENERA]`, `[VALUTA]`) senza separazioni, con le motivazioni degli
+agenti stampate su righe da trecento caratteri e senza alcuna indicazione di
+quale giro del ciclo fosse in corso.
+
+### 2. Il nuovo formato
+
+Un modulo dedicato, `src/are/console.py`, produce le stringhe; i moduli che già
+scrivevano nel log le usano. Nessun cambiamento di comportamento del sistema.
+
+- **fasi numerate** e chiuse da un filetto, così la successione dei giri resta
+  leggibile anche quando il ciclo si ripete tre volte;
+- **testo mandato a capo** a 78 colonne con rientro;
+- **feedback contato ed etichettato** (`problema 1 di 3`): il conteggio dice
+  subito quante obiezioni sono state sollevate, cosa che un elenco puntato
+  nasconde;
+- **consumo e costo della singola chiamata**, finora visibili solo nel totale;
+- la fase **memoria**, che prima non stampava nulla — e che resta silenziosa
+  quando il recupero è disattivato, perché una riga per Pull Request su una
+  funzionalità spenta è soltanto rumore;
+- con `--verbose`, messaggio inviato e risposta grezza in un blocco rientrato.
+
+### 3. Due difetti trovati provando il risultato
+
+- **I marcatori tipografici si corrompono.** La console Windows dichiara
+  `cp1252` e rappresenterebbe il punto mediano, ma lo stesso output attraversa
+  pipe e file di log: in quel passaggio i byte diventano caratteri di
+  sostituzione. I marcatori sono quindi in **ASCII puro**, scelta deliberata e
+  annotata nel modulo.
+- **Il costo della singola chiamata risultava sempre `n/d`.** Il fornitore
+  restituisce l'identificativo datato (`claude-haiku-4-5-20251001`) mentre il
+  listino è indicizzato per famiglia. `estimate_cost_usd` ora accetta il
+  suffisso **solo se è una data**: un confronto per prefisso più permissivo
+  rischierebbe di attribuire a un modello il prezzo di un altro. I totali di
+  esecuzione erano corretti già prima, perché usano il nome configurato.
+
+### 4. Una protezione aggiunta
+
+`console.make_output_resilient()` imposta la sostituzione dei caratteri non
+rappresentabili sui flussi di uscita. Le risposte dei modelli contengono
+lineette lunghe e virgolette tipografiche che `cp1252` non rappresenta: senza,
+una riga di log andrebbe persa nel mezzo di un'esecuzione lunga.
+
+### 5. Verifiche eseguite
+
+- `uv run ruff check .` e `ruff format` — puliti;
+- `uv run pytest` — **188 test passati** (2 nuovi sul listino: versione datata
+  riconosciuta, suffisso non numerico rifiutato);
+- due esecuzioni reali brevi per verificare il risultato a schermo; i report non
+  sono stati conservati perché prove di formattazione, non esperimenti.
+
+### 6. Stato del sistema dopo questa modifica
+
+```text
+[✔] Preprocessing del dataset       (script esterno al sistema)
+[✔] Input Loader                    are.input
+[✔] Configurazione + client LLM     are.llm
+[✔] Workflow LangGraph (agenti)     are.agents
+[✔] Pipeline Runner                 are.runner
+[ ] Memoria persistente (SQLite)    are.db          ← archiviazione fatta, recupero da fare
+[ ] Server MCP                      are.mcp_server
+[ ] Valutazione sperimentale                         ← gold standard da rifare su OpenHands
+```
+
+Invariato: la modifica riguarda la presentazione, non i componenti.
+
+---
+
 ## 2026-08-29 — Il nome di un artefatto non è evidenza, e rilettura dei due prompt
 
 **Branch:** `docs/named-artefact-question`

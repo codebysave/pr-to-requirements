@@ -17,8 +17,9 @@ import json
 import logging
 from typing import Any, Sequence
 
+from are import console
 from are.input import PullRequestRecord
-from are.llm import LLMClient
+from are.llm import LLMClient, LLMResponse, UsageStats, estimate_cost_usd
 
 from .prompts import (
     ASSESSMENT_AGENT,
@@ -40,7 +41,24 @@ logger = logging.getLogger(__name__)
 _PREVIEW_LENGTH = 200
 
 
-def _log_exchange(fase: str, system: str, user_message: str, risposta: str) -> None:
+def _log_call(response: LLMResponse) -> None:
+    """Riporta il consumo della singola chiamata, non solo il totale finale."""
+
+    usage = UsageStats(
+        calls=1, input_tokens=response.input_tokens, output_tokens=response.output_tokens
+    )
+    logger.info(
+        "%s",
+        console.call(
+            response.model,
+            response.input_tokens,
+            response.output_tokens,
+            estimate_cost_usd(response.model, usage),
+        ),
+    )
+
+
+def _log_exchange(system: str, user_message: str, risposta: str) -> None:
     """Registra a livello DEBUG i messaggi scambiati con il modello.
 
     Il prompt di sistema è lungo e identico a ogni chiamata: se ne registra
@@ -50,15 +68,7 @@ def _log_exchange(fase: str, system: str, user_message: str, risposta: str) -> N
 
     if not logger.isEnabledFor(logging.DEBUG):
         return
-    logger.debug("")
-    logger.debug("   +-- %s: messaggio inviato ---", fase)
-    logger.debug("   |   (prompt di sistema: %d caratteri, dai file in prompts/)", len(system))
-    for riga in user_message.splitlines():
-        logger.debug("   |   %s", riga)
-    logger.debug("   +-- %s: risposta ricevuta ---", fase)
-    for riga in risposta.splitlines():
-        logger.debug("   |   %s", riga)
-    logger.debug("")
+    logger.debug("%s", console.exchange(system, user_message, risposta))
 
 
 class AgentResponseError(Exception):
@@ -179,14 +189,32 @@ class LLMRequirementGenerator:
         previous_candidate: str | None,
         feedback: AssessmentFeedback | None,
     ) -> GenerationOutcome:
+        # Il generatore non conosce il numero del tentativo: la firma della
+        # porta non lo prevede, e il contatore delle fasi rende comunque
+        # leggibile la successione dei giri.
+        logger.info(
+            "%s",
+            console.phase("GENERAZIONE", "prima stesura" if feedback is None else "revisione"),
+        )
         if feedback is None:
-            logger.info("  [GENERA]  scrivo il requisito dalla sola evidenza della PR...")
+            logger.info(
+                "%s", console.note("scrivo il requisito dalla sola evidenza della Pull Request")
+            )
         else:
-            logger.info("  [GENERA]  riscrivo il requisito applicando il feedback ricevuto...")
+            quante = len(feedback.revision_instructions)
+            logger.info(
+                "%s",
+                console.note(
+                    f"riscrivo applicando le {quante} istruzioni ricevute"
+                    if quante != 1
+                    else "riscrivo applicando l'istruzione ricevuta"
+                ),
+            )
 
         user_message = self._build_message(pull_request, previous_candidate, feedback)
         response = self._client.complete(system=self._system, user_message=user_message)
-        _log_exchange("GENERA", self._system, user_message, response.text)
+        _log_call(response)
+        _log_exchange(self._system, user_message, response.text)
 
         data = parse_json_object(response.text, GENERATION_AGENT)
 
@@ -194,11 +222,13 @@ class LLMRequirementGenerator:
         # sarà il valutatore a confermarla o a respingerla.
         motivo = data.get("cannot_ground")
         if isinstance(motivo, str) and motivo.strip():
-            logger.info("  [GENERA]  -> nessun requisito ricostruibile: %s", motivo.strip())
+            logger.info("%s", console.result("nessun requisito ricostruibile", console.STOP))
+            logger.info("%s", console.items("motivo", [motivo.strip()]))
             return GenerationOutcome(refusal_reason=motivo.strip())
 
         requisito = _require_non_empty_string(data, "requirement", GENERATION_AGENT, response.text)
-        logger.info('  [GENERA]  -> "%s"', requisito)
+        logger.info("%s", console.result("REQUISITO"))
+        logger.info("%s", console.quoted(requisito))
         return GenerationOutcome(requirement=requisito)
 
     def _build_message(
@@ -239,22 +269,30 @@ class LLMRequirementAssessor:
         history: Sequence[IterationRecord] = (),
         generation_refusal: str | None = None,
     ) -> AssessmentResult:
-        contesto = []
-        if history:
-            contesto.append(f"{len(history)} tentativi precedenti")
-        if retrieved_requirements:
-            contesto.append(f"{len(retrieved_requirements)} requisiti storici")
+        logger.info("%s", console.phase("VALUTAZIONE", f"tentativo {len(history) + 1}"))
         cosa = "la rinuncia del redattore" if generation_refusal else "il requisito candidato"
-        if contesto:
-            logger.info("  [VALUTA]  esamino %s (%s)...", cosa, ", ".join(contesto))
-        else:
-            logger.info("  [VALUTA]  esamino %s...", cosa)
+        logger.info("%s", console.note(f"esamino {cosa}"))
+        if history:
+            logger.info(
+                "%s",
+                console.note(
+                    f"ho davanti anche i {len(history)} tentativi precedenti e i miei verdetti"
+                ),
+            )
+        if retrieved_requirements:
+            logger.info(
+                "%s",
+                console.note(
+                    f"e {len(retrieved_requirements)} requisiti gia' validati con cui confrontarlo"
+                ),
+            )
 
         user_message = self._build_message(
             pull_request, candidate, retrieved_requirements, history, generation_refusal
         )
         response = self._client.complete(system=self._system, user_message=user_message)
-        _log_exchange("VALUTA", self._system, user_message, response.text)
+        _log_call(response)
+        _log_exchange(self._system, user_message, response.text)
         data = parse_json_object(response.text, ASSESSMENT_AGENT)
 
         raw_decision = _require_non_empty_string(
@@ -282,15 +320,25 @@ class LLMRequirementAssessor:
             ),
         )
 
-        logger.info("  [VALUTA]  -> %s", decision.value)
+        passata = decision is AssessmentDecision.ACCEPT
+        rilievi = (
+            feedback.issues
+            + feedback.unsupported_claims
+            + feedback.missing_information
+            + feedback.revision_instructions
+        )
+        esito = decision.value if rilievi else f"{decision.value}  {console.DOT}  nessun rilievo"
+        logger.info("%s", console.result(esito, console.OK if passata else console.STOP))
+
         for etichetta, valori in (
             ("problema", feedback.issues),
-            ("non supportato", feedback.unsupported_claims),
+            ("non supportato dall'evidenza", feedback.unsupported_claims),
             ("informazione mancante", feedback.missing_information),
             ("istruzione", feedback.revision_instructions),
         ):
-            for valore in valori:
-                logger.info("              %s: %s", etichetta, valore)
+            blocco = console.items(etichetta, list(valori))
+            if blocco:
+                logger.info("%s", blocco)
 
         if decision is AssessmentDecision.REVISE and not feedback.revision_instructions:
             # Senza istruzioni il tentativo successivo ripeterebbe l'errore.

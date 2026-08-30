@@ -22,6 +22,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 
+from are import console
 from are.input import PullRequestRecord
 
 from .state import Extractability, ExtractabilityResult
@@ -48,9 +49,21 @@ class DeterministicExtractabilityChecker:
         title = pull_request.title.strip()
         body = pull_request.body.strip()
 
-        logger.info("  [GATE]    controllo che la PR contenga testo sufficiente...")
+        logger.info("%s", console.phase("GATE"))
+        logger.info(
+            "%s", console.note("la Pull Request contiene abbastanza testo per essere valutata?")
+        )
+
         result = self._evaluate(title, body)
-        logger.info("  [GATE]    -> %s: %s", result.decision.value, result.reason)
+
+        passata = result.decision is Extractability.EXTRACTABLE
+        logger.info(
+            "%s",
+            console.result(
+                f"{result.decision.value}  {console.DOT}  {result.reason}",
+                console.OK if passata else console.STOP,
+            ),
+        )
         return result
 
     def _evaluate(self, title: str, body: str) -> ExtractabilityResult:
