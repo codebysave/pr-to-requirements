@@ -29,7 +29,7 @@ from are.agents.llm_agents import LLMRequirementAssessor
 from are.db import IN_MEMORY, ExhaustiveRequirementRetriever, SqliteRequirementRepository
 from are.input import PullRequestRecord
 from are.llm import LLMResponse
-from are.runner import PipelineRunner
+from are.runner import PipelineRunner, build_run_report
 
 RUN = "20260830T140000Z"
 
@@ -212,3 +212,27 @@ def test_only_accepted_requirements_enter_the_memory() -> None:
     assert risultati[0].final_state["final_status"] is FinalStatus.REJECTED
     assert assessor.received[1][1] == ()
     assert totale == 1
+
+
+# -- traccia nel report --------------------------------------------------
+
+
+def test_the_report_records_which_requirements_were_shown() -> None:
+    """Senza questa traccia la verifica del recupero sarebbe a occhio.
+
+    Con essa, controllare che elaborando una Pull Request duplicata il sistema
+    abbia davvero pescato il suo gemello diventa un controllo automatico.
+    """
+
+    with SqliteRequirementRepository(IN_MEMORY, RUN) as store:
+        risultati = esegui(store, [pr(1, giorno=1), pr(2, giorno=2)], AcceptingAssessor())
+
+    report = build_run_report(risultati)
+    prima, seconda = report["results"]
+
+    assert prima["iteration_history"][0]["retrieved_requirements"] == []
+
+    mostrati = seconda["iteration_history"][0]["retrieved_requirements"]
+    assert [item["source_pr_number"] for item in mostrati] == [1]
+    assert mostrati[0]["statement"] == "The system shall satisfy the need of Pull Request 1."
+    assert mostrati[0]["requirement_id"]

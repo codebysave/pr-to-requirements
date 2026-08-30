@@ -128,6 +128,13 @@ class IterationRecord:
     candidate: str | None
     assessment: AssessmentResult | None
     refusal_reason: str | None = None
+    retrieved: tuple[RetrievedRequirement, ...] = ()
+    """Requisiti storici mostrati al valutatore in questo tentativo.
+
+    Senza questa traccia nel report, verificare che il recupero abbia funzionato
+    richiederebbe di rileggere il log a occhio su decine di Pull Request: qui
+    diventa un controllo automatico.
+    """
 
 
 class RequirementState(TypedDict):

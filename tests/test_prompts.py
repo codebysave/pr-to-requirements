@@ -185,6 +185,31 @@ def test_assessment_procedure_steps_are_numbered_consecutively() -> None:
     assert numeri == list(range(1, len(numeri) + 1)), numeri
 
 
+def test_the_procedure_hooks_the_comparison_with_historical_requirements() -> None:
+    """La sezione esisteva ma nessun passo la faceva scattare.
+
+    La procedura decide con il primo passo che si applica: un'istruzione che
+    resta fuori da quell'elenco puo' essere semplicemente ignorata.
+    """
+
+    prompt = load_prompt(ASSESSMENT_AGENT)
+    procedura = _extract_block(prompt, "procedure")
+
+    assert "previously validated requirements were supplied" in procedura
+    # Il confronto si riporta, non decide: l'esito resta quello dei passi.
+    assert "does not change the outcome" in procedura
+    # Nominare la Pull Request rende la segnalazione verificabile.
+    assert "naming the Pull Request" in procedura
+
+
+def test_resembling_an_earlier_requirement_is_not_a_defect() -> None:
+    """Due Pull Request diverse possono legittimamente produrre lo stesso comportamento."""
+
+    storici = _extract_block(load_prompt(ASSESSMENT_AGENT), "historical_requirements")
+
+    assert "Never reject or ask for a revision merely because" in storici
+
+
 def test_prompts_use_the_expected_structure() -> None:
     for agent in AGENTS:
         prompt = load_prompt(agent)
