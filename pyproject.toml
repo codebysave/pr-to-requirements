@@ -8,8 +8,8 @@ version = "0.1.0"
 description = "Automatic Requirement Extraction from PRs using LLM-based Agents"
 requires-python = ">=3.11"
 authors = [
-    { name = "Andrea [Cognome]" },
-    { name = "Marco [Cognome]" },
+    { name = "Andrea Saverino" },
+    { name = "Marco Saverino Salvatore" },
 ]
 dependencies = [
     "anthropic>=1.0.0",

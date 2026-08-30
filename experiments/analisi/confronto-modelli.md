@@ -1,7 +1,7 @@
 # Scelta dei modelli — cosa abbiamo imparato
 
 **Data:** 27 agosto 2026
-**Per:** Andrea e Marco
+**Autori:** Andrea, Marco
 **Report grezzi:** `experiments/runs/run-20260827T13*.json`
 
 ---
