@@ -15,25 +15,19 @@ Il sistema prevede due agenti:
   conformità allo stile richiesto. Se il requisito non supera la
   valutazione, la generazione viene ripetuta.
 
-I requisiti validati vengono salvati in un database persistente
-accessibile dagli agenti tramite MCP (Model Context Protocol), che
-funge da memoria a lungo termine e consente di verificare duplicazioni
-o incoerenze con i requisiti già generati.
+I requisiti generati, una volta validati, vengono salvati in un
+**database persistente** che funge da **memoria a lungo termine** del
+sistema. Gli agenti vi accedono tramite **MCP (Model Context Protocol)**,
+che espone tool di ricerca sui requisiti storici e permette
+all'Assessment Agent di individuare duplicazioni o incoerenze con i
+requisiti già generati.
 
-## Autori
+## Autori e supervisione
 
 - **Andrea Saverino** — Matricola: [914388]
 - **Marco Saverino Salvatore** — Matricola: [847000]
-
-## Supervisione
-
 - **Tutor**: Benedetta Donato
-- **Università**: Università degli studi di Milano Bicocca
-
-## Stato del progetto
-
-In fase di sviluppo. Stage avviato a luglio 2026,
-laurea prevista per settembre 2026.
+- **Università**: Università degli Studi di Milano-Bicocca
 
 ## Struttura del repository
 
