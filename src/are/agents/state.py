@@ -77,11 +77,22 @@ class AssessmentResult:
 
 @dataclass(frozen=True, slots=True)
 class RetrievedRequirement:
-    """Requisito storico recuperato dalla memoria per il confronto."""
+    """Requisito storico recuperato dalla memoria per il confronto.
+
+    Non c'è alcun punteggio di somiglianza: il recupero è esaustivo entro i
+    filtri di progetto e di data, e a stabilire se il candidato duplichi,
+    raffini o contraddica uno di questi requisiti è l'Assessment Agent
+    leggendone il testo. Un punteggio che nessuno calcola sarebbe un numero
+    inventato, e comunicarlo al modello lo indurrebbe in errore.
+
+    ``source_pr_number`` accompagna il testo perché il valutatore possa citare
+    la Pull Request di origine: una segnalazione di duplicazione che nomina il
+    caso è verificabile, una generica non lo è.
+    """
 
     requirement_id: str
     statement: str
-    similarity_score: float
+    source_pr_number: int
 
 
 @dataclass(frozen=True, slots=True)

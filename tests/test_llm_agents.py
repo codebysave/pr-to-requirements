@@ -188,14 +188,15 @@ def test_assessor_rejects_malformed_feedback_lists() -> None:
 
 def test_assessor_includes_retrieved_requirements_in_the_message() -> None:
     client = FakeLLMClient('{"decision": "ACCEPT"}')
-    historical = RetrievedRequirement("FR-0007", "The system shall export data.", 0.87)
+    historical = RetrievedRequirement("7", "The system shall export data.", source_pr_number=4242)
 
     LLMRequirementAssessor(client).assess(PR, "The system shall export reports.", (historical,))
 
     _, user_message = client.requests[0]
-    assert "FR-0007" in user_message
     assert "The system shall export data." in user_message
-    assert "0.87" in user_message
+    # Il numero della Pull Request permette al valutatore di citare il caso
+    # invece di segnalare una duplicazione generica.
+    assert "4242" in user_message
 
 
 def test_assessor_omits_memory_section_when_no_requirements_retrieved() -> None:

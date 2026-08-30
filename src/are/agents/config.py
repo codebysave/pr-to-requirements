@@ -22,6 +22,7 @@ _REQUIRED_KEYS = frozenset(
         "memory_enabled",
         "max_generation_attempts",
         "min_evidence_characters",
+        "max_memory_requirements",
     }
 )
 
@@ -34,6 +35,7 @@ class WorkflowConfig:
     memory_enabled: bool = False
     max_generation_attempts: int = 3
     min_evidence_characters: int = 50
+    max_memory_requirements: int = 50
 
 
 def load_workflow_config(path: str | os.PathLike[str]) -> WorkflowConfig:
@@ -99,6 +101,12 @@ def load_workflow_config(path: str | os.PathLike[str]) -> WorkflowConfig:
             f'[{_SECTION}] "min_evidence_characters" deve essere un intero maggiore o uguale a 0'
         )
 
+    max_memory = data.get("max_memory_requirements")
+    if "max_memory_requirements" in data and (type(max_memory) is not int or max_memory < 1):
+        issues.append(
+            f'[{_SECTION}] "max_memory_requirements" deve essere un intero maggiore o uguale a 1'
+        )
+
     if issues:
         raise InvalidWorkflowConfigError(config_path, issues)
 
@@ -106,9 +114,11 @@ def load_workflow_config(path: str | os.PathLike[str]) -> WorkflowConfig:
     assert isinstance(memory_enabled, bool)
     assert type(max_attempts) is int
     assert type(min_evidence) is int
+    assert type(max_memory) is int
     return WorkflowConfig(
         assessment_enabled=assessment_enabled,
         memory_enabled=memory_enabled,
         max_generation_attempts=max_attempts,
         min_evidence_characters=min_evidence,
+        max_memory_requirements=max_memory,
     )

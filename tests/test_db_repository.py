@@ -269,3 +269,53 @@ def test_creates_the_parent_directory(tmp_path) -> None:
         pass
 
     assert percorso.exists()
+
+
+# -- isolamento fra esecuzioni -------------------------------------------
+
+
+def test_lists_only_the_requirements_of_one_run(tmp_path) -> None:
+    """Il database è condiviso: senza questo filtro le run si contaminerebbero.
+
+    Una seconda esecuzione che vedesse i requisiti della prima partirebbe
+    avvantaggiata, e il confronto fra due configurazioni non direbbe più nulla.
+    """
+
+    percorso = tmp_path / "memoria.db"
+    with SqliteRequirementRepository(percorso, "run-uno") as repo:
+        repo.store_accepted(pr(pr_number=1), "Prodotto dalla prima esecuzione.")
+    with SqliteRequirementRepository(percorso, "run-due") as repo:
+        repo.store_accepted(pr(pr_number=2), "Prodotto dalla seconda esecuzione.")
+
+        della_seconda = repo.list_requirements(run_id="run-due")
+        tutte = repo.list_requirements()
+
+    assert [item.statement for item in della_seconda] == ["Prodotto dalla seconda esecuzione."]
+    assert len(tutte) == 2
+
+
+def test_the_run_filter_combines_with_the_others(tmp_path) -> None:
+    percorso = tmp_path / "memoria.db"
+    with SqliteRequirementRepository(percorso, "run-uno") as repo:
+        repo.store_accepted(
+            pr(pr_number=1, repository="owner/uno", timestamp="2026-01-01T10:00:00Z"), "Voluto."
+        )
+        repo.store_accepted(
+            pr(pr_number=2, repository="owner/due", timestamp="2026-01-01T10:00:00Z"), "Altro repo."
+        )
+        repo.store_accepted(
+            pr(pr_number=3, repository="owner/uno", timestamp="2026-06-01T10:00:00Z"),
+            "Troppo tardi.",
+        )
+    with SqliteRequirementRepository(percorso, "run-due") as repo:
+        repo.store_accepted(
+            pr(pr_number=4, repository="owner/uno", timestamp="2026-01-01T10:00:00Z"), "Altra run."
+        )
+
+        stored = repo.list_requirements(
+            repository="owner/uno",
+            before_timestamp=datetime(2026, 2, 1, tzinfo=timezone.utc),
+            run_id="run-uno",
+        )
+
+    assert [item.statement for item in stored] == ["Voluto."]

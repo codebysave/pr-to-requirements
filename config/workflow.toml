@@ -23,3 +23,10 @@ max_generation_attempts = 3
 # con corpo assente o scarsamente informativo). Con 0 il controllo si limita
 # a scartare i corpi vuoti.
 min_evidence_characters = 50
+
+# Numero massimo di requisiti storici mostrati al valutatore. Non è un `top_k`:
+# il recupero è esaustivo entro i filtri di progetto e di data, e questo valore
+# serve solo a impedire che un archivio cresciuto oltre le previsioni gonfi il
+# messaggio senza che nessuno se ne accorga. Se scatta, vengono tenuti i più
+# recenti e il log lo segnala.
+max_memory_requirements = 50

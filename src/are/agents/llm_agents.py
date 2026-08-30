@@ -369,8 +369,7 @@ class LLMRequirementAssessor:
             sections.append(f"CANDIDATE REQUIREMENT:\n{candidate}")
         if retrieved_requirements:
             lines = [
-                f"- [{item.requirement_id}] {item.statement} "
-                f"(similarity {item.similarity_score:.2f})"
+                f"- (from Pull Request #{item.source_pr_number}) {item.statement}"
                 for item in retrieved_requirements
             ]
             sections.append("PREVIOUSLY VALIDATED REQUIREMENTS:\n" + "\n".join(lines))
