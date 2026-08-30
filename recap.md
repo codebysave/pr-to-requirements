@@ -87,6 +87,83 @@ Invariato: la modifica riguarda la presentazione, non i componenti.
 
 ---
 
+## 2026-08-29 (pomeriggio) — Come recuperare dalla memoria: punto 5 per la tutor
+
+**Branch:** `docs/memory-retrieval-question`
+
+### 1. Perché questa modifica
+
+Rileggendo il testo della proposta di stage è emerso che il recupero semantico
+tramite embedding, previsto dalla Decisione 3.3 §8, **non è richiesto dalla
+proposta**: questa chiede che il database «funga da long-term memory e consenta
+di verificare duplicazioni o incoerenze», senza indicare come selezionare i
+requisiti da confrontare.
+
+Il *che cosa* è quindi fissato, il *come* no. La scelta va motivata e sottoposta
+alla tutor invece di essere data per acquisita.
+
+### 2. La soluzione adottata
+
+**Recupero esaustivo**: si passano all'Assessment Agent *tutti* i requisiti già
+validati, filtrati soltanto per progetto e per data della Pull Request di
+origine. È il modello che, leggendo i testi, individua duplicati,
+sovrapposizioni e contraddizioni.
+
+Regge alla scala del progetto: 34 requisiti sono circa 1.000 token aggiunti ai
+3.800 che il valutatore già riceve, cioè pochi centesimi per esecuzione. Su
+progetti da 5-10 Pull Request l'aggiunta è trascurabile.
+
+Ha inoltre un vantaggio non ovvio: **il modello legge le negazioni**. Molti dei
+requisiti prodotti hanno forma «*shall not*», e distinguere un requisito dal suo
+contrario è precisamente ciò che serve per riconoscere una contraddizione — cosa
+che un embedding fa male.
+
+### 3. Il nuovo punto 5 per la tutor
+
+Aggiunto a `docs/meetings/open-questions-for-tutor-updated.md`: illustra le due
+strade (recupero esaustivo e recupero semantico), confronta le due
+implementazioni possibili degli embedding — servizio esterno *Voyage AI* contro
+modello locale — ed elenca le ragioni a favore e contro, fra cui la debolezza
+degli embedding sulle negazioni e l'assunzione di terze parti che
+introdurrebbero.
+
+La domanda posta non è quale soluzione sia migliore in assoluto, ma **se
+l'implementazione del recupero semantico abbia valore per la tesi in sé**, anche
+dove non sia tecnicamente necessaria.
+
+### 4. Conseguenza sul piano di lavoro
+
+La decisione sul fornitore di embedding, ferma da due giorni, **non blocca più
+niente**: il recupero si può implementare subito senza sceglierlo, e le colonne
+`embedding` ed `embedding_model` restano predisposte nello schema per un
+passaggio futuro senza migrazioni.
+
+L'ordine dei lavori diventa: file unico con isolamento per esecuzione, recupero
+esaustivo, aggancio nel prompt del valutatore, verifica sulle tre coppie di
+Pull Request duplicate presenti nel corpus, poi il server MCP — che la proposta
+di stage nomina due volte ed è il pezzo mancante più rilevante.
+
+### 5. Verifiche eseguite
+
+Nessuna: la modifica riguarda un solo documento di progetto.
+
+### 6. Stato del sistema dopo questa modifica
+
+```text
+[✔] Preprocessing del dataset       (script esterno al sistema)
+[✔] Input Loader                    are.input
+[✔] Configurazione + client LLM     are.llm
+[✔] Workflow LangGraph (agenti)     are.agents
+[✔] Pipeline Runner                 are.runner
+[ ] Memoria persistente (SQLite)    are.db          ← archiviazione fatta, recupero da fare
+[ ] Server MCP                      are.mcp_server
+[ ] Valutazione sperimentale                         ← gold standard da rifare su OpenHands
+```
+
+Invariato: la modifica è documentale.
+
+---
+
 ## 2026-08-29 — Il nome di un artefatto non è evidenza, e rilettura dei due prompt
 
 **Branch:** `docs/named-artefact-question`

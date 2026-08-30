@@ -535,6 +535,96 @@ Non sono coinvolti il grafo, il routing, gli agenti né la memoria persistente. 
 
 ---
 
+## 5. Come recuperare dalla memoria i requisiti da mostrare al valutatore
+
+### Questione aperta
+
+La proposta di stage prevede che i requisiti validati siano salvati in un database persistente che «funge da long-term memory e consente di verificare duplicazioni o incoerenze con i requisiti già generati».
+
+Il *che cosa* è quindi stabilito. Resta aperto il *come*: quali requisiti storici mostrare all'Assessment Agent quando valuta un nuovo candidato, e con quale criterio sceglierli.
+
+Le strade sono due, e differiscono per complessità e per assunzioni introdotte.
+
+---
+
+### Soluzione adottata: recupero esaustivo
+
+Nella configurazione corrente **non si sceglie**: si passano all'Assessment Agent **tutti** i requisiti già validati, filtrati soltanto per
+
+- **progetto** — i requisiti di un altro repository non sono pertinenti;
+- **data** — soltanto quelli nati da Pull Request precedenti a quella in esame, per non ricostruire una storia mai avvenuta.
+
+È poi l'Assessment Agent, leggendo i testi, a stabilire se il candidato sia un duplicato, una sovrapposizione, un raffinamento o una contraddizione rispetto a quanto già in memoria.
+
+**Perché è sufficiente a questa scala.** Un requisito occupa circa 30 token. Il corpus più grande di cui disponiamo produce 34 requisiti validati, cioè circa **1.000 token** aggiunti al messaggio del valutatore, che già ne riceve circa 3.800. L'incremento di costo su un'esecuzione completa è di pochi centesimi. Su progetti da 5-10 Pull Request l'aggiunta è trascurabile.
+
+**Un vantaggio non ovvio.** Il modello legge i requisiti *come testo*, quindi riconosce le negazioni. Il punto non è secondario: molti dei requisiti prodotti dal sistema hanno la forma «*the system shall **not** ...*», e distinguere un requisito dal suo contrario è esattamente ciò che serve per individuare una contraddizione.
+
+**Il limite.** La soluzione smette di funzionare quando i requisiti in memoria non entrano più comodamente nel messaggio: indicativamente oltre il centinaio. A quel punto occorre *selezionare*, e selezionare richiede un criterio di somiglianza.
+
+---
+
+### Alternativa: recupero semantico tramite embedding
+
+Un **embedding** è una rappresentazione numerica del significato di una frase, prodotta da un modello addestrato apposta. Due frasi che esprimono lo stesso comportamento con parole diverse producono rappresentazioni vicine; si misura la distanza e si tengono i primi `top_k` risultati.
+
+È la soluzione descritta nella Decisione 3.3 §8, e serve quando i requisiti sono troppi per essere mostrati tutti.
+
+Esempio dal nostro corpus. Due Pull Request quasi gemelle hanno prodotto:
+
+> The system shall correctly map file store paths that contain a **tilde (~) character** when running in a nested Docker environment.
+
+> The system shall properly resolve and mount file store paths containing **home directory references** in the Docker nested runtime.
+
+Dicono la stessa cosa senza condividere le parole decisive: una ricerca testuale non le accosterebbe mai, un embedding sì.
+
+#### Due implementazioni possibili
+
+| | **Voyage AI** (servizio esterno) | **Modello locale** (`sentence-transformers`) |
+|---|---|---|
+| Come funziona | si invia la frase a un servizio, torna il vettore | il modello gira sul computer che esegue la pipeline |
+| Installazione | pacchetto leggero | circa 2 GB di dipendenze (`torch`) |
+| Chiave API | ne serve una seconda | nessuna |
+| Costo per esecuzione | frazioni di centesimo | nullo |
+| Riproducibilità | il fornitore può aggiornare il modello | il modello è fissato e non cambia mai |
+| Qualità | generalmente superiore | adeguata a questa scala |
+| Per chi clona il progetto | serve la chiave | serve scaricare il modello |
+
+#### Perché converrebbe
+
+- È la soluzione che **regge alla crescita**: su un progetto con centinaia di Pull Request il recupero esaustivo non è praticabile, quello semantico sì.
+- Rende esplicito e misurabile il concetto di «requisito affine», che oggi resta implicito nel giudizio del modello.
+- Le colonne `embedding` ed `embedding_model` sono già presenti nello schema del database: l'infrastruttura è predisposta e l'aggiunta non richiede migrazioni.
+- Consente di calcolare relazioni fra requisiti (`DUPLICATE`, `OVERLAPS`, …) anche fuori dal ciclo di valutazione, alimentando la tabella `requirement_relations` oggi vuota.
+
+#### Perché non converrebbe, oggi
+
+- **Risolve un problema che alla nostra scala non abbiamo.** Con 5-50 Pull Request per progetto, i requisiti da mostrare non sono molti.
+- **Gli embedding sono deboli sulle negazioni.** «*The system shall execute code from untrusted input*» e «*The system shall **not** execute code from untrusted input*» sono opposti, ma per un embedding sono quasi identici. Poiché i nostri requisiti sono spesso in forma negativa, il recupero semantico rischierebbe di presentare come affine proprio il contrario del candidato — mentre il modello che legge il testo la negazione la vede.
+- **Introduce un'assunzione da difendere.** La nozione di «due requisiti dicono la stessa cosa» verrebbe da un modello di terze parti addestrato su testo generico, che non ha mai visto una specifica software. Va dichiarata fra le assunzioni della valutazione sperimentale.
+- **Aggiunge parametri arbitrari da calibrare** — `top_k` e la soglia di similarità — su un progetto che ne ha già altri non fondati.
+- **Aggiunge una dipendenza**: una seconda chiave API oppure 2 GB di installazione per chiunque voglia eseguire il progetto.
+
+---
+
+### Da discutere con la tutor
+
+La domanda non è quale soluzione sia tecnicamente migliore in assoluto, ma **quale sia appropriata per questa tesi**.
+
+- Il recupero esaustivo è sufficiente alla scala del progetto: è accettabile presentarlo come scelta motivata anziché come semplificazione?
+- Oppure l'implementazione del recupero semantico ha valore **per la tesi in sé** — come dimostrazione di capacità e come parte del contributo — anche laddove non sia tecnicamente necessaria?
+- Se la risposta è affermativa, è preferibile un servizio esterno (Voyage AI, più leggero da installare ma con una dipendenza e una chiave in più) o un modello locale (più pesante ma pienamente riproducibile e senza costi)?
+- La debolezza degli embedding sulle negazioni è rilevante per il nostro dominio, in cui molti requisiti sono espressi in forma negativa: va considerata un rischio da evitare o un limite da documentare?
+- La scelta va registrata come variabile sperimentale, confrontando le due modalità di recupero, oppure fissata una volta per tutte?
+
+**Soluzione adottata:** recupero esaustivo, filtrato per progetto e per data.
+
+**Predisposizione:** lo schema del database contiene già le colonne per gli embedding; il passaggio al recupero semantico non richiede migrazioni né modifiche al workflow.
+
+**Decisione definitiva:** _da definire con la tutor._
+
+---
+
 ## Nuovi punti da aggiungere
 
 Le successive questioni progettuali ancora aperte verranno aggiunte a questo documento mantenendo, quando applicabile, la stessa struttura:
