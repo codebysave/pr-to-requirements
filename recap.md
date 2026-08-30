@@ -157,7 +157,7 @@ consentire.
 ### 2. Un solo database, isolato per esecuzione
 
 Prima ogni esecuzione creava un file nuovo. Ora ce n'è **uno solo**,
-`experiments/memory/pr4requirements.db`, e l'isolamento fra esecuzioni è
+`experiments/memory/pr-to-requirements.db`, e l'isolamento fra esecuzioni è
 affidato alla colonna `run_id`: il recupero vi filtra sopra, quindi ogni run si
 comporta come se partisse da una memoria vuota.
 
@@ -1569,8 +1569,8 @@ Il livello di accesso agli LLM, prerequisito di entrambi gli agenti. È il
 
 ### 1. Cosa è stato integrato
 
-Il **PullRequestLoader**, il nodo di ingresso di PR4Requirements, sviluppato e
-testato in precedenza come pacchetto separato (`PR4Requirements-Input-Loader`),
+Il **PullRequestLoader**, il nodo di ingresso di PR-to-Requirements, sviluppato e
+testato in precedenza come pacchetto separato (`PR-to-Requirements-Input-Loader`),
 è stato portato dentro il repository ufficiale.
 
 Il loader legge il file JSON normalizzato prodotto dal preprocessing (fuori dal

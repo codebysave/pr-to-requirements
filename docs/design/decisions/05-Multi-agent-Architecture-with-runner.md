@@ -9,7 +9,7 @@
 
 ## 1. Contesto
 
-PR4Requirements utilizza due componenti agentici principali:
+PR-to-Requirements utilizza due componenti agentici principali:
 
 - **Requirement Generation Agent**, responsabile della produzione di un requisito funzionale candidato;
 - **Requirement Assessment Agent**, responsabile della valutazione del requisito generato rispetto all'evidenza disponibile, ai criteri di qualità definiti per il progetto e, quando prevista, alla memoria persistente dei requisiti già validati.

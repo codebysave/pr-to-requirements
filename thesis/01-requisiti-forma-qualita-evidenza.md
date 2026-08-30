@@ -2,7 +2,7 @@
 
 **Materiale per la tesi — bozza di capitolo**
 Deriva da: `docs/design/decisions/01-quality-standard.md` (Decisione 3.1)
-Progetto PR4Requirements · Università degli Studi di Milano-Bicocca
+Progetto PR-to-Requirements · Università degli Studi di Milano-Bicocca
 
 > **Nota sul copyright.** I criteri di qualità richiamati in questo capitolo sono
 > una rielaborazione operativa dei principi di *Requirements Engineering*, non una

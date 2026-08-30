@@ -1,4 +1,4 @@
-"""Entry point di PR4Requirements: dal file JSON ai requisiti generati.
+"""Entry point di PR-to-Requirements: dal file JSON ai requisiti generati.
 
 Esecuzione tipica dalla radice del repository:
 
@@ -244,7 +244,7 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument(
         "--memory-db",
         help="database SQLite dei requisiti accettati "
-        "(default: experiments/memory/pr4requirements.db)",
+        "(default: experiments/memory/pr-to-requirements.db)",
     )
     parser.add_argument(
         "--llm-config",
@@ -437,7 +437,7 @@ def _default_memory_path() -> Path:
     interrogazione invece di un confronto fra file.
     """
 
-    return DEFAULT_MEMORY_DIR / "pr4requirements.db"
+    return DEFAULT_MEMORY_DIR / "pr-to-requirements.db"
 
 
 def _print_summary(

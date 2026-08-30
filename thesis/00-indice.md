@@ -1,6 +1,6 @@
 # Materiale per la tesi — indice
 
-Progetto PR4Requirements · Andrea Saverino, Marco Saverino Salvatore
+Progetto PR-to-Requirements · Andrea Saverino, Marco Saverino Salvatore
 Università degli Studi di Milano-Bicocca · tutor: Benedetta Donato
 
 ---

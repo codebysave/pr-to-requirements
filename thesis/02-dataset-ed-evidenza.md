@@ -2,7 +2,7 @@
 
 **Materiale per la tesi — bozza di capitolo**
 Deriva da: `docs/design/decisions/06-PullRequest-Dataset-with-runner.md` (Decisione 3.6)
-Progetto PR4Requirements · Università degli Studi di Milano-Bicocca
+Progetto PR-to-Requirements · Università degli Studi di Milano-Bicocca
 
 ---
 
@@ -187,7 +187,7 @@ qualunque sorgente di Pull Request
             ▼
        sample.json
             │
-      ──────┼──────  confine di PR4Requirements
+      ──────┼──────  confine di PR-to-Requirements
             │
             ▼
    PullRequestLoader  →  validazione
@@ -226,7 +226,7 @@ riconoscibile.
 
 Il contratto è quindi esplicito:
 
-> **PR4Requirements accetta Pull Request già normalizzate secondo uno schema noto e
+> **PR-to-Requirements accetta Pull Request già normalizzate secondo uno schema noto e
 > stabile.**
 
 ### 5.3 Separazione fra caricamento ed elaborazione

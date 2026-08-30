@@ -9,7 +9,7 @@
 
 ## 1. Contesto
 
-PR4Requirements utilizza una memoria persistente dei requisiti funzionali validati, progettata nella Decisione 3.3.
+PR-to-Requirements utilizza una memoria persistente dei requisiti funzionali validati, progettata nella Decisione 3.3.
 
 Gli agenti e gli altri componenti della pipeline non devono accedere direttamente al backend di persistenza né conoscere query SQL, struttura fisica del database o dettagli del retrieval semantico.
 
@@ -18,7 +18,7 @@ Per questo viene introdotto un **server MCP (Model Context Protocol)** che espon
 MCP viene quindi utilizzato come **livello standardizzato di accesso alla memoria**, non come database e non come implementazione del retrieval.
 
 ```text
-Componenti di PR4Requirements
+Componenti di PR-to-Requirements
             │
             │ MCP
             ▼
@@ -79,7 +79,7 @@ In nessuna delle alternative si assume che il modello LLM possa comunicare auton
 
 ### Decisione
 
-PR4Requirements utilizza un **server MCP dedicato** come punto di accesso alla memoria persistente.
+PR-to-Requirements utilizza un **server MCP dedicato** come punto di accesso alla memoria persistente.
 
 Il server non contiene direttamente la logica completa del sistema, ma delega le operazioni ai componenti responsabili:
 
@@ -92,7 +92,7 @@ Il server non contiene direttamente la logica completa del sistema, ma delega le
 
 La prima implementazione utilizza principalmente **MCP Tools**.
 
-Le operazioni necessarie a PR4Requirements sono infatti azioni parametrizzate, ad esempio:
+Le operazioni necessarie a PR-to-Requirements sono infatti azioni parametrizzate, ad esempio:
 
 - cercare requisiti semanticamente affini;
 - recuperare un requisito;
@@ -371,7 +371,7 @@ Per la prima implementazione locale viene adottato **stdio** come trasporto MCP.
 Questa scelta mantiene semplice l'esecuzione del prototipo:
 
 ```text
-PR4Requirements
+PR-to-Requirements
       │
       │ stdio / MCP
       ▼

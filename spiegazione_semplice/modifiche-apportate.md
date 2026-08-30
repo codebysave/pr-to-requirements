@@ -156,13 +156,13 @@ Tutte le coordinate y del diagramma esistente sono state spostate in giù di
 - Il click sulla barra apre la scheda dettagliata, uniformando il pattern
   interattivo con gli altri blocchi.
 
-### 1. Sostituito "PR4Requirements" con "pr-to-requirements" (3 occorrenze)
+### 1. Sostituito "PR-to-Requirements" con "pr-to-requirements" (3 occorrenze)
 
 Sostituzioni fatte:
 
-- `<title>Pipeline PR4Requirements</title>` → `<title>Pipeline pr-to-requirements</title>` (titolo del tab del browser).
-- `<div class="eyebrow">Diagramma interattivo · PR4Requirements</div>` → `... · pr-to-requirements`.
-- `aria-label="Diagramma della pipeline PR4Requirements: ..."` → `aria-label="Diagramma della pipeline pr-to-requirements: ..."`.
+- `<title>Pipeline PR-to-Requirements</title>` → `<title>Pipeline pr-to-requirements</title>` (titolo del tab del browser).
+- `<div class="eyebrow">Diagramma interattivo · PR-to-Requirements</div>` → `... · pr-to-requirements`.
+- `aria-label="Diagramma della pipeline PR-to-Requirements: ..."` → `aria-label="Diagramma della pipeline pr-to-requirements: ..."`.
 
 **Motivazione.**
 - Uniformità con il nome ufficiale del repository (`pr-to-requirements`), che è

@@ -1,4 +1,4 @@
-"""Modelli tipizzati del contratto di input di PR4Requirements."""
+"""Modelli tipizzati del contratto di input di PR-to-Requirements."""
 
 from __future__ import annotations
 

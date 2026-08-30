@@ -2,7 +2,7 @@
 
 **Materiale per la tesi — bozza di capitolo**
 Deriva da: `docs/design/decisions/07-Evaluation-System.md` (Decisione 3.7)
-Progetto PR4Requirements · Università degli Studi di Milano-Bicocca
+Progetto PR-to-Requirements · Università degli Studi di Milano-Bicocca
 
 ---
 
@@ -235,7 +235,7 @@ L'agente produce già, durante l'esecuzione, decisioni `ACCEPT`, `REVISE` e
 giudicare il sistema a una sua componente.
 
 ```text
-PR4Requirements
+PR-to-Requirements
       │
       ▼
 requisito generato

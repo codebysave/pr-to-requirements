@@ -1,14 +1,14 @@
 # La scelta del modello linguistico
 
 **Materiale per la tesi — bozza di capitolo**
-Progetto PR4Requirements · Andrea Saverino, Marco Saverino Salvatore
+Progetto PR-to-Requirements · Andrea Saverino, Marco Saverino Salvatore
 Università degli Studi di Milano-Bicocca · agosto 2026
 
 ---
 
 ## 1. Scopo di questo documento
 
-PR4Requirements è costruito attorno a due agenti che sono, tecnicamente, due
+PR-to-Requirements è costruito attorno a due agenti che sono, tecnicamente, due
 modelli linguistici con istruzioni diverse. La scelta di *quale* modello mettere
 in ciascuno dei due posti non è un dettaglio implementativo: come mostrano i dati
 raccolti, sposta gli esiti del sistema più di qualunque altra modifica fatta

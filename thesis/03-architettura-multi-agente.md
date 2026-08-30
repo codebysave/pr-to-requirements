@@ -2,7 +2,7 @@
 
 **Materiale per la tesi — bozza di capitolo**
 Deriva da: `docs/design/decisions/05-Multi-agent-Architecture-with-runner.md` (Decisione 3.5)
-Progetto PR4Requirements · Università degli Studi di Milano-Bicocca
+Progetto PR-to-Requirements · Università degli Studi di Milano-Bicocca
 
 ---
 

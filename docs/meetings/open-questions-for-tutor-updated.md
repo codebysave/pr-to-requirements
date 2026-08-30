@@ -1,6 +1,6 @@
 # Punti aperti da discutere con la tutor
 
-**Progetto:** PR4Requirements  
+**Progetto:** PR-to-Requirements  
 **Stato:** Working document  
 **Autori:** Andrea, Marco  
 **Ultimo aggiornamento:** Agosto 2026  
@@ -9,7 +9,7 @@
 
 ## Scopo del documento
 
-Questo documento raccoglie le **decisioni progettuali e metodologiche ancora aperte** che richiedono un confronto con la tutor prima di essere consolidate nel design definitivo di PR4Requirements.
+Questo documento raccoglie le **decisioni progettuali e metodologiche ancora aperte** che richiedono un confronto con la tutor prima di essere consolidate nel design definitivo di PR-to-Requirements.
 
 Ogni punto rappresenta una questione da discutere e potrà successivamente essere:
 
@@ -26,7 +26,7 @@ Le decisioni già consolidate non vengono mantenute in questo documento.
 
 ### Questione aperta
 
-PR4Requirements ha come target principale la ricostruzione di **requisiti funzionali**.
+PR-to-Requirements ha come target principale la ricostruzione di **requisiti funzionali**.
 
 Nel dataset possono tuttavia essere presenti Pull Request che esprimono:
 
@@ -192,7 +192,7 @@ In particolare, vogliamo discutere:
 
 ### Questione aperta
 
-PR4Requirements utilizza, nella configurazione corrente, **titolo e body della Pull Request** come evidenza primaria per ricostruire un requisito funzionale.
+PR-to-Requirements utilizza, nella configurazione corrente, **titolo e body della Pull Request** come evidenza primaria per ricostruire un requisito funzionale.
 
 Resta da stabilire come gestire le Pull Request che contengono una quantità di testo molto ridotta e che, di conseguenza, potrebbero non fornire informazioni sufficienti per ricostruire un requisito funzionale in modo affidabile.
 

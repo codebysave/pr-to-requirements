@@ -9,7 +9,7 @@
 
 ## 1. Contesto
 
-PR4Requirements deve mantenere una **memoria persistente dei requisiti funzionali validati**.
+PR-to-Requirements deve mantenere una **memoria persistente dei requisiti funzionali validati**.
 
 La memoria non ha soltanto una funzione di archiviazione: i requisiti già accettati devono poter essere recuperati e confrontati con un nuovo requisito candidato, così da supportare controlli di similarità e di coerenza storica.
 
@@ -56,7 +56,7 @@ Un requisito ulteriore è la **consistenza temporale**: quando il sistema deve r
 
 ## 4. Decisione
 
-Per la prima implementazione di PR4Requirements viene adottato **SQLite** come backend della memoria persistente dei requisiti.
+Per la prima implementazione di PR-to-Requirements viene adottato **SQLite** come backend della memoria persistente dei requisiti.
 
 La scelta è motivata dal fatto che SQLite offre le funzionalità necessarie per una memoria strutturata senza introdurre un servizio database separato. In particolare consente di utilizzare:
 
@@ -259,7 +259,7 @@ L'accesso a SQLite viene incapsulato dietro un componente `RequirementRepository
 Il resto del sistema non dipende quindi direttamente dal database concreto.
 
 ```text
-PR4Requirements
+PR-to-Requirements
        │
        ▼
 RequirementRepository
@@ -386,7 +386,7 @@ Questi aspetti fanno parte del design della memoria persistente perché determin
 > l'ordinamento lessicografico delle stringhe ISO coincide con quello
 > cronologico anche fra fusi orari diversi.
 >
-> **Inizializzazione e isolamento.** Un unico file, `pr4requirements.db`,
+> **Inizializzazione e isolamento.** Un unico file, `pr-to-requirements.db`,
 > condiviso da tutte le esecuzioni. L'isolamento non è affidato al nome del file
 > ma alla colonna `run_id`: il recupero vi filtra sopra, quindi ogni esecuzione
 > si comporta come se partisse da una memoria vuota, mentre resta un solo

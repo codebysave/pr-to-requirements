@@ -1,4 +1,4 @@
-# Diario di lavoro — PR4Requirements
+# Diario di lavoro — PR-to-Requirements
 
 Diario dello stage di Andrea Saverino e Marco Saverino Salvatore.
 Università degli Studi di Milano-Bicocca — tutor: Benedetta Donato.
@@ -312,7 +312,7 @@ agli esperimenti.
 
 Creazione del repository su GitHub e stesura del README: descrizione del
 progetto, i due agenti previsti, autori, e la tabella con la struttura delle
-cartelle. Abbiamo dato al progetto il nome interno **PR4Requirements**, e al
+cartelle. Abbiamo dato al progetto il nome interno **PR-to-Requirements**, e al
 pacchetto di codice la sigla **ARE** (Automatic Requirement Extraction).
 
 Prime prove con i comandi git per prendere confidenza con il flusso di lavoro

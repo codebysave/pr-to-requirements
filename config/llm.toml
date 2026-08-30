@@ -1,4 +1,4 @@
-# Configurazione LLM di PR4Requirements (Decisione 3.2).
+# Configurazione LLM di PR-to-Requirements (Decisione 3.2).
 #
 # Un blocco per agente: il modello è selezionabile separatamente per il
 # Generation Agent e per l'Assessment Agent. Questo file è versionato e

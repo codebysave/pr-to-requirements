@@ -15,7 +15,7 @@
 
 ## 1. Contesto
 
-PR4Requirements ha l'obiettivo di ricostruire requisiti software funzionali a partire
+PR-to-Requirements ha l'obiettivo di ricostruire requisiti software funzionali a partire
 dal contenuto testuale delle Pull Request e di valutarne automaticamente la qualità
 tramite un **Requirement Assessment Agent**.
 
@@ -100,7 +100,7 @@ Il riferimento normativo principale adottato dal progetto è:
 > Requirements engineering**
 
 Lo standard viene utilizzato come base concettuale per definire le caratteristiche che
-un requisito deve possedere. Nel contesto di PR4Requirements, tali caratteristiche
+un requisito deve possedere. Nel contesto di PR-to-Requirements, tali caratteristiche
 vengono tradotte in un insieme di criteri operativi adatti al task di ricostruzione
 automatica da Pull Request.
 
@@ -195,7 +195,7 @@ del requisito; stato della valutazione.
 
 ## 4. Distinzione tra WHAT e HOW
 
-PR4Requirements deve produrre requisiti che descrivano principalmente **che cosa il
+PR-to-Requirements deve produrre requisiti che descrivano principalmente **che cosa il
 sistema deve fare**, evitando di trasformare automaticamente una soluzione implementativa
 in un requisito.
 
@@ -384,7 +384,7 @@ valore predefinito è sovrascrivibile.
 
 ## 7. Grounding sulla Pull Request
 
-La fedeltà all'evidenza costituisce un vincolo fondamentale di PR4Requirements. Ogni
+La fedeltà all'evidenza costituisce un vincolo fondamentale di PR-to-Requirements. Ogni
 elemento semantico introdotto nel requisito deve essere supportato direttamente o
 ragionevolmente ricostruibile dal titolo e dal body della Pull Request utilizzati come
 input.
@@ -420,7 +420,7 @@ grammaticalmente corretto e verificabile.
 
 ## 8. Requisiti funzionali
 
-Il target primario di PR4Requirements è costituito dai **requisiti funzionali**. Nel
+Il target primario di PR-to-Requirements è costituito dai **requisiti funzionali**. Nel
 progetto consideriamo requisito funzionale una dichiarazione che descrive un
 comportamento, una capacità o una risposta che il sistema deve fornire o garantire.
 

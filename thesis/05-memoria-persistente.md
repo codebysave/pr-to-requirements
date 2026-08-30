@@ -2,7 +2,7 @@
 
 **Materiale per la tesi — bozza di capitolo**
 Deriva da: `docs/design/decisions/03-memory-persistence-requirements.md` (Decisione 3.3)
-Progetto PR4Requirements · Università degli Studi di Milano-Bicocca
+Progetto PR-to-Requirements · Università degli Studi di Milano-Bicocca
 
 ---
 
@@ -272,7 +272,7 @@ per gli esperimenti.
 L'accesso al database è incapsulato in due componenti distinti:
 
 ```text
-PR4Requirements
+PR-to-Requirements
        │
        ▼
 RequirementRepository  →  persistenza, metadati, filtri, relazioni

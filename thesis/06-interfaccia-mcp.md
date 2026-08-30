@@ -2,7 +2,7 @@
 
 **Materiale per la tesi — bozza di capitolo**
 Deriva da: `docs/design/decisions/04-Interface-MCP.md` (Decisione 3.4)
-Progetto PR4Requirements · Università degli Studi di Milano-Bicocca
+Progetto PR-to-Requirements · Università degli Studi di Milano-Bicocca
 
 ---
 
@@ -25,7 +25,7 @@ persistenza né il recupero: è un **livello di accesso standardizzato** che sta
 sopra i componenti che li realizzano.
 
 ```text
-Componenti di PR4Requirements
+Componenti di PR-to-Requirements
             │
             │ MCP
             ▼
@@ -246,7 +246,7 @@ Per la prima implementazione locale si adotta **stdio**: il server viene eseguit
 come processo figlio e comunica attraverso i flussi standard.
 
 ```text
-PR4Requirements
+PR-to-Requirements
       │ stdio / MCP
       ▼
   Server MCP

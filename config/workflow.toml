@@ -1,4 +1,4 @@
-# Configurazione del workflow di PR4Requirements (Decisione 3.5, §20).
+# Configurazione del workflow di PR-to-Requirements (Decisione 3.5, §20).
 #
 # Questi parametri permettono di eseguire il workflow in configurazioni
 # diverse senza modificare il codice: sviluppo incrementale, prove

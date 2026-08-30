@@ -9,7 +9,7 @@
 
 ## 1. Contesto
 
-PR4Requirements deve essere valutato su Pull Request reali, sufficientemente rappresentative di attività di sviluppo software e accompagnate da una descrizione testuale utilizzabile per la ricostruzione dei requisiti funzionali.
+PR-to-Requirements deve essere valutato su Pull Request reali, sufficientemente rappresentative di attività di sviluppo software e accompagnate da una descrizione testuale utilizzabile per la ricostruzione dei requisiti funzionali.
 
 Per il primo ciclo di sperimentazione abbiamo deciso di utilizzare come sorgente **PR4Code**, il dataset presentato da Donato, Mariani, Micucci e Riganelli in *PR4Code: A Pull Requests Dataset for AI Code Generation*.
 
@@ -20,7 +20,7 @@ PR4Code contiene **13.339 Pull Request reali provenienti da GitHub**, suddivise 
 
 Il dataset è costruito a partire da 1.055 repository GitHub e conserva, per ogni Pull Request, sia informazioni testuali sia informazioni relative alla sua storia di sviluppo e alle modifiche al codice.
 
-PR4Code viene utilizzato come **sorgente di casi reali per la sperimentazione**, ma PR4Requirements non viene progettato in modo dipendente da questo dataset.
+PR4Code viene utilizzato come **sorgente di casi reali per la sperimentazione**, ma PR-to-Requirements non viene progettato in modo dipendente da questo dataset.
 
 ---
 
@@ -42,7 +42,7 @@ La strategia relativa ai dati deve consentire di:
 
 PR4Code è stato progettato come dataset di Pull Request reali per lo studio di task di sviluppo software e AI-driven code generation.
 
-La sua struttura è più ricca rispetto alle informazioni che PR4Requirements utilizza nella prima configurazione sperimentale.
+La sua struttura è più ricca rispetto alle informazioni che PR-to-Requirements utilizza nella prima configurazione sperimentale.
 
 Per ogni Pull Request, il dataset mette a disposizione informazioni che permettono di ricostruire diversi livelli del task di sviluppo, tra cui:
 
@@ -220,7 +220,7 @@ La configurazione sperimentale stabilisce esplicitamente quali campi sono visibi
 
 ## 9. Formato di input atteso dal workflow
 
-PR4Requirements non legge direttamente PR4Code o altri dataset nel loro formato originale.
+PR-to-Requirements non legge direttamente PR4Code o altri dataset nel loro formato originale.
 
 Il workflow accetta invece un **unico formato di input normalizzato**, definito dal progetto. Per la prima sperimentazione questo formato è rappresentato da un file JSON contenente una collezione di Pull Request con i campi necessari all'esecuzione.
 
@@ -239,7 +239,7 @@ Un record può essere rappresentato, ad esempio, come:
 
 Dal punto di vista del workflow, **non è importante da dove provengano questi dati**.
 
-La sorgente può essere PR4Code, un altro dataset, un'esportazione personalizzata o un file costruito manualmente. La condizione necessaria è che, prima dell'avvio del workflow, i dati siano stati portati nel formato JSON previsto da PR4Requirements.
+La sorgente può essere PR4Code, un altro dataset, un'esportazione personalizzata o un file costruito manualmente. La condizione necessaria è che, prima dell'avvio del workflow, i dati siano stati portati nel formato JSON previsto da PR-to-Requirements.
 
 
 Il file JSON normalizzato può contenere **una o più Pull Request**. Il `PullRequestLoader` legge e valida l'intera collezione e costruisce i relativi `PullRequestRecord`, ma non esegue direttamente il workflow. Come definito nella **Decisione 3.5**, l'elaborazione delle PR viene affidata a un **Pipeline Runner** deterministico, che prende una PR alla volta, avvia una nuova esecuzione LangGraph, attende che la PR corrente raggiunga uno stato finale e soltanto dopo passa alla successiva.
@@ -275,7 +275,7 @@ preparazione / normalizzazione dei dati
             ▼
       sample.json
             │
-      ──────┼──────  inizio di PR4Requirements
+      ──────┼──────  inizio di PR-to-Requirements
             │
             ▼
   PullRequestLoader
@@ -290,7 +290,7 @@ Tutto ciò che avviene prima della produzione del file JSON normalizzato è este
 
 ## 10. Ruolo del Loader
 
-Una volta disponibile il file JSON normalizzato, PR4Requirements utilizza un **loader generico** per caricare le Pull Request.
+Una volta disponibile il file JSON normalizzato, PR-to-Requirements utilizza un **loader generico** per caricare le Pull Request.
 
 Il loader non deve conoscere la struttura interna di PR4Code e non deve sapere quale dataset sia stato utilizzato in origine.
 
@@ -323,7 +323,7 @@ Se il file non rispetta lo schema previsto, il workflow non procede e viene rest
 
 Questa scelta rende esplicito il contratto di input del sistema:
 
-> **PR4Requirements accetta Pull Request già normalizzate secondo uno schema noto e stabile.**
+> **PR-to-Requirements accetta Pull Request già normalizzate secondo uno schema noto e stabile.**
 
 Di conseguenza, il workflow rimane indipendente dal dataset sorgente pur mantenendo un formato di ingresso controllato e facilmente validabile.
 
@@ -342,7 +342,7 @@ PR4Code ha una struttura propria, più ricca del formato minimo richiesto dal wo
 - seleziona il numero di Pull Request desiderato;
 - estrae i campi necessari, come identificatore, repository, numero della PR, titolo e body;
 - ignora, nella configurazione iniziale, i metadati che non vogliamo fornire al workflow;
-- produce il file `sample.json` nel formato richiesto da PR4Requirements.
+- produce il file `sample.json` nel formato richiesto da PR-to-Requirements.
 
 Il flusso è quindi:
 
@@ -359,7 +359,7 @@ sample.json
 PullRequestLoader
    │
    ▼
-PR4Requirements
+PR-to-Requirements
 ```
 
 Lo script di preprocessing può essere considerato un **adapter della sorgente**, ma non fa parte del workflow agentico.
@@ -370,7 +370,7 @@ Il workflow, invece, non cambierebbe.
 
 ### 11.2 Possibile estensione verso una normalizzazione automatica
 
-La scelta attuale richiede quindi che la normalizzazione del dataset avvenga prima dell'esecuzione di PR4Requirements.
+La scelta attuale richiede quindi che la normalizzazione del dataset avvenga prima dell'esecuzione di PR-to-Requirements.
 
 In futuro, se si volesse costruire un sistema capace di ricevere direttamente dataset di Pull Request organizzati in modi differenti e convertirli automaticamente nel formato atteso, sarebbe necessario introdurre una componente aggiuntiva dedicata alla **costruzione del dataset normalizzato**.
 
@@ -395,10 +395,10 @@ Dataset di PR con struttura arbitraria
         PullRequestLoader
                 │
                 ▼
-         PR4Requirements
+         PR-to-Requirements
 ```
 
-Il compito di questa componente sarebbe trasformare sorgenti strutturate in modi differenti nel contratto di input standard richiesto da PR4Requirements.
+Il compito di questa componente sarebbe trasformare sorgenti strutturate in modi differenti nel contratto di input standard richiesto da PR-to-Requirements.
 
 Questa funzionalità **non viene inclusa nella prima versione del sistema**, perché introdurrebbe un ulteriore problema di interpretazione e normalizzazione dei dati che è separato dall'obiettivo principale dello stage, cioè la ricostruzione e valutazione dei requisiti funzionali.
 
@@ -505,7 +505,7 @@ La scelta dei metadati aggiuntivi da introdurre rimane quindi **aperta** e potr�
 
 PR4Code fornisce Pull Request e relativi artefatti di sviluppo, ma non è costruito come gold standard di requisiti funzionali ricostruiti.
 
-Per valutare PR4Requirements è quindi necessario costruire un livello di annotazione separato.
+Per valutare PR-to-Requirements è quindi necessario costruire un livello di annotazione separato.
 
 Per ogni Pull Request del campione, il gold standard dovrà rappresentare almeno:
 
@@ -627,7 +627,7 @@ Evoluzione:
     possibile utilizzo futuro di metadati aggiuntivi
 ```
 
-La scelta permette di iniziare con un esperimento controllato e interpretabile, senza vincolare PR4Requirements a PR4Code e senza escludere configurazioni future che sfruttino una porzione più ampia dell'informazione disponibile nelle Pull Request.
+La scelta permette di iniziare con un esperimento controllato e interpretabile, senza vincolare PR-to-Requirements a PR4Code e senza escludere configurazioni future che sfruttino una porzione più ampia dell'informazione disponibile nelle Pull Request.
 
 ---
 

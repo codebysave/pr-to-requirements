@@ -1,4 +1,4 @@
-"""API pubblica del workflow agentico di PR4Requirements (Decisione 3.5)."""
+"""API pubblica del workflow agentico di PR-to-Requirements (Decisione 3.5)."""
 
 from .config import WorkflowConfig, load_workflow_config
 from .exceptions import (
