@@ -16,6 +16,7 @@ assessment_enabled = true
 memory_enabled = false
 max_generation_attempts = 3
 min_evidence_characters = 50
+max_memory_requirements = 50
 """
 
 
@@ -32,6 +33,7 @@ def test_loads_valid_config(tmp_path: Path) -> None:
     assert config.memory_enabled is False
     assert config.max_generation_attempts == 3
     assert config.min_evidence_characters == 50
+    assert config.max_memory_requirements == 50
 
 
 def test_repository_config_file_is_valid() -> None:
@@ -95,5 +97,5 @@ def test_reports_all_issues_together(tmp_path: Path) -> None:
     with pytest.raises(InvalidWorkflowConfigError) as excinfo:
         load_workflow_config(write_config(tmp_path, content))
 
-    # tre chiavi obbligatorie mancanti, una sconosciuta, un tipo errato
-    assert len(excinfo.value.issues) == 5
+    # quattro chiavi obbligatorie mancanti, una sconosciuta, un tipo errato
+    assert len(excinfo.value.issues) == 6

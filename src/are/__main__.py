@@ -30,7 +30,7 @@ from are.agents.llm_agents import (
     LLMRequirementGenerator,
 )
 from are.agents.prompts import DEFAULT_PROMPT_VERSION
-from are.db import SqliteRequirementRepository
+from are.db import ExhaustiveRequirementRetriever, SqliteRequirementRepository
 from are.env import load_environment
 from are.input import PullRequestInputError, PullRequestLoader
 from are.llm import (
@@ -53,6 +53,8 @@ DEFAULT_LLM_CONFIG = Path("config/llm.toml")
 DEFAULT_WORKFLOW_CONFIG = Path("config/workflow.toml")
 DEFAULT_OUTPUT_DIR = Path("experiments/runs")
 DEFAULT_MEMORY_DIR = Path("experiments/memory")
+MEMORY_SCOPE_RUN = "run"
+MEMORY_SCOPE_ALL = "all"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -97,7 +99,7 @@ def main(argv: list[str] | None = None) -> int:
     # e identifica le righe che questa run scrive in memoria, così i tre
     # artefatti restano agganciati fra loro.
     run_stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    memory_path = Path(args.memory_db) if args.memory_db else _default_memory_path(run_stamp)
+    memory_path = Path(args.memory_db) if args.memory_db else _default_memory_path()
     memory = SqliteRequirementRepository(memory_path, run_stamp)
 
     # La verifica di estraibilità è deterministica: nessun modello, nessun
@@ -112,6 +114,7 @@ def main(argv: list[str] | None = None) -> int:
             if workflow_config.assessment_enabled
             else None
         ),
+        retriever=_build_retriever(memory, run_stamp, args.memory_scope, workflow_config),
         store=memory,
     )
 
@@ -131,7 +134,10 @@ def main(argv: list[str] | None = None) -> int:
         f"Modelli: generazione={llm_config.generation.model}, "
         f"valutazione={llm_config.assessment.model}"
     )
-    print(f"Memoria: {memory_path}\n")
+    ambito = (
+        "solo questa esecuzione" if args.memory_scope == MEMORY_SCOPE_RUN else "tutte le esecuzioni"
+    )
+    print(f"Memoria: {memory_path}  (il valutatore vede: {ambito})\n")
 
     try:
         results = runner.run(pull_requests)
@@ -224,10 +230,17 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         help="file JSON del report (default: experiments/runs/run-<timestamp>.json)",
     )
     parser.add_argument(
+        "--memory-scope",
+        choices=(MEMORY_SCOPE_RUN, MEMORY_SCOPE_ALL),
+        default=MEMORY_SCOPE_RUN,
+        help="quali requisiti storici puo' vedere il valutatore: soltanto quelli "
+        "prodotti da questa esecuzione (run, predefinito, rende confrontabili le "
+        "esecuzioni fra loro) oppure quelli di tutte (all, memoria che si accumula)",
+    )
+    parser.add_argument(
         "--memory-db",
-        help="database SQLite dei requisiti accettati; indicarne uno esistente per "
-        "accumulare fra esecuzioni diverse "
-        "(default: experiments/memory/run-<timestamp>.db, nuovo a ogni esecuzione)",
+        help="database SQLite dei requisiti accettati "
+        "(default: experiments/memory/pr4requirements.db)",
     )
     parser.add_argument(
         "--llm-config",
@@ -388,16 +401,39 @@ def _default_output_path(stamp: str) -> Path:
     return DEFAULT_OUTPUT_DIR / f"run-{stamp}.json"
 
 
-def _default_memory_path(stamp: str) -> Path:
-    """Un database nuovo per ogni esecuzione, salvo indicazione contraria.
+def _build_retriever(
+    memory: SqliteRequirementRepository,
+    run_stamp: str,
+    scope: str,
+    workflow_config,
+) -> ExhaustiveRequirementRetriever:
+    """Costruisce il recupero dei requisiti storici secondo l'ambito richiesto.
 
-    È la scelta che rende le esecuzioni confrontabili: una run che partisse con
-    la memoria già popolata da quella precedente avrebbe un vantaggio, e il
-    confronto non direbbe più nulla. Con `--memory-db` si punta invece a un
-    database condiviso, che è il modo in cui il sistema funzionerebbe davvero.
+    Con ``run`` ogni esecuzione vede soltanto sé stessa, anche condividendo il
+    file con le altre: è la condizione perché due configurazioni siano
+    confrontabili. Con ``all`` la memoria si accumula davvero fra esecuzioni,
+    che è il comportamento previsto dalla Decisione 3.3 per l'uso reale ma che
+    negli esperimenti falserebbe i confronti.
     """
 
-    return DEFAULT_MEMORY_DIR / f"run-{stamp}.db"
+    return ExhaustiveRequirementRetriever(
+        memory,
+        run_id=run_stamp if scope == MEMORY_SCOPE_RUN else None,
+        max_requirements=workflow_config.max_memory_requirements,
+    )
+
+
+def _default_memory_path() -> Path:
+    """Un unico database per tutte le esecuzioni.
+
+    L'isolamento fra esecuzioni non è affidato al file ma alla colonna
+    ``run_id``: il recupero filtra su di essa, quindi ogni run si comporta come
+    se partisse da una memoria vuota. In cambio resta un solo artefatto da
+    aprire, sfogliare e allegare, e confrontare due esecuzioni diventa una
+    interrogazione invece di un confronto fra file.
+    """
+
+    return DEFAULT_MEMORY_DIR / "pr4requirements.db"
 
 
 def _print_summary(

@@ -202,6 +202,17 @@ def _serialize_result(result: RunResult) -> dict[str, Any]:
                     "attempt": record.attempt,
                     "candidate": record.candidate,
                     "refusal_reason": record.refusal_reason,
+                    # I requisiti storici mostrati al valutatore in questo
+                    # tentativo: permettono di verificare a macchina che il
+                    # recupero abbia pescato quello che doveva.
+                    "retrieved_requirements": [
+                        {
+                            "requirement_id": item.requirement_id,
+                            "source_pr_number": item.source_pr_number,
+                            "statement": item.statement,
+                        }
+                        for item in record.retrieved
+                    ],
                     "assessment": _serialize_assessment(record.assessment),
                 }
                 for record in state["iteration_history"]

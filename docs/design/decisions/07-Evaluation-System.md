@@ -61,6 +61,36 @@ Persistent Memory
 
 Il piano di valutazione descritto in questa decisione riguarda quindi principalmente la qualità dei requisiti finali prodotti da questa configurazione.
 
+### 2.1 La memoria è una condizione sperimentale, non un miglioramento assunto
+
+> **Aggiornamento (30 agosto 2026).** Il recupero dei requisiti storici è stato
+> implementato ed è ora attivo. Ne discendono tre conseguenze per il piano di
+> valutazione.
+
+**Il sistema diventa dipendente dall'ordine.** Valutando la quarantesima Pull
+Request, l'Assessment Agent ha davanti i requisiti prodotti dalle trentanove
+precedenti. Due esecuzioni sullo stesso materiale in ordine diverso possono
+quindi dare risultati diversi. È realistico — nella pratica i requisiti si
+accumulano — ma va dichiarato: le Pull Request sono elaborate in ordine
+cronologico e la memoria è azzerata a ogni esecuzione (l'isolamento è garantito
+dalla colonna `run_id`, si veda la Decisione 3.3 §13.1).
+
+**`memory_enabled` acceso e spento sono due condizioni diverse**, non una
+configurazione migliore e una peggiore. Il recupero cambia l'input del
+valutatore su *ogni* Pull Request, comprese quelle che con la memoria non hanno
+alcuna relazione: può quindi spostare esiti dove non dovrebbe. Il confronto fra
+le due condizioni va eseguito e riportato, con le repliche necessarie a
+distinguere l'effetto dal rumore.
+
+**L'affermazione del §2 secondo cui la memoria ha prodotto un miglioramento
+qualitativo va verificata, non citata.** È stata scritta prima che il recupero
+esistesse in questo repository, e descrive quindi un'aspettativa di progetto.
+La prima misura disponibile è l'esecuzione del 30 agosto
+(`experiments/runs/run-20260830T112646Z.json`), che mostra che il meccanismo
+**funziona** — il duplicato viene individuato e nominato, e nessuna relazione
+viene inventata sulle Pull Request non correlate — ma una singola esecuzione,
+senza gold standard, non sostiene alcuna affermazione sulla qualità.
+
 ---
 
 ## 3. Obiettivi della valutazione

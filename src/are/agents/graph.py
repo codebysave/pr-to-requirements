@@ -197,6 +197,7 @@ class _WorkflowNodes:
             candidate=candidate,
             assessment=result,
             refusal_reason=refusal,
+            retrieved=tuple(state["retrieved_requirements"]),
         )
         return {
             "assessment": result,

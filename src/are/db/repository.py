@@ -216,6 +216,7 @@ class SqliteRequirementRepository:
         *,
         repository: str | None = None,
         before_timestamp: datetime | None = None,
+        run_id: str | None = None,
     ) -> list[StoredRequirement]:
         """Elenca i requisiti validati, in ordine cronologico di Pull Request.
 
@@ -223,6 +224,11 @@ class SqliteRequirementRepository:
         Request di origine: serve a ricostruire la memoria disponibile a un
         certo istante (Decisione 3.3, §2), non a filtrare per data di
         inserimento.
+
+        ``run_id`` isola una singola esecuzione. Serve perché il database è
+        condiviso fra esecuzioni diverse: senza il filtro, una run vedrebbe i
+        requisiti prodotti da quelle precedenti e partirebbe avvantaggiata,
+        rendendo i confronti fra configurazioni privi di significato.
         """
 
         clauses: list[str] = []
@@ -233,6 +239,9 @@ class SqliteRequirementRepository:
         if before_timestamp is not None:
             clauses.append("source_pr_timestamp < ?")
             parameters.append(_to_utc_iso(before_timestamp))
+        if run_id is not None:
+            clauses.append("run_id = ?")
+            parameters.append(run_id)
 
         where = f" WHERE {' AND '.join(clauses)}" if clauses else ""
         rows = self._connection.execute(

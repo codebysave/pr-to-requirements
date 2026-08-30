@@ -101,18 +101,48 @@ def parse_json_object(text: str, agent: str) -> dict[str, Any]:
     try:
         parsed = json.loads(candidate)
     except json.JSONDecodeError:
-        start = candidate.find("{")
-        end = candidate.rfind("}")
-        if start == -1 or end == -1 or end < start:
-            raise AgentResponseError(agent, "nessun oggetto JSON trovato", text) from None
-        try:
-            parsed = json.loads(candidate[start : end + 1])
-        except json.JSONDecodeError as exc:
-            raise AgentResponseError(agent, f"JSON non valido ({exc.msg})", text) from exc
+        parsed = _first_json_object(candidate, agent, text)
 
     if not isinstance(parsed, dict):
         raise AgentResponseError(agent, "la risposta non è un oggetto JSON", text)
     return parsed
+
+
+_DECODER = json.JSONDecoder()
+
+
+def _first_json_object(candidate: str, agent: str, raw: str) -> Any:
+    """Estrae il primo oggetto JSON completo, ignorando ciò che lo circonda.
+
+    Si legge il primo oggetto *completo* invece di ritagliare dalla prima
+    graffa aperta all'ultima chiusa. La differenza conta: capita che il modello
+    produca il JSON e poi continui a ragionare a voce alta ("Wait, let me
+    reconsider..."). Se quel testo contiene una graffa, il ritaglio comprende
+    spazzatura e la Pull Request si perde per un errore di formato invece di
+    ricevere una risposta che era già completa e valida.
+
+    Le posizioni si provano in ordine perché la risposta può cominciare con
+    della prosa che contiene una graffa: la prima che apre un oggetto valido
+    vince.
+    """
+
+    ultimo_errore: json.JSONDecodeError | None = None
+    posizione = candidate.find("{")
+    while posizione != -1:
+        try:
+            parsed, _ = _DECODER.raw_decode(candidate, posizione)
+        except json.JSONDecodeError as exc:
+            ultimo_errore = exc
+        else:
+            if isinstance(parsed, dict):
+                return parsed
+        posizione = candidate.find("{", posizione + 1)
+
+    if ultimo_errore is None:
+        raise AgentResponseError(agent, "nessun oggetto JSON trovato", raw) from None
+    raise AgentResponseError(
+        agent, f"JSON non valido ({ultimo_errore.msg})", raw
+    ) from ultimo_errore
 
 
 def _require_non_empty_string(data: dict[str, Any], field: str, agent: str, raw: str) -> str:
@@ -369,8 +399,7 @@ class LLMRequirementAssessor:
             sections.append(f"CANDIDATE REQUIREMENT:\n{candidate}")
         if retrieved_requirements:
             lines = [
-                f"- [{item.requirement_id}] {item.statement} "
-                f"(similarity {item.similarity_score:.2f})"
+                f"- (from Pull Request #{item.source_pr_number}) {item.statement}"
                 for item in retrieved_requirements
             ]
             sections.append("PREVIOUSLY VALIDATED REQUIREMENTS:\n" + "\n".join(lines))
