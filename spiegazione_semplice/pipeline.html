@@ -1,0 +1,1238 @@
+<title>Pipeline pr-to-requirements</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --ground: #EEECE6;
+    --surface: #F6F4EE;
+    --surface-alt: #E4E1D6;
+    --ink: #1A1A1F;
+    --ink-soft: #3B3B41;
+    --muted: #6D6A64;
+    --line: #CBC7BB;
+    --accent-accept: #2F6E5A;
+    --accent-decline: #A94B2E;
+    --accent-revise: #B9862A;
+
+    --tint-input: #D6D3CB;
+    --tint-deterministic: #BFCCD5;
+    --tint-gate: #DBC9A0;
+    --tint-llm: #E6C88F;
+    --tint-candidate: #EAE6DB;
+    --tint-memory: #A6C9C4;
+    --tint-accepted: #A2C296;
+    --tint-declined: #D9A48F;
+
+    --radius: 6px;
+    --radius-lg: 12px;
+    --shadow: 0 1px 0 rgba(0,0,0,0.03), 0 8px 32px -20px rgba(0,0,0,0.18);
+
+    --font-display: "Fraunces", Georgia, serif;
+    --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #16171A;
+      --surface: #1D1F23;
+      --surface-alt: #262A2F;
+      --ink: #E7E4DD;
+      --ink-soft: #C5C1B7;
+      --muted: #8B8880;
+      --line: #33363B;
+      --accent-accept: #4CAB90;
+      --accent-decline: #D07555;
+      --accent-revise: #DEA649;
+
+      --tint-input: #32343A;
+      --tint-deterministic: #2A3841;
+      --tint-gate: #45391E;
+      --tint-llm: #503F1B;
+      --tint-candidate: #2A2C31;
+      --tint-memory: #1F3E3C;
+      --tint-accepted: #2E4A35;
+      --tint-declined: #4E2E22;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #16171A;
+    --surface: #1D1F23;
+    --surface-alt: #262A2F;
+    --ink: #E7E4DD;
+    --ink-soft: #C5C1B7;
+    --muted: #8B8880;
+    --line: #33363B;
+    --accent-accept: #4CAB90;
+    --accent-decline: #D07555;
+    --accent-revise: #DEA649;
+
+    --tint-input: #32343A;
+    --tint-deterministic: #2A3841;
+    --tint-gate: #45391E;
+    --tint-llm: #503F1B;
+    --tint-candidate: #2A2C31;
+    --tint-memory: #1F3E3C;
+    --tint-accepted: #2E4A35;
+    --tint-declined: #4E2E22;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-body);
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  .page {
+    max-width: 1760px;
+    margin: 0 auto;
+    padding: 48px 32px 96px;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .page-head h1 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(30px, 3.6vw, 52px);
+    letter-spacing: -0.015em;
+    margin: 0 0 14px;
+    text-wrap: balance;
+    line-height: 1.05;
+  }
+  .page-head p.lede {
+    color: var(--ink-soft);
+    font-size: 16px;
+    max-width: 78ch;
+    margin: 0 0 32px;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 24px;
+    padding: 20px 24px;
+    margin: 0 0 32px;
+    list-style: none;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .legend li { display: flex; align-items: center; gap: 8px; }
+  .swatch {
+    width: 12px; height: 12px;
+    border-radius: 3px;
+    border: 1px solid var(--line);
+    display: inline-block;
+  }
+
+  .diagram-frame {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    box-shadow: var(--shadow);
+    margin: 0;
+  }
+  .diagram-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .diagram-scroll svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    min-width: 1280px;
+  }
+  figcaption {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+    color: var(--muted);
+    font-style: italic;
+    text-align: center;
+  }
+
+  .principles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    margin-top: 32px;
+    padding: 0;
+    list-style: none;
+    counter-reset: pri;
+  }
+  .principles li {
+    counter-increment: pri;
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    position: relative;
+  }
+  .principles li::before {
+    content: "P" counter(pri, decimal-leading-zero);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    color: var(--accent-accept);
+    display: block;
+    margin-bottom: 8px;
+  }
+  .principles h3 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 18px;
+    margin: 0 0 8px;
+    letter-spacing: -0.005em;
+  }
+  .principles p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+  .principles code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--surface-alt);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* SVG blocks */
+  .block { cursor: pointer; outline: none; }
+  .block-body {
+    stroke: var(--line);
+    stroke-width: 1;
+    transition: filter 0.15s, stroke-width 0.15s;
+  }
+  .block:hover .block-body { filter: brightness(1.03); stroke-width: 1.5; }
+  .block:focus-visible .block-body {
+    stroke: var(--ink);
+    stroke-width: 2.5;
+  }
+  .block-num {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    fill: var(--ink);
+    font-weight: 500;
+  }
+  .block-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    fill: var(--muted);
+  }
+  .block-title {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 17px;
+    fill: var(--ink);
+    letter-spacing: -0.005em;
+  }
+  .block-sub {
+    font-family: var(--font-body);
+    font-size: 11.5px;
+    fill: var(--muted);
+  }
+  .flow-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    fill: var(--muted);
+  }
+  .row-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    fill: var(--muted);
+  }
+
+  /* Detail panel */
+  .panel-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    z-index: 20;
+  }
+  .panel-overlay[data-open="true"] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .detail-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(580px, 100vw);
+    background: var(--ground);
+    border-left: 1px solid var(--line);
+    transform: translateX(100%);
+    transition: transform 0.28s cubic-bezier(0.2, 0.7, 0.2, 1);
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -12px 0 48px -24px rgba(0,0,0,0.4);
+  }
+  .detail-panel[data-open="true"] { transform: translateX(0); }
+  .panel-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 28px 32px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .panel-head-text { flex: 1; min-width: 0; }
+  .panel-tag {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 8px;
+  }
+  .panel-title {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 28px;
+    margin: 0;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    line-height: 1.1;
+  }
+  .close-btn {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink);
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-family: var(--font-body);
+    transition: background 0.15s;
+  }
+  .close-btn:hover { background: var(--surface-alt); }
+  .close-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  .panel-body {
+    padding: 28px 32px 56px;
+    overflow-y: auto;
+    flex: 1;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--ink);
+  }
+  .panel-body h4 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 16px;
+    margin: 26px 0 10px;
+    letter-spacing: -0.005em;
+  }
+  .panel-body h4:first-child { margin-top: 0; }
+  .panel-body p { margin: 0 0 12px; color: var(--ink-soft); }
+  .panel-body strong { color: var(--ink); font-weight: 600; }
+  .panel-body em { color: var(--ink); font-style: italic; }
+  .panel-body code {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    background: var(--surface-alt);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+  .panel-body pre {
+    background: var(--surface-alt);
+    padding: 14px 18px;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.55;
+    margin: 8px 0 18px;
+    border: 1px solid var(--line);
+    color: var(--ink);
+  }
+  .panel-body ul {
+    margin: 0 0 16px;
+    padding-left: 22px;
+    color: var(--ink-soft);
+  }
+  .panel-body li { margin-bottom: 6px; }
+  .panel-body table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 8px 0 20px;
+    color: var(--ink);
+  }
+  .panel-body th, .panel-body td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  .panel-body th {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    font-weight: 500;
+    background: var(--surface);
+  }
+  .stub {
+    padding: 18px 22px;
+    background: var(--surface-alt);
+    border-left: 3px solid var(--accent-revise);
+    border-radius: 4px;
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .stub p:last-child { margin-bottom: 0; }
+
+  @media (max-width: 720px) {
+    .page { padding: 32px 20px 72px; }
+    .panel-head { padding: 20px 22px 16px; }
+    .panel-body { padding: 20px 22px 40px; }
+  }
+</style>
+
+<div class="page">
+  <header class="page-head">
+    <div class="eyebrow">Diagramma interattivo · pr-to-requirements</div>
+    <h1>La pipeline multi-agente, tappa per tappa</h1>
+    <p class="lede">Dalla Pull Request normalizzata al requisito validato. Otto tappe, due agenti LLM, un ciclo di revisione, due esiti terminali. Clicca ogni blocco per aprire la scheda dettagliata sul lato destro.</p>
+
+    <ul class="legend">
+      <li><span class="swatch" style="background: var(--tint-input)"></span>Input</li>
+      <li><span class="swatch" style="background: var(--tint-deterministic)"></span>Deterministico</li>
+      <li><span class="swatch" style="background: var(--tint-gate)"></span>Gate</li>
+      <li><span class="swatch" style="background: var(--tint-llm)"></span>LLM Agent</li>
+      <li><span class="swatch" style="background: var(--tint-memory)"></span>Memoria + MCP</li>
+      <li><span class="swatch" style="background: var(--surface-alt); border-style: dashed"></span>Infrastruttura LLM</li>
+      <li><span class="swatch" style="background: var(--tint-accepted)"></span>Esito ACCEPT</li>
+      <li><span class="swatch" style="background: var(--tint-declined)"></span>Esito DECLINE</li>
+    </ul>
+  </header>
+
+  <figure class="diagram-frame">
+    <div class="diagram-scroll">
+      <svg viewBox="0 0 1600 920" role="img" aria-label="Diagramma della pipeline pr-to-requirements: livello LLM Client condiviso, otto tappe più esiti e ciclo di revisione, tutte cliccabili per il dettaglio">
+        <defs>
+          <marker id="arr-main" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+            <polygon points="0,0 10,5 0,10" fill="var(--muted)"/>
+          </marker>
+          <marker id="arr-accept" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto">
+            <polygon points="0,0 10,5 0,10" fill="var(--accent-accept)"/>
+          </marker>
+          <marker id="arr-decline" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto">
+            <polygon points="0,0 10,5 0,10" fill="var(--accent-decline)"/>
+          </marker>
+          <marker id="arr-revise" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto">
+            <polygon points="0,0 10,5 0,10" fill="var(--accent-revise)"/>
+          </marker>
+        </defs>
+
+        <!-- === LLM Client · shared infrastructure layer (top) === -->
+        <text class="row-label" x="20" y="18">Livello LLM · astrazione fornitore condivisa dagli agenti</text>
+        <g class="block" data-step="llm-client" tabindex="0" role="button" aria-label="Livello LLM Client">
+          <rect class="block-body" x="560" y="30" width="760" height="80" rx="8" fill="var(--surface-alt)" stroke-dasharray="5 4" stroke-width="1.5"/>
+          <text class="block-tag" x="580" y="54">INFRASTRUTTURA · DECISIONE 3.2</text>
+          <text class="block-title" x="580" y="80">LLM Client</text>
+          <text class="block-sub" x="580" y="100">config/llm.toml   ·   AnthropicLLMClient   ·   SDK ufficiale</text>
+        </g>
+
+        <!-- Dashed connectors: bar → block 04 and bar → block 07 -->
+        <line x1="670" y1="110" x2="670" y2="400" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 4"/>
+        <text x="683" y="258" class="flow-label" fill="var(--muted)">chiama</text>
+        <line x1="1240" y1="110" x2="1240" y2="400" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 4"/>
+        <text x="1253" y="258" class="flow-label" fill="var(--muted)">chiama</text>
+
+        <!-- === ACCEPTED terminal === -->
+        <g class="block" data-step="accepted" tabindex="0" role="button" aria-label="Esito ACCEPTED">
+          <rect class="block-body" x="1350" y="140" width="170" height="90" rx="6" fill="var(--tint-accepted)"/>
+          <text class="block-tag" x="1370" y="164">CONTROLLED WORKFLOW</text>
+          <text class="block-title" x="1370" y="192">ACCEPTED</text>
+          <text class="block-sub" x="1370" y="214">requisito persistito</text>
+        </g>
+
+        <!-- === Persist via MCP === -->
+        <g class="block" data-step="persist" tabindex="0" role="button" aria-label="Persist via MCP">
+          <rect class="block-body" x="1350" y="260" width="170" height="90" rx="6" fill="var(--surface-alt)"/>
+          <text class="block-tag" x="1370" y="284">CONTROLLER</text>
+          <text class="block-title" x="1370" y="312">Persist via MCP</text>
+          <text class="block-sub" x="1370" y="334">Repository → SQLite</text>
+        </g>
+
+        <!-- Arrow: Persist → ACCEPTED -->
+        <line x1="1435" y1="260" x2="1435" y2="234" stroke="var(--accent-accept)" stroke-width="2" marker-end="url(#arr-accept)"/>
+
+        <!-- Arrow: 08 → Persist (ACCEPT) -->
+        <line x1="1435" y1="400" x2="1435" y2="354" stroke="var(--accent-accept)" stroke-width="2" marker-end="url(#arr-accept)"/>
+        <text x="1450" y="382" class="flow-label" fill="var(--accent-accept)">ACCEPT</text>
+
+        <!-- === Main pipeline row === -->
+        <text class="row-label" x="20" y="384">Main pipeline</text>
+
+        <!-- 01 INPUT -->
+        <g class="block" data-step="01" tabindex="0" role="button" aria-label="Step 01, PR normalizzata">
+          <rect class="block-body" x="20" y="400" width="160" height="140" rx="6" fill="var(--tint-input)"/>
+          <text class="block-num" x="34" y="424">01</text>
+          <text class="block-tag" x="166" y="424" text-anchor="end">INPUT</text>
+          <text class="block-title" x="34" y="468">PR normalizzata</text>
+          <text class="block-sub" x="34" y="496">title + body</text>
+          <text class="block-sub" x="34" y="514">metadati tecnici</text>
+        </g>
+
+        <!-- 02 LOADER -->
+        <g class="block" data-step="02" tabindex="0" role="button" aria-label="Step 02, PullRequestLoader">
+          <rect class="block-body" x="210" y="400" width="160" height="140" rx="6" fill="var(--tint-deterministic)"/>
+          <text class="block-num" x="224" y="424">02</text>
+          <text class="block-tag" x="356" y="424" text-anchor="end">DETERMINISTIC</text>
+          <text class="block-title" x="224" y="462">PullRequest</text>
+          <text class="block-title" x="224" y="482">Loader</text>
+          <text class="block-sub" x="224" y="506">valida lo schema</text>
+          <text class="block-sub" x="224" y="524">crea il record</text>
+        </g>
+
+        <!-- 03 EXTRACTABILITY -->
+        <g class="block" data-step="03" tabindex="0" role="button" aria-label="Step 03, Extractability">
+          <rect class="block-body" x="400" y="400" width="160" height="140" rx="6" fill="var(--tint-gate)"/>
+          <text class="block-num" x="414" y="424">03</text>
+          <text class="block-tag" x="546" y="424" text-anchor="end">ROUTING GATE</text>
+          <text class="block-title" x="414" y="468">Extractability</text>
+          <text class="block-sub" x="414" y="496">comportamento</text>
+          <text class="block-sub" x="414" y="514">funzionale presente?</text>
+        </g>
+
+        <!-- 04 GENERATION -->
+        <g class="block" data-step="04" tabindex="0" role="button" aria-label="Step 04, Generation Agent">
+          <rect class="block-body" x="590" y="400" width="160" height="140" rx="6" fill="var(--tint-llm)"/>
+          <text class="block-num" x="604" y="424">04</text>
+          <text class="block-tag" x="736" y="424" text-anchor="end">LLM AGENT</text>
+          <text class="block-title" x="604" y="462">Generation</text>
+          <text class="block-title" x="604" y="482">Agent</text>
+          <text class="block-sub" x="604" y="506">ricostruisce il WHAT</text>
+          <text class="block-sub" x="604" y="524">produce il requisito</text>
+        </g>
+
+        <!-- 05 CANDIDATE -->
+        <g class="block" data-step="05" tabindex="0" role="button" aria-label="Step 05, Candidate Requirement">
+          <rect class="block-body" x="780" y="400" width="160" height="140" rx="6" fill="var(--tint-candidate)"/>
+          <text class="block-num" x="794" y="424">05</text>
+          <text class="block-tag" x="926" y="424" text-anchor="end">CANDIDATE</text>
+          <text class="block-title" x="794" y="462">Candidate</text>
+          <text class="block-title" x="794" y="482">Requirement</text>
+          <text class="block-sub" x="794" y="506">output non ancora</text>
+          <text class="block-sub" x="794" y="524">validato</text>
+        </g>
+
+        <!-- 06 MEMORY RETRIEVAL -->
+        <g class="block" data-step="06" tabindex="0" role="button" aria-label="Step 06, Memory Retrieval">
+          <rect class="block-body" x="970" y="400" width="160" height="140" rx="6" fill="var(--tint-memory)"/>
+          <text class="block-num" x="984" y="424">06</text>
+          <text class="block-tag" x="1116" y="424" text-anchor="end">MCP + MEMORY</text>
+          <text class="block-title" x="984" y="462">Memory</text>
+          <text class="block-title" x="984" y="482">Retrieval</text>
+          <text class="block-sub" x="984" y="506">search_requirements</text>
+          <text class="block-sub" x="984" y="524">Retriever → top-k</text>
+        </g>
+
+        <!-- 07 ASSESSMENT -->
+        <g class="block" data-step="07" tabindex="0" role="button" aria-label="Step 07, Assessment Agent">
+          <rect class="block-body" x="1160" y="400" width="160" height="140" rx="6" fill="var(--tint-llm)"/>
+          <text class="block-num" x="1174" y="424">07</text>
+          <text class="block-tag" x="1306" y="424" text-anchor="end">LLM AGENT</text>
+          <text class="block-title" x="1174" y="462">Assessment</text>
+          <text class="block-title" x="1174" y="482">Agent</text>
+          <text class="block-sub" x="1174" y="506">fidelity + quality</text>
+          <text class="block-sub" x="1174" y="524">relazioni storiche</text>
+        </g>
+
+        <!-- 08 ROUTER -->
+        <g class="block" data-step="08" tabindex="0" role="button" aria-label="Step 08, Router">
+          <rect class="block-body" x="1350" y="400" width="170" height="140" rx="6" fill="var(--tint-deterministic)"/>
+          <text class="block-num" x="1364" y="424">08</text>
+          <text class="block-tag" x="1506" y="424" text-anchor="end">DETERMINISTIC</text>
+          <text class="block-title" x="1364" y="468">Router</text>
+          <text class="block-sub" x="1364" y="496">ACCEPT</text>
+          <text class="block-sub" x="1364" y="514">REVISE / REJECT</text>
+        </g>
+
+        <!-- === Main flow arrows === -->
+        <line x1="180" y1="470" x2="210" y2="470" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr-main)"/>
+        <line x1="370" y1="470" x2="400" y2="470" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr-main)"/>
+        <line x1="560" y1="470" x2="590" y2="470" stroke="var(--accent-accept)" stroke-width="1.8" marker-end="url(#arr-accept)"/>
+        <text x="575" y="462" class="flow-label" text-anchor="middle" fill="var(--accent-accept)">YES</text>
+        <line x1="750" y1="470" x2="780" y2="470" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr-main)"/>
+        <line x1="940" y1="470" x2="970" y2="470" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr-main)"/>
+        <text x="955" y="462" class="flow-label" text-anchor="middle">candidato → query</text>
+        <line x1="1130" y1="470" x2="1160" y2="470" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr-main)"/>
+        <text x="1145" y="462" class="flow-label" text-anchor="middle">top-k storici</text>
+        <line x1="1320" y1="470" x2="1350" y2="470" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr-main)"/>
+
+        <!-- === Skip: cannot_ground (04 → 07, salta 05 e 06) === -->
+        <path d="M 720 540 L 720 610 L 1200 610 L 1200 540" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr-main)"/>
+        <text x="960" y="602" class="flow-label" fill="var(--muted)" text-anchor="middle">cannot_ground · salta 05, 06</text>
+
+        <!-- === REVISE loop === -->
+        <g class="block" data-step="revise" tabindex="0" role="button" aria-label="Structured Feedback">
+          <rect class="block-body" x="620" y="650" width="360" height="80" rx="6" fill="var(--tint-llm)" opacity="0.55"/>
+          <text class="block-tag" x="638" y="674">RETRY · MAX 3 TENTATIVI</text>
+          <text class="block-title" x="638" y="702">Structured Feedback</text>
+          <text class="block-sub" x="638" y="722">candidato precedente + istruzioni di riscrittura</text>
+        </g>
+
+        <!-- Arrow: 08 → SF -->
+        <path d="M 1400 540 L 1400 690 L 990 690" fill="none" stroke="var(--accent-revise)" stroke-width="2" marker-end="url(#arr-revise)"/>
+        <text x="1195" y="682" class="flow-label" fill="var(--accent-revise)" text-anchor="middle">REVISE</text>
+
+        <!-- Arrow: SF → 04 -->
+        <path d="M 670 650 L 670 540" fill="none" stroke="var(--accent-revise)" stroke-width="2" marker-end="url(#arr-revise)"/>
+        <text x="683" y="600" class="flow-label" fill="var(--accent-revise)">nuova generazione</text>
+
+        <!-- === DECLINE terminal === -->
+        <g class="block" data-step="decline" tabindex="0" role="button" aria-label="Esito DECLINE">
+          <rect class="block-body" x="1350" y="760" width="170" height="100" rx="6" fill="var(--tint-declined)"/>
+          <text class="block-tag" x="1370" y="784">ESITO NEGATIVO</text>
+          <text class="block-title" x="1370" y="812">DECLINE</text>
+          <text class="block-sub" x="1370" y="834">nessuna persistenza</text>
+        </g>
+
+        <!-- Arrow: 03 → DECLINE (NOT EXTRACTABLE) -->
+        <path d="M 480 540 L 480 820 L 1350 820" fill="none" stroke="var(--accent-decline)" stroke-width="2" marker-end="url(#arr-decline)"/>
+        <text x="900" y="812" class="flow-label" fill="var(--accent-decline)" text-anchor="middle">NOT EXTRACTABLE</text>
+
+        <!-- Arrow: 08 → DECLINE (REJECT / LIMIT) -->
+        <path d="M 1470 540 L 1470 760" fill="none" stroke="var(--accent-decline)" stroke-width="2" marker-end="url(#arr-decline)"/>
+        <text x="1485" y="630" class="flow-label" fill="var(--accent-decline)">REJECT / LIMIT</text>
+
+      </svg>
+    </div>
+    <figcaption>La barra tratteggiata in alto è il livello LLM condiviso: entrambi gli agenti (04 Generation, 07 Assessment) ci "si collegano" per parlare con Claude. Verde = flusso di accettazione. Arancio = ciclo di revisione (max 3 tentativi). Ruggine = esiti negativi senza persistenza. Il ramo sotto 04→07 rappresenta il caso <code>cannot_ground</code>: il Generator rinuncia motivatamente, si saltano Candidate e Memory Retrieval e si va direttamente all'Assessment che deve confermare o dissentire.</figcaption>
+  </figure>
+
+  <ol class="principles">
+    <li>
+      <h3>Memory timing</h3>
+      <p>La memoria viene interrogata <strong>dopo</strong> ogni generazione e <strong>prima</strong> dell'assessment: il valutatore vede sempre il contesto storico più aggiornato per il candidato corrente.</p>
+    </li>
+    <li>
+      <h3>Retry completo</h3>
+      <p>Ogni <code>REVISE</code> ripete la sequenza <code>Generation → Retrieval → Assessment</code>. Non si riscrive solo il testo: si riesegue tutto, con feedback strutturato del tentativo precedente.</p>
+    </li>
+    <li>
+      <h3>Persistenza controllata</h3>
+      <p>Solo l'esito <code>ACCEPT</code> scrive nella memoria a lungo termine. Tutti gli altri esiti (<code>REJECT</code>, <code>NOT_EXTRACTABLE</code>, <code>REVISE</code> esaurito) terminano senza scrittura.</p>
+    </li>
+  </ol>
+</div>
+
+<div class="panel-overlay" data-open="false" aria-hidden="true"></div>
+<aside class="detail-panel" data-open="false" aria-hidden="true" aria-labelledby="panel-title">
+  <div class="panel-head">
+    <div class="panel-head-text">
+      <span class="panel-tag" id="panel-tag">—</span>
+      <h2 class="panel-title" id="panel-title">—</h2>
+    </div>
+    <button class="close-btn" aria-label="Chiudi pannello" id="close-btn">×</button>
+  </div>
+  <div class="panel-body" id="panel-body"></div>
+</aside>
+
+<script>
+  const stubMessage = (fileRef, note) => `
+    <div class="stub">
+      <p><strong>Scheda in stesura.</strong> Verrà completata quando arriveremo alla revisione ${fileRef}.</p>
+      ${note ? `<p>${note}</p>` : ''}
+    </div>
+  `;
+
+  const steps = {
+    "01": {
+      tag: "Step 01 · Input",
+      title: "PR normalizzata",
+      body: `
+        <p><strong>Tipo.</strong> Ingresso della pipeline. Non è un componente che esegue codice — è <em>il dato</em> con cui tutto il resto lavora.</p>
+
+        <h4>Cosa contiene</h4>
+        <p>Una singola Pull Request già normalizzata dal preprocessing di PR4Code. Sei campi fissi, sempre gli stessi schema:</p>
+        <table>
+          <thead><tr><th>Campo</th><th>A cosa serve</th></tr></thead>
+          <tbody>
+            <tr><td><code>id</code></td><td>Identificativo univoco (es. <code>scrapy-scrapy-pr-6512</code>). Traccia il requisito prodotto fino alla PR di origine.</td></tr>
+            <tr><td><code>repository</code></td><td>Repo di provenienza (<code>scrapy/scrapy</code>). Raggruppa PR dello stesso progetto e struttura la memoria.</td></tr>
+            <tr><td><code>pr_number</code></td><td>Numero della PR su GitHub. Ridondante rispetto a <code>id</code>, utile per link e leggibilità.</td></tr>
+            <tr><td><code>timestamp</code></td><td>Data ISO-8601 con fuso orario. Il Runner ordina le PR cronologicamente prima di elaborarle.</td></tr>
+            <tr><td><code>title</code></td><td>Titolo della PR: fonte principale di evidenza insieme al body.</td></tr>
+            <tr><td><code>body</code></td><td>Corpo testuale. Insieme al titolo forma <strong>tutta l'evidenza disponibile</strong> su cui il sistema può ragionare.</td></tr>
+          </tbody>
+        </table>
+
+        <h4>Esempio concreto</h4>
+<pre>{
+  "id": "scrapy-scrapy-pr-6512",
+  "repository": "scrapy/scrapy",
+  "pr_number": 6512,
+  "timestamp": "2025-04-18T09:22:04Z",
+  "title": "Fix retry policy when downloader returns HTTP 429",
+  "body": "Currently, when the downloader receives a 429 …"
+}</pre>
+
+        <h4>Dove arriva nel codice</h4>
+        <p>Rappresentato dalla classe <code>PullRequestRecord</code> in <code>src/are/input/models.py</code>. È un oggetto Python <strong>immutabile</strong> che contiene esattamente i sei campi sopra, già validati.</p>
+
+        <h4>Cosa NON è</h4>
+        <ul>
+          <li><strong>Non è la lettura del file JSON.</strong> Quella la fa lo step 02 (<code>PullRequestLoader</code>).</li>
+          <li><strong>Non è il preprocessing di PR4Code.</strong> Quello è un programma separato, esterno al sistema, che ha già prodotto il JSON normalizzato prima che la pipeline partisse.</li>
+          <li><strong>Non è la scelta di quale PR elaborare.</strong> Quella è compito del <em>Runner</em> (ciclo esterno sulla lista).</li>
+        </ul>
+      `
+    },
+    "02": {
+      tag: "Step 02 · Deterministic",
+      title: "PullRequestLoader",
+      body: `
+        <p><strong>In una frase.</strong> Il custode dell'ingresso del sistema: prende il file JSON prodotto dal preprocessing, controlla che sia scritto bene, e lo trasforma in una lista di oggetti Python (<code>PullRequestRecord</code>) su cui il resto della pipeline lavorerà. Zero coercizioni silenziose, zero dipendenze esterne, ordine del file preservato.</p>
+
+        <h4>Dove sta nel codice</h4>
+        <p>Tutto in <code>src/are/input/</code>, quattro file:</p>
+        <table>
+          <thead><tr><th>File</th><th>Contiene</th></tr></thead>
+          <tbody>
+            <tr><td><code>models.py</code></td><td>La <em>forma</em> del dato: la classe <code>PullRequestRecord</code> e le regole per costruirlo da un dizionario JSON.</td></tr>
+            <tr><td><code>loader.py</code></td><td>Il loader vero: la classe <code>PullRequestLoader</code> che legge il file, gestisce errori di path/JSON/schema, restituisce la lista.</td></tr>
+            <tr><td><code>exceptions.py</code></td><td>Gli errori pubblici che il loader può sollevare (uno per tipo di problema, ciascuno con messaggio chiaro).</td></tr>
+            <tr><td><code>__init__.py</code></td><td>API pubblica del modulo: dichiara cosa si può importare da fuori.</td></tr>
+          </tbody>
+        </table>
+
+        <h4>Cosa fa passo-passo</h4>
+
+        <p><strong>1. Verifica del percorso</strong> — <code>loader.py:87</code>. Il metodo <code>_normalize_path</code> controlla: il valore ricevuto è un percorso? Il file esiste? È un file regolare, non una cartella? Errori dedicati per ciascun caso.</p>
+
+        <p><strong>2. Lettura e parsing JSON</strong> — <code>loader.py:106</code>. Legge il file come UTF-8 (accetta anche il BOM di Windows). Poi due controlli extra rispetto al normale:</p>
+        <ul>
+          <li><strong>Rifiuta chiavi duplicate</strong> nello stesso oggetto: normalmente <code>json</code> le sovrascrive silenziosamente; qui vengono bloccate.</li>
+          <li><strong>Rifiuta i numeri non-standard</strong> <code>NaN</code>, <code>Infinity</code>, <code>-Infinity</code>: sono estensioni non nel JSON puro.</li>
+        </ul>
+
+        <p><strong>3. Verifica della radice</strong> — <code>loader.py:43</code>. Il documento deve essere un <em>array non vuoto</em>.</p>
+
+        <p><strong>4. Validazione record per record</strong> — <code>loader.py:48</code>. Per ogni elemento dell'array: deve essere un oggetto; viene chiamato <code>PullRequestRecord.from_mapping(item)</code>; se il record è valido, controllo di unicità dell'<code>id</code>. Ordine del file preservato.</p>
+
+        <p><strong>5. Costruzione del record</strong> — <code>models.py:32</code>. Il metodo <code>from_mapping</code> fa la parte più severa. Filosofia importante: <strong>raccoglie tutti gli errori insieme</strong> (lista <code>issues</code>), non si ferma al primo. Controlli fatti:</p>
+        <ul>
+          <li>Campi mancanti (uno degli 6 → segnalato).</li>
+          <li>Campi non previsti (es. <code>author</code> → rifiutato: zero campi ignorati silenziosamente).</li>
+          <li><code>id</code>, <code>repository</code>, <code>title</code>, <code>body</code>: devono essere stringhe.</li>
+          <li><code>pr_number</code>: intero <em>puro</em> — un <code>True</code>/<code>False</code> (tecnicamente <code>int</code> in Python) viene rifiutato.</li>
+          <li><code>timestamp</code>: stringa ISO-8601 <strong>con fuso orario esplicito</strong> (<code>Z</code> o <code>+02:00</code>). Un timestamp senza fuso viene rifiutato — essenziale per l'ordinamento cronologico tra repository diversi.</li>
+        </ul>
+
+        <h4>Le 5 scelte di design da capire</h4>
+        <ol>
+          <li><strong><code>PullRequestRecord</code> è immutabile</strong> (<code>frozen=True, slots=True</code>): nessun nodo successivo può accidentalmente modificare i dati di ingresso.</li>
+          <li><strong>Zero coercizioni silenziose.</strong> Se <code>pr_number</code> è <code>"123"</code>, viene rifiutato, non convertito. Se il preprocessing ha sbagliato, meglio saperlo subito.</li>
+          <li><strong>Errori aggregati.</strong> Tutti i problemi di una PR sono riportati insieme: se ne ha 3 sbagliati, li vedi tutti, non uno alla volta.</li>
+          <li><strong>Errori tipizzati e specifici</strong>: file mancante ≠ JSON invalido ≠ schema sbagliato ≠ id duplicato. Ciascuno è una classe di eccezione dedicata.</li>
+          <li><strong>Nessuna dipendenza esterna.</strong> Solo libreria standard di Python (<code>json</code>, <code>pathlib</code>, <code>datetime</code>). Nessun Pydantic. Meno cose si possono rompere.</li>
+        </ol>
+
+        <h4>Uso in pratica</h4>
+<pre>from are.input import PullRequestLoader
+
+records = PullRequestLoader().load(
+    "experiments/samples/sample-scrapy_scrapy.json"
+)
+
+for pr in records:
+    print(pr.id, pr.pr_number, pr.title)</pre>
+
+        <h4>Cosa NON fa</h4>
+        <ul>
+          <li>Non ordina le PR per timestamp — lo farà il Runner.</li>
+          <li>Non filtra le PR (es. "salta le PR di security").</li>
+          <li>Non chiama l'LLM.</li>
+          <li>Non giudica il contenuto (titolo vuoto? body corto? va bene, decideranno i nodi semantici).</li>
+          <li>Non conosce PR4Code — sa solo lo schema del JSON normalizzato.</li>
+        </ul>
+
+        <h4>Test</h4>
+        <p>Due file di test, che sono la <em>specifica eseguibile</em>: se non capisci un comportamento, apri il test corrispondente e vedi "con questo input → questo errore".</p>
+        <ul>
+          <li><code>tests/test_input_models.py</code> — verifica <code>PullRequestRecord.from_mapping</code></li>
+          <li><code>tests/test_input_loader.py</code> — verifica <code>PullRequestLoader.load</code></li>
+        </ul>
+      `
+    },
+    "03": {
+      tag: "Step 03 · Routing Gate",
+      title: "Extractability",
+      body: `
+        <p><strong>In una frase.</strong> Il primo cancello della pipeline: decide se la PR contiene abbastanza testo per essere anche solo <em>valutata</em>. È l'unico punto in cui una PR può essere scartata prima di chiamare l'LLM.</p>
+
+        <h4>È deterministico, NON è un agente LLM</h4>
+        <p>La Decisione 05 permetterebbe di implementarlo come agente LLM. Qui è stato scelto un controllo sintattico per tre motivi (<code>src/are/agents/extractability.py:1</code>):</p>
+        <ul>
+          <li><strong>Riproducibilità</strong> — un controllo sintattico dà sempre lo stesso esito; un LLM può cambiare risposta tra due esecuzioni.</li>
+          <li><strong>Divisione di responsabilità</strong> — questo gate decide <em>senza vedere il requisito</em>; il giudizio semantico spetta all'Assessment Agent, che ha davanti anche il candidato e può rifiutare più tardi con <code>REJECT</code>.</li>
+          <li><strong>Costo</strong> — zero chiamate all'LLM per PR scartabili "in modo incontestabile".</li>
+        </ul>
+        <p>Il compito è volutamente limitato: buttare via solo i casi banali, tutto il resto passa alla generazione.</p>
+
+        <h4>Cosa controlla (due sole condizioni)</h4>
+        <p>Nella funzione <code>_evaluate</code> (<code>extractability.py:56</code>):</p>
+        <ol>
+          <li>Il <strong>body è vuoto</strong>? → <code>NOT_EXTRACTABLE</code> con motivo <em>"il corpo della Pull Request è vuoto"</em>.</li>
+          <li>La <strong>lunghezza totale</strong> (titolo + body, spazi tolti) è <strong>sotto i 50 caratteri</strong>? → <code>NOT_EXTRACTABLE</code> con motivo <em>"titolo e corpo contengono N caratteri, meno del minimo richiesto di 50"</em>.</li>
+        </ol>
+        <p>Altrimenti → <code>EXTRACTABLE</code>, si prosegue verso il Generation Agent.</p>
+        <p>La soglia di <strong>50 caratteri</strong> (<code>DEFAULT_MIN_EVIDENCE_CHARACTERS</code>) è <strong>dichiaratamente provvisoria</strong>: nel codice è chiamata "criterio di comodo, non una soglia fondata". Andrà calibrata sul gold standard.</p>
+
+        <h4>Cosa restituisce</h4>
+        <p>Un oggetto <code>ExtractabilityResult</code> (<code>state.py:48</code>) con due campi:</p>
+        <ul>
+          <li><code>decision</code>: uno di <code>EXTRACTABLE</code> / <code>NOT_EXTRACTABLE</code>. Serve al <strong>codice</strong> per decidere dove andare nel grafo.</li>
+          <li><code>reason</code>: una stringa in italiano <em>scritta da noi nel codice</em> (nessun LLM), utile agli <strong>umani</strong>: appare nel log a schermo e nel file di report finale del run.</li>
+        </ul>
+        <p>Le "motivazioni" possibili sono in totale 3, tutte cablate come template nel codice — non generate.</p>
+
+        <h4>Esempio: com'è fatto un log del run</h4>
+        <p>Ogni esecuzione della pipeline produce un file JSON in <code>experiments/runs/</code>. Estratto da un run reale (<code>run-20260828T142024Z.json</code>, 5 PR di OpenHands elaborate):</p>
+<pre>{
+  "run": {
+    "generated_at": "2026-08-28T14:20:44Z",
+    "input_file": "experiments/samples/sample-All-Hands-AI_OpenHands.json",
+    "pull_requests": 5,
+    "workflow": { "assessment_enabled": true, "memory_enabled": false, "max_generation_attempts": 3 },
+    "llm": { "generation": {...}, "assessment": {...} },
+    "usage": {
+      "total_calls": 12,
+      "total_input_tokens": 38963,
+      "total_output_tokens": 954,
+      "total_estimated_cost_usd": 0.043733
+    }
+  },
+  "summary": { "ACCEPTED": 3, "NOT_EXTRACTABLE": 2 },
+  "results": [
+    {
+      "pr_id": "all-hands-ai-openhands-pr-9581",
+      "pr_number": 9581,
+      "title": "fix(frontend): NaN is shown on the conversation card",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 1537 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall not display NaN on the conversation card.",
+      "generation_attempts": 1,
+      "iteration_history": [ ... ]
+    },
+    ...
+  ]
+}</pre>
+        <p>Vedi come il <code>extractability_reason</code> ("titolo e corpo contengono 1537 caratteri: la valutazione prosegue") sia esattamente la stringa cablata dal gate, interpolata con la lunghezza reale di quella PR. Settimane dopo, aprire quel file basta a capire cos'è successo — senza rieseguire nulla, senza rileggere la PR originale.</p>
+
+        <h4>Cosa NON fa il gate</h4>
+        <ul>
+          <li>Non giudica se la PR contenga davvero un comportamento funzionale (compito semantico dell'Assessment).</li>
+          <li>Non applica la regola "il nome di un artefatto non è evidenza" (Decisione 01 §9.2 — troppo semantica per un gate sintattico; la applica l'Assessment con esito <code>REJECT</code>).</li>
+          <li>Non chiama l'LLM.</li>
+        </ul>
+
+        <h4>Come si aggancia al flusso</h4>
+        <ul>
+          <li><code>EXTRACTABLE</code> → si passa allo <strong>Step 04 (Generation Agent)</strong>.</li>
+          <li><code>NOT_EXTRACTABLE</code> → si va direttamente al terminale <strong>DECLINE</strong> con <code>FinalStatus.NOT_EXTRACTABLE</code>. Nessuna chiamata LLM, nessuna scrittura in memoria.</li>
+        </ul>
+
+        <h4>Punto ancora aperto</h4>
+        <p>Il criterio "50 caratteri" è aperto con la tutor (<code>docs/meetings/open-questions-for-tutor-updated.md</code>). Alternative in discussione: restare severi come ora, essere più permissivi (accettare in ingresso e lasciar decidere l'Assessment), oppure calibrare la soglia sul gold standard quando sarà pronto.</p>
+      `
+    },
+    "04": {
+      tag: "Step 04 · LLM Agent",
+      title: "Generation Agent",
+      body: `
+        <p><strong>In una frase.</strong> Il primo dei due agenti LLM. Dato titolo e body di una PR, <strong>scrive un requisito funzionale</strong> che esprima il comportamento che il sistema deve garantire. È il momento in cui la pipeline "produce": prima è preparazione, dopo è valutazione.</p>
+
+        <h4>Dove sta</h4>
+        <ul>
+          <li><code>src/are/agents/llm_agents.py</code> — classe <code>LLMRequirementGenerator</code> (righe 164-219): il codice dell'agente.</li>
+          <li><code>prompts/generation/v1.md</code> — il <strong>prompt di sistema</strong> in inglese: chi è, cosa fa, i 5 pattern EARS, 8 esempi. L'anima dell'agente.</li>
+          <li><code>src/are/agents/prompts.py</code> — modulo di supporto che legge il file <code>.md</code> dal disco nella versione richiesta.</li>
+        </ul>
+        <p>L'agente usa poi l'infrastruttura <strong>LLM Client</strong> (barra tratteggiata del diagramma) per parlare con Claude.</p>
+
+        <h4>Due modalità</h4>
+        <p>Firma di <code>generate()</code>: <code>generate(pull_request, previous_candidate, feedback)</code>.</p>
+        <ul>
+          <li>Se <code>previous_candidate</code> e <code>feedback</code> sono <code>None</code> → <strong>prima generazione</strong>: scrive dalla sola evidenza della PR.</li>
+          <li>Se sono valorizzati → <strong>revisione</strong>: c'è stato un <code>REVISE</code>, riscrive applicando il feedback strutturato.</li>
+        </ul>
+        <p>L'agente riceve <strong>solo il tentativo precedente + feedback</strong>, non lo storico completo. Scelta esplicita (Decisione 05 §11): messaggio corto e focalizzato.</p>
+
+        <h4>Come si aggancia al livello LLM Client</h4>
+        <p>L'agente non conosce il fornitore. Riceve un <code>LLMClient</code> (l'interfaccia astratta) dall'esterno:</p>
+<pre>def __init__(self, client: LLMClient, prompt_version: str = "v1"):
+    self._client = client                              # ← interfaccia astratta
+    self._system = load_prompt(GENERATION_AGENT, prompt_version)
+    #                          ↑ legge prompts/generation/v1.md UNA volta</pre>
+        <p>Poi a ogni chiamata:</p>
+<pre>response = self._client.complete(
+    system=self._system,           # il prompt v1.md caricato in __init__
+    user_message=user_message,     # PULL REQUEST TITLE:... BODY:...
+)</pre>
+        <p>Non sa se sotto ci sia <code>AnthropicLLMClient</code> (produzione) o un client finto (test): vede solo il "tubo". Cambiare fornitore = riscrivere solo il client, non l'agente.</p>
+
+        <h4>Cosa fa passo-passo</h4>
+        <ol>
+          <li><strong>Costruisce il messaggio utente</strong> (<code>_build_message</code>, riga 204): <code>PULL REQUEST TITLE:</code> + <code>BODY:</code>, e — solo in revisione — <code>PREVIOUS REQUIREMENT:</code> + <code>REVIEWER FEEDBACK:</code>.</li>
+          <li><strong>Chiama il client LLM</strong> (riga 188).</li>
+          <li><strong>Interpreta la risposta JSON</strong> (<code>parse_json_object</code>, riga 79): tollerante — se il modello aggiunge testo prima/dopo o racchiude in markdown, estrae comunque. Ma se il JSON è invalido → <code>AgentResponseError</code>. Non inventa.</li>
+        </ol>
+
+        <h4>Due esiti possibili (con routing diverso!)</h4>
+        <p><strong>Esito A — Requisito prodotto:</strong></p>
+<pre>{"requirement": "The system shall notify the user after a successful password reset."}</pre>
+        <p>Va allo <strong>Step 05</strong> (Candidate) → <strong>Step 06</strong> (Memory Retrieval) → <strong>Step 07</strong> (Assessment).</p>
+
+        <p><strong>Esito B — Rinuncia motivata</strong> (<code>cannot_ground</code>, riga 195):</p>
+<pre>{"cannot_ground": "The evidence names a component but never states what the system does with it."}</pre>
+        <p>Esito <strong>legittimo</strong> (Decisione 01 §11.10). <strong>Salta Step 05 e Step 06</strong> e va direttamente all'Assessment con il campo <code>generation_refusal</code> valorizzato. Motivo: senza un candidato non c'è cosa cercare in memoria. L'Assessment può poi <em>confermare</em> (esito finale <code>NOT_EXTRACTABLE</code>) o <em>dissentire</em> con <code>REVISE</code>.</p>
+
+        <h4>Il prompt v1 in due parole</h4>
+        <p>Il file <code>prompts/generation/v1.md</code> è la traduzione operativa della Decisione 01:</p>
+        <ul>
+          <li><code>&lt;role&gt;</code> — "You are a requirements engineer..."</li>
+          <li><code>&lt;task&gt;</code> — scrivere UN requisito funzionale come JSON</li>
+          <li><code>&lt;definitions&gt;</code> — required behaviour, black-box test, evidence, WHAT vs mechanism, removal test</li>
+          <li><code>&lt;procedure&gt;</code> — 5 passi: leggere l'evidenza → scegliere il livello di astrazione → scegliere il pattern EARS → verificare → applicare eventuale feedback</li>
+          <li><code>&lt;examples&gt;</code> — 8 esempi (uno per pattern EARS + casi difficili + esempio "Add breadcrumb component" per <code>cannot_ground</code>)</li>
+          <li><code>&lt;output_format&gt;</code> — un solo JSON, niente preamboli, niente markdown</li>
+        </ul>
+        <p>Ogni regola della Decisione 01 è cablata qui: EARS + <code>shall</code> obbligatorio, grounding, WHAT/HOW, removal test, "il nome di un artefatto non è evidenza" (§9.2).</p>
+
+        <h4>Filosofia — "parsing severo"</h4>
+        <p>Dal docstring del file: <em>"Il parsing è volutamente severo: una risposta malformata solleva un errore esplicito invece di produrre un requisito o una decisione inventati."</em> Preferiamo un fallimento visibile a un requisito inventato dal parser.</p>
+
+        <h4>Cosa NON fa</h4>
+        <ul>
+          <li><strong>Non decide</strong> se la PR è estraibile (Step 03 già fatto).</li>
+          <li><strong>Non valuta</strong> la qualità del proprio output (Step 07).</li>
+          <li><strong>Non consulta la memoria</strong> (Step 06).</li>
+          <li><strong>Non decide se rifare</strong> (Step 08).</li>
+        </ul>
+
+        <h4>Esempio reale (dal run <code>run-20260828T142024Z.json</code>)</h4>
+        <p>PR <code>all-hands-ai-openhands-pr-9581</code>, titolo <em>"fix(frontend): NaN is shown on the conversation card"</em>. Il generator produce al primo tentativo:</p>
+<pre>{"requirement": "The system shall not display NaN on the conversation card."}</pre>
+        <p>L'Assessment risponde subito <code>ACCEPT</code>. Nel report: <code>generation_attempts: 1</code>, <code>iteration_history</code> con un solo elemento.</p>
+      `
+    },
+    "05": {
+      tag: "Step 05 · Candidate",
+      title: "Candidate Requirement",
+      body: `
+        <p><strong>È un artefatto, non uno step di lavoro.</strong> Nessun codice viene eseguito qui: è la rappresentazione visuale nel diagramma del requisito che il Generation Agent (Step 04) ha appena prodotto, in attesa di essere sottoposto a Memory Retrieval e Assessment.</p>
+
+        <h4>Cos'è un "artefatto"</h4>
+        <p>In ingegneria del software un <strong>artefatto</strong> è un pezzo di lavoro prodotto o consumato durante un processo — <em>la cosa che resta dopo un'azione</em>: un file di codice, un requisito scritto, un JSON di configurazione, un log. Nella nostra pipeline sono artefatti i dati che passano da uno step al successivo (la PR normalizzata, il candidato, l'assessment result, il file di report). Sono <strong>cose statiche</strong>, in contrapposizione agli step che sono <strong>azioni</strong>.</p>
+
+        <h4>Cos'è, tecnicamente</h4>
+        <p>Una <strong>stringa in inglese</strong> in forma EARS. Vive dentro <code>GenerationOutcome</code> in <code>src/are/agents/state.py</code>:</p>
+<pre>@dataclass(frozen=True, slots=True)
+class GenerationOutcome:
+    requirement: str | None = None      # ← il candidato, se prodotto
+    refusal_reason: str | None = None   # ← se invece è cannot_ground</pre>
+        <p>Uno dei due valorizzato, l'altro <code>None</code>.</p>
+
+        <h4>Perché "candidate"</h4>
+        <p>Perché <strong>non è ancora accettato</strong>. È una proposta del Generator in attesa di validazione. Solo dopo l'<code>ACCEPT</code> dell'Assessment diventa un requisito "vero" nella memoria a lungo termine. Fino a quel momento può ancora essere: accettato (→ diventa <code>accepted_requirement</code>), rimandato indietro con <code>REVISE</code> (→ nuova iterazione), o rifiutato con <code>REJECT</code> (→ abbandonato, PR in DECLINE).</p>
+
+        <h4>Dove il candidato viene salvato (tre "vite")</h4>
+
+        <p><strong>Vita 1 — In RAM, durante l'esecuzione</strong> (secondi).</p>
+        <p>Solo un oggetto Python in memoria. Nessun file. Vive dentro <code>GenerationOutcome</code> e <code>RequirementState</code> (lo stato del workflow LangGraph). Attenzione alla distinzione: <code>state.py</code> <strong>definisce la forma</strong> (la classe), ma non contiene il candidato di alcuna PR specifica — le istanze nascono al volo mentre la pipeline gira.</p>
+
+        <p><strong>Vita 2 — Persistito nel file di report, dopo l'esecuzione</strong> (per sempre).</p>
+        <p>Quando il Runner finisce di elaborare tutto, serializza in JSON e scrive <code>experiments/runs/run-YYYYMMDDTHHMMSSZ.json</code>. Il candidato compare in due posti:</p>
+<pre>// Dentro iteration_history, un elemento per tentativo:
+"iteration_history": [
+  { "attempt": 1, "candidate": "The system shall...", ... },
+  { "attempt": 2, "candidate": "The system shall never...", ... }
+]
+
+// E, se la PR è finita in ACCEPTED, anche qui:
+"final_status": "ACCEPTED",
+"accepted_requirement": "The system shall not display NaN on the conversation card."</pre>
+        <p>Formato: <strong>JSON</strong>. Nessun altro formato. Non esiste un file dedicato "solo al candidato" — vive dentro il file di report come parte del record della PR.</p>
+
+        <p><strong>Vita 3 — Nella memoria a lungo termine, SE è accettato</strong> (per sempre, riutilizzabile).</p>
+        <p>Se il candidato ottiene <code>ACCEPT</code>, va <em>anche</em> nel database SQLite della memoria (Step 06 + Persist via MCP). Vive in <code>experiments/memory/run-*.db</code>. Da lì può essere recuperato come "requisito storico" quando l'Assessment valuta PR successive. Dettagli allo Step 06.</p>
+
+        <h4>Come si aggancia al flusso</h4>
+        <ul>
+          <li><strong>In arrivo</strong> dal Generator (Step 04).</li>
+          <li><strong>In uscita verso Memory Retrieval</strong> (Step 06): il candidato viene usato come query semantica.</li>
+          <li><strong>In uscita verso Assessment</strong> (Step 07): il candidato entra nel prompt del valutatore come <code>CANDIDATE REQUIREMENT:</code>.</li>
+          <li>Se invece del candidato c'è <code>cannot_ground</code>, <strong>questo blocco viene saltato</strong> insieme allo Step 06 (arco grigio nel diagramma).</li>
+        </ul>
+
+        <h4>Cosa contiene, cosa NON contiene</h4>
+        <p><strong>Contiene</strong>: solo la frase del requisito candidato. Nient'altro.</p>
+        <p><strong>Non contiene</strong>: ragionamento del Generator, token usati, numero di tentativo, esito dell'Assessment. Tutte cose che vivono altrove nello stato del workflow, non nel candidato in sé.</p>
+      `
+    },
+    "06": {
+      tag: "Step 06 · MCP + Memory",
+      title: "Memory Retrieval",
+      body: `
+        <p><strong>In una frase.</strong> Il ponte con la memoria a lungo termine: dopo la generazione, il sistema dovrebbe interrogare i requisiti storici semanticamente simili al candidato e passarli all'Assessment come contesto. È lo step con la maggiore parte da fare: <strong>DB c'è, retrieval semantico e server MCP no</strong>.</p>
+
+        <h4>Il concetto (obiettivo del design)</h4>
+        <p>Dopo che il Generator ha prodotto un candidato, il sistema fa una <strong>query semantica</strong> sui requisiti già validati e restituisce una <strong>lista top-k</strong> (es. i 5 più simili). Poi passa il tutto all'Assessment, che così può classificare la relazione: <code>NEW</code>, <code>DUPLICATE</code>, <code>OVERLAPS</code>, <code>REFINES</code>, <code>SUPERSEDES</code>, <code>CONFLICTS</code>.</p>
+
+        <h4>Perché il retrieval PRIMA dell'Assessment (non dopo)</h4>
+        <p>Domanda ricorrente: "non è l'Assessment che guarda la memoria?". <strong>No</strong>: il retrieval è un helper, l'Assessment è il giudice. Metafora: in un processo, l'ufficiale giudiziario che va in archivio a recuperare i casi simili non è il giudice. Il giudice decide dopo che il fascicolo è sul suo tavolo.</p>
+        <p>Meccanica: <code>assess()</code> ha <code>retrieved_requirements</code> come <strong>parametro in ingresso</strong>. I risultati vengono <strong>incollati nel prompt</strong> del valutatore sotto <code>PREVIOUSLY VALIDATED REQUIREMENTS:</code>. L'Assessment li <em>consuma</em>, non li cerca.</p>
+        <p>Ordine forzato: il retrieval usa il candidato come query → il candidato deve esistere prima → serve dopo lo Step 04. E serve prima dello Step 07 perché l'Assessment lo consuma. Sequenza obbligata: <code>04 → 05 → 06 → 07</code>.</p>
+
+        <h4>Cosa c'è di costruito oggi</h4>
+
+        <p><strong>✅ Database persistente su SQLite</strong> (<code>src/are/db/</code>). <code>SqliteRequirementRepository</code> sa:</p>
+        <ul>
+          <li><strong>scrivere</strong> un requisito accettato (<code>store_accepted</code>): inserisce statement, repo di origine, PR number, timestamp PR, evidence (title + body), created_at, run_id;</li>
+          <li><strong>leggere</strong> con filtri (<code>list_requirements</code>): per repository e/o solo requisiti con timestamp PR precedente a una data.</li>
+        </ul>
+        <p>Schema con <strong>due tabelle</strong>: <code>requirements</code> (con colonne <code>embedding</code> e <code>embedding_model</code> <em>predisposte ma non usate</em>) e <code>requirement_relations</code> (per le relazioni tra requisiti — esiste, vuota).</p>
+
+        <p><strong>⚠️ Retrieval semantico — NON implementato.</strong> Il nodo del grafo (<code>retrieve_memory</code>) esiste, il campo nello stato (<code>retrieved_requirements</code>) esiste, ma il retriever vero (che calcola similarità sugli embedding) non c'è. Nei run attuali:</p>
+<pre>"workflow": { "assessment_enabled": true, "memory_enabled": false, "max_generation_attempts": 3 }</pre>
+        <p><code>memory_enabled: false</code> → retrieval disattivato. La scrittura sul DB avviene comunque (<code>stored_requirements: 3</code>): il database si popola in vista del completamento.</p>
+
+        <p><strong>❌ Server MCP — cartella VUOTA.</strong> <code>src/are/mcp_server/</code> contiene solo un <code>__init__.py</code> vuoto. Il server che dovrebbe esporre tool come <code>search_requirements</code> agli agenti non è ancora stato scritto.</p>
+
+        <h4>Oggi vs domani</h4>
+        <p><strong>Oggi</strong> — accesso diretto: il controller chiama <code>repository.store_accepted(...)</code>. Nessun MCP.</p>
+        <p><strong>Domani</strong> (obiettivo Decisione 04): Assessment → tool MCP <code>search_requirements</code> → server MCP → Retriever → Repository → SQLite. Il fatto che sotto ci sia SQLite diventa un dettaglio; cambiare DB non tocca gli agenti.</p>
+
+        <h4>Persist via MCP (il rettangolo viola del diagramma)</h4>
+        <p>Terzo momento della memoria: <strong>dopo</strong> un <code>ACCEPT</code>, il candidato viene scritto nella memoria a lungo termine. Oggi lo fa direttamente <code>repository.store_accepted(pull_request, statement)</code>. Nel report:</p>
+<pre>"memory": {
+  "database": "experiments\\\\memory\\\\run-20260828T142024Z.db",
+  "run_id": "20260828T142024Z",
+  "stored_requirements": 3
+}</pre>
+        <p><strong>Un DB per run</strong> (nome = timestamp del report). Run diversi non si contaminano.</p>
+
+        <h4>Due date diverse per ogni requisito</h4>
+        <p>In <code>StoredRequirement</code>:</p>
+        <ul>
+          <li><code>source_pr_timestamp</code> = data della PR di origine (quando fu aperta su GitHub).</li>
+          <li><code>created_at</code> = data di inserimento nel DB (quando avete lanciato il run).</li>
+        </ul>
+        <p>Il retrieval storico usa <strong>la prima</strong>: se stai valutando una PR di aprile 2025, vuoi in memoria solo requisiti da PR precedenti ad aprile 2025 — non tutti quelli inseriti nel DB. Filtrare per <code>created_at</code> ricostruirebbe l'ordine dei tuoi esperimenti, non la storia del progetto.</p>
+
+        <h4>Il DB si tiene "leggibile da solo"</h4>
+        <p>Nella riga viene salvato anche il <strong>testo dell'evidenza</strong> (title + body della PR). Motivo: se un domani apri il <code>.db</code> senza avere accanto il file JSON di sample, capisci comunque da dove arriva ogni requisito.</p>
+
+        <h4>Cosa manca per completare lo Step 06</h4>
+        <ol>
+          <li><strong><code>RequirementRetriever</code></strong> — componente che calcola embedding e li confronta (usa le colonne <code>embedding</code>/<code>embedding_model</code> già nello schema).</li>
+          <li><strong>Server MCP</strong> — espone <code>search_requirements</code> e altri tool secondo la spec del Model Context Protocol.</li>
+          <li><strong>Aggancio nel grafo</strong> — usare il retriever tramite MCP quando <code>memory_enabled=true</code>, invece del <code>NullRequirementStore</code> attuale.</li>
+        </ol>
+        <p>Sono i prossimi grossi lavori dopo la fase di revisione.</p>
+      `
+    },
+    "07": {
+      tag: "Step 07 · LLM Agent",
+      title: "Assessment Agent",
+      body: stubMessage("della Decisione 05 §Assessment, del prompt <code>prompts/assessment/v1.md</code> e del file <code>src/are/agents/llm_agents.py</code>")
+    },
+    "08": {
+      tag: "Step 08 · Deterministic",
+      title: "Router",
+      body: stubMessage("del file <code>src/are/agents/routing.py</code>", "Decide l'esito finale del candidato in base al giudizio dell'Assessment: <code>ACCEPT</code>, <code>REVISE</code> (torna a 04), <code>REJECT</code> (verso DECLINE).")
+    },
+    "persist": {
+      tag: "Controller",
+      title: "Persist via MCP",
+      body: stubMessage("delle Decisioni 03 e 04", "Corrisponde alla scrittura del requisito approvato nel database SQLite tramite un tool esposto dal server MCP.")
+    },
+    "accepted": {
+      tag: "Esito terminale",
+      title: "ACCEPTED",
+      body: `
+        <p>Il requisito è stato accettato dall'Assessment Agent. È stato <strong>persistito</strong> nella memoria a lungo termine tramite un tool MCP.</p>
+        <p>Da questo momento sarà disponibile come <strong>contesto storico</strong> per le PR successive: quando l'Assessment valuterà un nuovo candidato, il Memory Retrieval potrà restituire questo requisito tra i top-k semanticamente simili, permettendo la classificazione delle relazioni (<code>NEW</code>, <code>DUPLICATE</code>, <code>OVERLAPS</code>, <code>REFINES</code>, <code>SUPERSEDES</code>, <code>CONFLICTS</code>).</p>
+      `
+    },
+    "decline": {
+      tag: "Esito terminale",
+      title: "DECLINE",
+      body: `
+        <p>La PR termina senza produrre un requisito valido. Tre cause possibili:</p>
+        <ul>
+          <li><strong><code>NOT_EXTRACTABLE</code></strong> — il gate deterministico (step 03) ha stabilito che la PR non contiene un comportamento funzionale estraibile.</li>
+          <li><strong><code>REJECT</code></strong> — l'Assessment ha identificato un difetto di <em>fondatezza</em> non riparabile con una riscrittura (es. il candidato contiene informazioni non supportate dall'evidenza).</li>
+          <li><strong><code>LIMIT</code></strong> — sono stati esauriti i 3 tentativi di <code>REVISE</code> senza raggiungere <code>ACCEPT</code>.</li>
+        </ul>
+        <p><strong>Nessuna scrittura</strong> nella memoria a lungo termine: gli esiti negativi non contaminano il corpus di requisiti validati.</p>
+      `
+    },
+    "revise": {
+      tag: "Retry loop",
+      title: "Structured Feedback",
+      body: `
+        <p>Quando il Router (step 08) decide <code>REVISE</code>, il candidato precedente viene ripassato al Generation Agent insieme a un <strong>feedback strutturato</strong> prodotto dall'Assessment: quali criteri hanno fallito, quali affermazioni non erano supportate, come riformulare.</p>
+        <p>Il ciclo <code>Generation → Retrieval → Assessment</code> viene <strong>rieseguito completamente</strong>. Massimo <strong>3 tentativi</strong>: se il terzo non raggiunge <code>ACCEPT</code>, l'esito diventa <code>DECLINE</code> (causa <code>LIMIT</code>).</p>
+        <div class="stub" style="margin-top:16px">
+          <p>Dettaglio del formato del feedback e delle regole di riscrittura in stesura. Verrà completato alla revisione della Decisione 05.</p>
+        </div>
+      `
+    },
+    "llm-client": {
+      tag: "Infrastruttura · Decisione 3.2",
+      title: "LLM Client (astrazione del fornitore)",
+      body: `
+        <p><strong>Cos'è.</strong> Il "tubo" attraverso cui gli agenti parlano con Claude. Non è una tappa della pipeline — è <em>infrastruttura condivisa</em>: sia il Generation Agent (04) sia l'Assessment Agent (07) fanno le loro chiamate all'LLM attraverso questo unico livello.</p>
+
+        <h4>Perché esiste</h4>
+        <p>Senza questo livello, ogni agente dovrebbe conoscere direttamente l'SDK di Anthropic, gestire la chiave API, conoscere quale modello usare, quali parametri, come contare i token per il costo. Sarebbe codice duplicato in ogni agente e — soprattutto — cambiare fornitore un domani (es. passare a un modello open source) diventerebbe una riscrittura totale.</p>
+        <p>Con questo livello, gli agenti sanno solo che esiste un "cliente LLM" che accetta un prompt e restituisce una risposta. Non gli interessa <em>chi</em> risponde.</p>
+
+        <h4>I tre pezzi costruiti (25/08)</h4>
+
+        <p><strong>1. Configurazione versionata per agente</strong> — <code>config/llm.toml</code></p>
+        <p>File TOML che definisce, <em>separatamente</em> per Generation e Assessment: modello, parametri di generazione (<code>temperature</code>, <code>top_p</code>, <code>max_tokens</code>). Come richiesto dalla Decisione 3.2, il modello è una <strong>variabile dell'esperimento</strong>, non un valore cablato nel codice. In sviluppo entrambi usano <code>claude-haiku-4-5</code> (fascia economica) per contenere i costi.</p>
+<pre>[generation]
+model = "claude-haiku-4-5"
+temperature = 0
+max_tokens = 1024
+
+[assessment]
+model = "claude-haiku-4-5"
+temperature = 0
+max_tokens = 1024</pre>
+
+        <p><strong>2. Modulo di caricamento config</strong> — <code>src/are/llm/config.py</code></p>
+        <p>Legge il TOML con la libreria standard (<code>tomllib</code>, niente dipendenze extra) e lo valida con lo stesso rigore del loader di input: sezioni obbligatorie, chiavi sconosciute rifiutate, tipi e range controllati. Tutti i problemi vengono riportati insieme, non uno alla volta.</p>
+
+        <p><strong>3. Client LLM astratto</strong> — <code>src/are/llm/client.py</code></p>
+        <p>Contiene due cose:</p>
+        <ul>
+          <li><code>LLMClient</code> — l'<strong>interfaccia</strong> (il contratto): dice "qualunque client verso un LLM deve fare queste cose", senza dire <em>come</em>.</li>
+          <li><code>AnthropicLLMClient</code> — l'<strong>implementazione concreta</strong> per Anthropic, sopra l'SDK ufficiale <code>anthropic</code>.</li>
+        </ul>
+        <p>La risposta (<code>LLMResponse</code>) include <strong>token in ingresso e uscita</strong>, per il tracciamento dei costi previsto dalla Decisione 3.2. Errori del fornitore incapsulati in <code>LLMCallError</code>.</p>
+
+        <h4>Gestione della chiave API</h4>
+        <ul>
+          <li>La chiave vive <strong>solo</strong> nella variabile d'ambiente <code>ANTHROPIC_API_KEY</code>, caricabile dal file <code>.env</code> (già in <code>.gitignore</code>) tramite <code>are.env.load_environment()</code>.</li>
+          <li><code>.env.example</code> versionato documenta la variabile richiesta, senza contenere il valore vero.</li>
+          <li>Se la chiave manca, il client fallisce <strong>subito</strong> con <code>MissingApiKeyError</code>, invece che alla prima chiamata a metà lavoro.</li>
+        </ul>
+
+        <h4>Scelte importanti</h4>
+        <ul>
+          <li><strong>SDK Anthropic diretto, NON LangChain</strong> — deciso insieme. Controllo totale sui parametri inviati (essenziale per la riproducibilità), meno dipendenze, più facile da documentare. LangGraph (il passo successivo) non richiede oggetti LangChain: i nodi sono normali funzioni Python.</li>
+          <li><strong>Client iniettabile nei test</strong> — <code>AnthropicLLMClient</code> accetta un SDK finto: i test verificano <em>esattamente</em> quali parametri vengono inviati, <strong>senza mai chiamare la rete</strong>. Test veloci, gratuiti, riproducibili.</li>
+          <li><strong>Prime dipendenze runtime</strong> aggiunte al progetto: <code>anthropic</code> (SDK ufficiale) e <code>python-dotenv</code>.</li>
+        </ul>
+
+        <h4>Nota importante (agosto 2026)</h4>
+        <div class="stub">
+          <p>La configurazione iniziale prevedeva <code>temperature = 0</code> per la riproducibilità. In fase di implementazione avete scoperto che <code>temperature</code>, <code>top_p</code> e <code>top_k</code> <strong>non sono più disponibili</strong> nell'API dei modelli attuali (rimossi dal fornitore). La riproducibilità si sposta interamente sulle contromisure previste dalla Decisione 3.2: registrare modello + versione + prompt, e <strong>misurare</strong> la variabilità con più repliche invece di sopprimerla.</p>
+        </div>
+
+        <h4>Verifica</h4>
+        <p><strong>48 test verdi</strong> al termine: 25 del loader precedente + 23 nuovi (13 sulla validazione della config, 6 sul client con SDK finto, più un test che verifica che <code>config/llm.toml</code> del repo sia esso stesso valido).</p>
+      `
+    }
+  };
+
+  const panel = document.querySelector('.detail-panel');
+  const overlay = document.querySelector('.panel-overlay');
+  const closeBtn = document.getElementById('close-btn');
+  const tagEl = document.getElementById('panel-tag');
+  const titleEl = document.getElementById('panel-title');
+  const bodyEl = document.getElementById('panel-body');
+  let lastFocus = null;
+
+  function openPanel(stepId, sourceEl) {
+    const step = steps[stepId];
+    if (!step) return;
+    lastFocus = sourceEl;
+    tagEl.textContent = step.tag;
+    titleEl.textContent = step.title;
+    bodyEl.innerHTML = step.body;
+    panel.dataset.open = 'true';
+    overlay.dataset.open = 'true';
+    panel.setAttribute('aria-hidden', 'false');
+    overlay.setAttribute('aria-hidden', 'false');
+    bodyEl.scrollTop = 0;
+    setTimeout(() => closeBtn.focus(), 100);
+  }
+
+  function closePanel() {
+    panel.dataset.open = 'false';
+    overlay.dataset.open = 'false';
+    panel.setAttribute('aria-hidden', 'true');
+    overlay.setAttribute('aria-hidden', 'true');
+    if (lastFocus && typeof lastFocus.focus === 'function') {
+      lastFocus.focus();
+    }
+  }
+
+  document.querySelectorAll('.block').forEach(b => {
+    b.addEventListener('click', () => openPanel(b.dataset.step, b));
+    b.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openPanel(b.dataset.step, b);
+      }
+    });
+  });
+
+  closeBtn.addEventListener('click', closePanel);
+  overlay.addEventListener('click', closePanel);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && panel.dataset.open === 'true') closePanel();
+  });
+</script>
