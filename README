@@ -39,7 +39,6 @@ requisiti già generati.
 | `experiments/` | Script e dati degli esperimenti                 |
 | `docs/`        | Documentazione (stato dell'arte, design, verbali) |
 | `thesis/`      | Materiale per le tesi di laurea                 |
-| `worklog/`     | Diario di lavoro giornaliero                    |
 
 ## Installazione
 

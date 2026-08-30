@@ -1,0 +1,130 @@
+[
+  {
+    "id": "django-django-pr-19491",
+    "repository": "django/django",
+    "pr_number": 19491,
+    "timestamp": "2025-05-22T07:29:30Z",
+    "title": "Fix typo in German translation",
+    "body": "#### Trac ticket number\r\nN/A – trivial typo fix in German translation.\r\n\r\n#### Branch description\r\nFixes a small typo in the German `.po` translation file.\r\n\r\n#### Checklist\r\n- [x] This PR targets the `main` branch.\r\n- [x] The commit message is written in past tense, mentions the ticket number, and ends with a period.\r\n- [x] N/A – trivial fix, no ticket required.\r\n- [x] N/A – no tests/docs required for translation fixes.\r\n"
+  },
+  {
+    "id": "django-django-pr-19511",
+    "repository": "django/django",
+    "pr_number": 19511,
+    "timestamp": "2025-05-29T02:33:52Z",
+    "title": "Fixed #36388 -- Handle empty combinator arguments in QuerySet methods",
+    "body": "#### Trac ticket number\r\nticket-36388\r\n\r\n#### Branch description\r\nThis change restores the pre-5.2 behavior for the three combinator methods (union(), intersection(), and difference()) so that calling them with no arguments returns a valid QuerySet (either self or an empty result) instead of crashing.\r\n\r\n#### Checklist\r\n- [ ] This PR targets the `main` branch. <!-- Backports will be evaluated and done by mergers, when necessary. -->\r\n- [ ] The commit message is written in past tense, mentions the ticket number, and ends with a period.\r\n- [ ] I have checked the \"Has patch\" ticket flag in the Trac system.\r\n- [ ] I have added or updated relevant tests.\r\n- [ ] I have added or updated relevant docs, including release notes if applicable.\r\n- [ ] I have attached screenshots in both light and dark modes for any UI changes.\r\n"
+  },
+  {
+    "id": "django-django-pr-19532",
+    "repository": "django/django",
+    "pr_number": 19532,
+    "timestamp": "2025-06-06T04:32:21Z",
+    "title": "Refs #36416, #34378, #36143 -- Fixed isolation of LookupTests.test_in_bulk_preserve_ordering_with_batch_size().",
+    "body": "`max_query_params` is a property on SQLite since ticket-36143 (6.0), so the test for ticket-34378 must patch the class.\r\n\r\nThis was exposed via a poor interaction with the test for ticket-36416 (backported to 5.2, but rewritten in #19522 for 6.0, ticket-36430).\r\n\r\nTo reproduce the failure on postgres, here is a django-docker-box invocation:\r\n```\r\ndocker compose run --rm postgresql -k bulk_preserve -k batching --parallel=1 --reverse\r\n```\r\n```\r\ntest_in_bulk_preserve_ordering_with_batch_size (lookup.tests.LookupTests.test_in_bulk_preserve_ordering_with_batch_size) ... ok\r\ntest_in_bulk_preserve_ordering (lookup.tests.LookupTests.test_in_bulk_preserve_ordering) ... ok\r\ntest_in_bulk_batching (composite_pk.tests.CompositePKTests.test_in_bulk_batching) ... ERROR\r\n\r\n======================================================================\r\nERROR: test_in_bulk_batching (composite_pk.tests.CompositePKTests.test_in_bulk_batching)\r\n----------------------------------------------------------------------\r\nTraceback (most recent call last):\r\n  File \"/usr/local/lib/python3.12/unittest/mock.py\", line 1396, in patched\r\n    return func(*newargs, **newkeywargs)\r\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\n  File \"/django/source/tests/composite_pk/tests.py\", line 155, in test_in_bulk_batching\r\n    num_requiring_batching = (connection.features.max_query_params // 2) + 1\r\n                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^~~\r\nTypeError: unsupported operand type(s) for //: 'NoneType' and 'int'\r\n\r\n----------------------------------------------------------------------\r\nRan 3 tests in 0.039s\r\n\r\nFAILED (errors=1)\r\n```\r\n\r\n***\r\n\r\nNo need to backport, since `max_query_params` is a property only on main. However, I think this change still brings value separately from #19522: if you adjust `test_in_bulk_preserve_ordering_with_batch_size()` to run on SQLite by removing the skip decorator, you see:\r\n\r\n```py\r\n======================================================================\r\nERROR: test_in_bulk_preserve_ordering_with_batch_size (lookup.tests.LookupTests.test_in_bulk_preserve_ordering_with_batch_size)\r\n----------------------------------------------------------------------\r\nTraceback (most recent call last):\r\n  File \"/Users/jwalls/django/tests/lookup/tests.py\", line 264, in test_in_bulk_preserve_ordering_with_batch_size\r\n    connection.features.max_query_params = 1\r\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\nAttributeError: property 'max_query_params' of 'DatabaseFeatures' object has no setter\r\n\r\n----------------------------------------------------------------------\r\n```"
+  },
+  {
+    "id": "django-django-pr-19537",
+    "repository": "django/django",
+    "pr_number": 19537,
+    "timestamp": "2025-06-07T15:40:47Z",
+    "title": "Fixed #36448 -- Fixed GeoDjango spelling in test_commands.py docstrings.",
+    "body": "## Description\r\nThis PR fixes the spelling of \"Geodjango\" to \"GeoDjango\" in the docstrings of `tests/gis_tests/gis_migrations/test_commands.py`. This change ensures consistency with Django's official documentation and naming conventions.\r\n\r\nFixes #36448.\r\n\r\n## Changes Made\r\n- Corrected \"Geodjango\" to \"GeoDjango\" in the class docstring\r\n- Corrected \"Geodjango\" to \"GeoDjango\" in the `test_migrate_gis` method docstring\r\n\r\n## Why This Change Is Needed\r\nThe term \"GeoDjango\" is the official spelling used throughout Django's documentation and codebase. Maintaining consistent spelling helps with documentation clarity and searchability.\r\n\r\n## Testing\r\nNo functional changes were made. Only documentation strings were updated.\r\n\r\n## Checklist\r\n- [x] Code follows Django's coding style\r\n- [x] Tests are not needed (documentation only change)\r\n- [x] Documentation is not needed (internal docstring only)\r\n- [x] Commit message is clear and follows guidelines\r\n- [x] Changes are minimal and focused"
+  },
+  {
+    "id": "django-django-pr-19540",
+    "repository": "django/django",
+    "pr_number": 19540,
+    "timestamp": "2025-06-08T14:19:01Z",
+    "title": "Fixed #36449 -- Fixed field types in example model using ForeignObject.",
+    "body": "#### Trac ticket number\r\nticket-36449\r\n\r\n#### Branch description\r\nBefore, the model fields were incorrectly reversed in this example."
+  },
+  {
+    "id": "django-django-pr-19558",
+    "repository": "django/django",
+    "pr_number": 19558,
+    "timestamp": "2025-06-12T17:37:00Z",
+    "title": "Fixed #36463 -- Fixed grammar in docs/intro/contributing.txt.",
+    "body": "Didn't create the ticket as the typo is trivial : https://docs.djangoproject.com/en/dev/internals/contributing/writing-code/submitting-patches/#typo-fixes-and-trivial-documentation-changes\r\n\r\n#### Trac ticket number\r\n<!-- Replace XXXXX with the corresponding Trac ticket number, or delete the line and write \"N/A\" if this is a trivial PR. -->\r\n\r\nticket-[36463](https://code.djangoproject.com/ticket/36463)\r\n\r\n#### Branch description\r\nProvide a concise overview of the issue or rationale behind the proposed changes.\r\n\r\nThe verb \"indicated\" is in the past tense, while the rest of the paragraph uses present tense. To maintain consistency, changed \"indicated\" to \"indicate\". \r\n\r\n#### Checklist\r\n- [x] This PR targets the `main` branch. <!-- Backports will be evaluated and done by mergers, when necessary. -->\r\n- [ ] The commit message is written in past tense, mentions the ticket number, and ends with a period.\r\n- [ ] I have checked the \"Has patch\" ticket flag in the Trac system.\r\n- [ ] I have added or updated relevant tests.\r\n- [x] I have added or updated relevant docs, including release notes if applicable.\r\n- [ ] I have attached screenshots in both light and dark modes for any UI changes.\r\n"
+  },
+  {
+    "id": "django-django-pr-19575",
+    "repository": "django/django",
+    "pr_number": 19575,
+    "timestamp": "2025-06-18T14:01:22Z",
+    "title": "对Update manage_translations.py的修改",
+    "body": "#### Trac ticket number\r\n<!-- Replace XXXXX with the corresponding Trac ticket number, or delete the line and write \"N/A\" if this is a trivial PR. -->\r\n\r\nticket-XXXXX\r\n\r\n#### Branch description\r\nProvide a concise overview of the issue or rationale behind the proposed changes.\r\n\r\n#### Checklist\r\n- [ ] This PR targets the `main` branch. <!-- Backports will be evaluated and done by mergers, when necessary. -->\r\n- [ ] The commit message is written in past tense, mentions the ticket number, and ends with a period.\r\n- [ ] I have checked the \"Has patch\" ticket flag in the Trac system.\r\n- [ ] I have added or updated relevant tests.\r\n- [ ] I have added or updated relevant docs, including release notes if applicable.\r\n- [ ] I have attached screenshots in both light and dark modes for any UI changes.\r\n"
+  },
+  {
+    "id": "django-django-pr-19581",
+    "repository": "django/django",
+    "pr_number": 19581,
+    "timestamp": "2025-06-20T01:03:35Z",
+    "title": "Removed @skipUnlessDBFeature silencing of nonexistent features.",
+    "body": "This was added in 46c7707e50400e237cbd774a31ad801669ca3905 but is obsolete now that gis_tests are discovered separately. It's error-prone to ignore mistyped names."
+  },
+  {
+    "id": "django-django-pr-19583",
+    "repository": "django/django",
+    "pr_number": 19583,
+    "timestamp": "2025-06-20T21:57:00Z",
+    "title": "Removed @skipIfDBFeature silencing of nonexistent features.",
+    "body": "Follow up to f5df7ed7e62585c7d0289a88a327dab8d608efcf.\r\n\r\n(missed in https://github.com/django/django/pull/19581)"
+  },
+  {
+    "id": "django-django-pr-19584",
+    "repository": "django/django",
+    "pr_number": 19584,
+    "timestamp": "2025-06-21T18:34:51Z",
+    "title": "Fixed #36168 -- Fixed backwards migration to replaced migrations with…",
+    "body": "… cross-app dependencies.\r\n\r\nWhen migrating backwards to replaced migrations that have cross-app dependencies, the migration executor now correctly includes replaced migrations in the applied migrations set for state reconstruction.\r\n\r\nThe issue occurred because _migrate_all_backwards() only considered migrations present in the current graph when building applied_migrations, excluding replaced migrations. This caused FieldDoesNotExist errors when dependent apps expected model changes from replaced migrations.\r\n\r\nThe fix identifies applied replaced migrations that are not in the current graph and applies them first to build the correct base state before processing the full migration plan.\r\n\r\n#### Trac ticket number\r\n<!-- Replace XXXXX with the corresponding Trac ticket number, or delete the line and write \"N/A\" if this is a trivial PR. -->\r\n\r\nticket-36168\r\n\r\n#### Branch description\r\n\r\nFixed backwards migration to replaced migrations with cross-app dependencies.\r\n\r\nWhen App A has squashed migrations that replace earlier migrations and App B depends on those replaced migrations, attempting to migrate backwards to a replaced migration would fail with FieldDoesNotExist errors. This occurred because the migration executor's _migrate_all_backwards() method only considered migrations present in the current graph when building the applied migrations set, excluding replaced migrations that dependent apps expected to be available in the project state.\r\n\r\nThe fix identifies applied replaced migrations that are not in the current graph and applies them first to build the correct base state before processing the migration plan.\r\n\r\n#### Checklist\r\n- [x] This PR targets the `main` branch. <!-- Backports will be evaluated and done by mergers, when necessary. -->\r\n- [x] The commit message is written in past tense, mentions the ticket number, and ends with a period.\r\n- [x] I have checked the \"Has patch\" ticket flag in the Trac system.\r\n- [x] I have added or updated relevant tests.\r\n- [ ] I have added or updated relevant docs, including release notes if applicable.\r\n- [ ] I have attached screenshots in both light and dark modes for any UI changes.\r\n"
+  },
+  {
+    "id": "django-django-pr-19591",
+    "repository": "django/django",
+    "pr_number": 19591,
+    "timestamp": "2025-06-25T17:41:23Z",
+    "title": "Fixed #36479: Failing test for black formatter missing install simulation on a macOS",
+    "body": "#### Trac ticket number\r\n<!-- Replace XXXXX with the corresponding Trac ticket number, or delete the line and write \"N/A\" if this is a trivial PR. -->\r\n\r\n[ticket-36479](https://code.djangoproject.com/ticket/36479)\r\n\r\n#### Branch description\r\n\r\nThis branch added a simple fix for running `./runtests.py user_commands.tests.UtilsTests.test_run_formatters_handles_oserror_for_black_path` which fails on a `darwin` platform but passes on a `linux` platform due to different subclass results by `OSError` from different platforms. Please see the ticket for further details of the problem.\r\n\r\n#### Checklist\r\n- [x] This PR targets the `main` branch. <!-- Backports will be evaluated and done by mergers, when necessary. -->\r\n- [x] The commit message is written in past tense, mentions the ticket number, and ends with a period.\r\n- [x] I have checked the \"Has patch\" ticket flag in the Trac system.\r\n- [x] I have added or updated relevant tests.\r\n- [ ] I have added or updated relevant docs, including release notes if applicable.\r\n- [ ] I have attached screenshots in both light and dark modes for any UI changes.\r\n"
+  },
+  {
+    "id": "django-django-pr-19592",
+    "repository": "django/django",
+    "pr_number": 19592,
+    "timestamp": "2025-06-25T20:22:11Z",
+    "title": "Fixed #36470 — strip ANSI escape codes from log_message() output",
+    "body": "#### Trac ticket number\r\nticket-36470\r\n\r\n#### Branch description\r\nThis PR addresses a potential log injection vulnerability in the development server’s WSGIRequestHandler.log_message() method.\r\n\r\nPreviously, the method could include unescaped ANSI escape codes (e.g., \\x1b[31m) in terminal logs when crafted request lines were received. This could result in misleading or colored output in developer consoles.\r\n\r\nThis change strips ANSI escape codes from all log message arguments before logging, and includes a regression test that confirms the behavior.\r\n\r\n#### Checklist\r\n- [x] This PR targets the `main` branch. <!-- Backports will be evaluated and done by mergers, when necessary. -->\r\n- [x] The commit message is written in past tense, mentions the ticket number, and ends with a period.\r\n- [x] I have checked the \"Has patch\" ticket flag in the Trac system.\r\n- [x] I have added or updated relevant tests.\r\n- [ ] I have added or updated relevant docs, including release notes if applicable.\r\n- [ ] I have attached screenshots in both light and dark modes for any UI changes.\r\n"
+  },
+  {
+    "id": "django-django-pr-19634",
+    "repository": "django/django",
+    "pr_number": 19634,
+    "timestamp": "2025-07-11T04:08:46Z",
+    "title": "fix: more extensive file name checking",
+    "body": "#### Trac ticket number\r\n\r\nN/A\r\n\r\n#### Branch description\r\nCheck file name of FileField not only for None.\r\n\r\n#### Checklist\r\n- [x] This PR targets the `main` branch.\r\n- [ ] The commit message is written in past tense, mentions the ticket number, and ends with a period.\r\n- [ ] I have checked the \"Has patch\" ticket flag in the Trac system.\r\n- [ ] I have added or updated relevant tests.\r\n- [ ] I have added or updated relevant docs, including release notes if applicable.\r\n- [ ] I have attached screenshots in both light and dark modes for any UI changes."
+  },
+  {
+    "id": "django-django-pr-19636",
+    "repository": "django/django",
+    "pr_number": 19636,
+    "timestamp": "2025-07-11T22:35:58Z",
+    "title": "Add MaxFileSizeValidator and MinFileSizeValidator to core validators",
+    "body": "This PR adds two new file size validators to Django's core validators:\r\n\r\n**MaxFileSizeValidator**: Validates that uploaded files don't exceed a maximum size (in bytes)\r\n**MinFileSizeValidator**: Validates that uploaded files meet a minimum size requirement (in bytes)\r\n\r\nBoth validators follow Django conventions with @deconstructible decorator, comprehensive tests, and full documentation.\r\n\r\n**Usage example:**\r\n```python\r\nfrom django.core.validators import MaxFileSizeValidator, MinFileSizeValidator\r\nfrom django.db import models\r\n\r\nclass MyModel(models.Model):\r\n    file = models.FileField(validators=[\r\n        MaxFileSizeValidator(1024 * 1024),  # 1MB max\r\n        MinFileSizeValidator(1024),         # 1KB min\r\n    ])\r\n```\r\n\r\n**Changes:**\r\n- Added MaxFileSizeValidator and MinFileSizeValidator to django/core/validators.py\r\n- Added comprehensive test coverage in tests/validators/tests.py\r\n- Added documentation in docs/ref/validators.txt\r\n- All tests pass, code follows Django style guidelines"
+  },
+  {
+    "id": "django-django-pr-19640",
+    "repository": "django/django",
+    "pr_number": 19640,
+    "timestamp": "2025-07-14T21:18:28Z",
+    "title": "Added GitHub Action to enforce stable branch commit message prefix.",
+    "body": "#### Branch description\r\nI've made the mistake of forgetting to include the `[A.B.x]` prefix in commit messages a few times when targeting `stable/A.B.x` branches. This new GitHub Actions check, designed to run only on branches starting with `stable/`, should help me and others avoid this in future merges."
+  },
+  {
+    "id": "django-django-pr-19647",
+    "repository": "django/django",
+    "pr_number": 19647,
+    "timestamp": "2025-07-16T17:42:56Z",
+    "title": "Fixed GitHub Action that checks commit prefixes to fetch PR head correctly.",
+    "body": "The previous version of this action (10386fac00be55e73279459f00f1959c3ef30a1c) worked when testing against my own fork, but failed for PRs from forks to the main repository. This update adjusts the way commits are fetched to use more robust refs that work regardless of the\r\nPR source.\r\n\r\nAlso renamed the workflow file to use underscores for consistency with other GitHub Actions."
+  }
+]

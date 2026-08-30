@@ -55,7 +55,7 @@ corrispondenza al materiale disponibile:
 | 3. Analisi del problema | che cos'è un requisito funzionale, i criteri | documento **01** |
 | 4. Il dataset | sorgente, campione, evidenza | documento **02** |
 | 5. Progettazione | architettura, modello, memoria, MCP | documenti **03**, **04**, **05**, **06** |
-| 6. Implementazione | come è realizzato | codice, `recap.md` |
+| 6. Implementazione | come è realizzato | codice sorgente, cronologia dei commit |
 | 7. Valutazione | metodo e risultati | documento **07**, `experiments/` |
 | 8. Discussione e limiti | cosa non funziona e perché | limiti dichiarati in ciascun documento |
 | 9. Conclusioni | riepilogo e sviluppi futuri | **da scrivere** |
@@ -89,5 +89,3 @@ realizzare (documento 06, §13).
   confronto fra modelli, con le citazioni originali.
 - `experiments/runs/` — i rapporti integrali di ogni esecuzione.
 - `experiments/gold-standard/` — le schede di annotazione.
-- `recap.md` — il registro cronologico delle modifiche al sistema.
-- `worklog/diario-di-lavoro.md` — il diario di lavoro, non tecnico.
