@@ -225,3 +225,22 @@ def test_prompts_provide_several_diverse_examples() -> None:
         esempi = re.findall(r"<example>", load_prompt(agent))
 
         assert len(esempi) >= 4, f"{agent}: solo {len(esempi)} esempi"
+
+
+def test_a_changed_default_is_not_a_named_artefact() -> None:
+    """La regola sull'artefatto nominato non deve mangiarsi i valori predefiniti.
+
+    Sono due casi che si somigliano ma non lo sono: «questa cosa ora esiste»
+    non fonda nulla, «questa impostazione ora vale X» e' un fatto sul sistema,
+    verificabile senza sapere cosa X faccia internamente. La Decisione 3.1
+    §9.2 lo dichiara estraibile, ma nella prova del 30 agosto il valutatore
+    ha rifiutato proprio quel caso applicandovi la regola.
+    """
+
+    procedura = _extract_block(load_prompt(ASSESSMENT_AGENT), "procedure")
+
+    assert "This step does **not** fire when the evidence states that a setting" in procedura
+    assert "this setting now has this value" in procedura
+
+    generazione = _extract_block(load_prompt(GENERATION_AGENT), "procedure")
+    assert "A changed default is not such a case" in generazione

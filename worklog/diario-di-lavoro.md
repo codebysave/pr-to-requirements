@@ -934,6 +934,58 @@ costato un caso. Corretto.
 
 Alla fine tutto questo è costato **dieci centesimi**.
 
+### Domenica 30 agosto — sera
+
+Abbiamo provato il sistema con la memoria accesa, due volte: prima con il
+modello economico, poi con quello intermedio. E le due prove ci hanno detto cose
+diverse, tutte e due utili.
+
+**Con il modello economico è andata male.** Un solo requisito approvato su nove.
+Guardando il perché, il valutatore aveva cominciato a pretendere di sapere
+**come** era stato fatto il fix: «non sappiamo se hanno validato l'input, se
+hanno cambiato metodo, se hanno tolto la funzione». Ma il nostro documento di
+progetto dice esattamente il contrario — che non sapere la tecnica **non** è un
+motivo per scartare una Pull Request — e porta come esempio proprio uno dei casi
+che il sistema ha rifiutato.
+
+**Con il modello intermedio quel problema è sparito del tutto.** Zero casi su
+nove. Quindi non erano le istruzioni a essere sbagliate: era il modello piccolo
+che applica una regola alla lettera anche dove non c'entra. È la stessa cosa che
+avevamo visto il 27 agosto con un'altra regola.
+
+**Ma abbiamo trovato un errore vero, e l'avevo fatto io ieri.** La regola che
+avevamo scritto — «il nome di una cosa non basta a dire cosa fa» — si mangiava
+per sbaglio un caso diverso: le Pull Request che cambiano un'impostazione
+predefinita. Sono cose che sembrano uguali ma non lo sono. «Ho fatto un
+componente tab» non dice niente di verificabile; «l'impostazione adesso vale X
+invece di Y» è un fatto sul sistema, e si controlla: prendi il programma, non
+tocchi niente, guardi quale valore usa.
+
+Il bello è che nel documento avevamo già scritto un esempio identico
+classificandolo come **estraibile**. Quindi la regola contraddiceva il nostro
+stesso esempio. Corretta, con un'eccezione esplicita e un esempio in più nelle
+istruzioni.
+
+**La memoria invece ha funzionato bene**, e con una sorpresa. Oltre a riconoscere
+i doppioni — e a registrarli come osservazione senza bocciare, che era la regola
+che volevamo — a un certo punto ha fatto una cosa che non avevamo previsto: ha
+usato i requisiti già approvati come **metro di misura**. Accettando un
+requisito, ha scritto che «rispecchia il livello di generalità di quelli già
+accettati». Cioè si è servito della memoria per **restare coerente con sé stesso**
+lungo tutto il lotto. Nessuno gliel'aveva chiesto, ed è probabilmente la cosa più
+interessante uscita oggi.
+
+**Due cose pratiche da sistemare.** Una Pull Request si è persa perché la
+risposta del valutatore ha sbattuto contro il limite di lunghezza — con la
+memoria attiva scrive di più, perché deve confrontare. Limite alzato, per la
+seconda volta in tre giorni.
+
+E abbiamo capito un limite del modo «memoria che si accumula»: va usato **una
+volta sola** su uno stesso gruppo di Pull Request. Rilanciandolo, la memoria si
+riempie di versioni diverse dello stesso caso — prodotte dal sistema stesso in
+esecuzioni precedenti — e lui le scambia per doppioni veri. Scritto
+nell'avvertenza del comando e nel documento.
+
 ---
 
 ## Situazione a fine agosto
@@ -959,7 +1011,7 @@ Cosa c'è:
   quarantasei scritte da persone;
 - un documento che spiega cosa cambia al cambiare dei modelli, con gli esempi
   veri e la verifica sul secondo gruppo;
-- duecentoventi controlli automatici che verificano tutto senza costi.
+- duecentoventuno controlli automatici che verificano tutto senza costi.
 
 Cosa manca:
 

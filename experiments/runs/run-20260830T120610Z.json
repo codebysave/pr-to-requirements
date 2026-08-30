@@ -1,0 +1,475 @@
+{
+  "run": {
+    "generated_at": "2026-08-30T12:09:04.042729+00:00",
+    "input_file": "experiments/samples/sample-scrapy_scrapy.json",
+    "pull_requests": 9,
+    "prompt_version": "v1",
+    "workflow": {
+      "assessment_enabled": true,
+      "memory_enabled": true,
+      "max_generation_attempts": 3
+    },
+    "llm": {
+      "generation": {
+        "model": "claude-sonnet-5",
+        "resolved_model": "claude-sonnet-5",
+        "max_tokens": 1024,
+        "effort": null
+      },
+      "assessment": {
+        "model": "claude-sonnet-5",
+        "resolved_model": "claude-sonnet-5",
+        "max_tokens": 4096,
+        "effort": null
+      }
+    },
+    "usage": {
+      "per_agent": {
+        "generation": {
+          "model": "claude-sonnet-5",
+          "calls": 11,
+          "input_tokens": 45937,
+          "output_tokens": 553,
+          "estimated_cost_usd": 0.146106
+        },
+        "assessment": {
+          "model": "claude-sonnet-5",
+          "calls": 11,
+          "input_tokens": 69421,
+          "output_tokens": 12801,
+          "estimated_cost_usd": 0.400278
+        }
+      },
+      "total_calls": 22,
+      "total_input_tokens": 115358,
+      "total_output_tokens": 13354,
+      "total_estimated_cost_usd": 0.546384,
+      "pricing_reference_date": "2026-08-26"
+    },
+    "memory": {
+      "database": "experiments\\memory\\pr4requirements.db",
+      "run_id": "20260830T120610Z",
+      "stored_requirements": 9
+    }
+  },
+  "summary": {
+    "ACCEPTED": 4,
+    "NOT_EXTRACTABLE": 3,
+    "ERROR": 1,
+    "REJECTED": 1
+  },
+  "results": [
+    {
+      "pr_id": "scrapy-scrapy-pr-6869",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6869,
+      "timestamp": "2025-06-06T13:17:48+00:00",
+      "title": "Fix: Dangerous Code Execution Function Could Allow External Attacks in scrapy/shell.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 960 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall not execute arbitrary code originating from externally supplied content.",
+      "generation_attempts": 2,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall evaluate shell input without executing arbitrary code from externally supplied content.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement introduces 'shell input' as the object being evaluated, but the evidence only states that eval() was used in scrapy/shell.py without specifying what content is evaluated or its source.",
+              "The phrase 'evaluate shell input' assumes a specific behaviour (evaluating something called shell input) that is not stated in the evidence and may derive from guessing based on the file name rather than the text."
+            ],
+            "unsupported_claims": [
+              "evaluate shell input"
+            ],
+            "missing_information": [],
+            "revision_instructions": [
+              "Remove the reference to 'shell input': the evidence does not specify what content the eval() call evaluates.",
+              "Keep the core security guarantee that the evidence does support - that arbitrary code from externally supplied content must not be executed - without naming an unsupported object being evaluated."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "The system shall not execute arbitrary code originating from externally supplied content.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6870",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6870,
+      "timestamp": "2025-06-06T13:19:55+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 978 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall prevent untrusted input from causing arbitrary code modules to be loaded and executed during spider generation.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall prevent untrusted input from causing arbitrary code modules to be loaded and executed during spider generation.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "6",
+              "source_pr_number": 6869,
+              "statement": "The system shall not execute arbitrary code originating from externally supplied content."
+            }
+          ],
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [
+              "This overlaps substantially with the requirement from Pull Request #6869 ('The system shall not execute arbitrary code originating from externally supplied content'), differing mainly in scoping the behaviour to spider generation rather than stating it generally."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6875",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6875,
+      "timestamp": "2025-06-07T03:44:46+00:00",
+      "title": "Fix typo in cmdline.py comment: 'a argument' -> 'an argument'",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 579 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence describes a comment-only typo fix with no code logic or functionality affected, so no observable system behaviour is stated or changed.",
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The evidence explicitly states this is a comment-only change with no code logic or functionality affected, so there is no observable behaviour to ground a requirement in."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6879",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6879,
+      "timestamp": "2025-06-09T02:36:45+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 978 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall prevent user-supplied input from causing arbitrary modules to be imported and executed.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall prevent user-supplied input from causing arbitrary modules to be imported and executed.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "6",
+              "source_pr_number": 6869,
+              "statement": "The system shall not execute arbitrary code originating from externally supplied content."
+            },
+            {
+              "requirement_id": "1",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent user-supplied input from causing arbitrary code to be executed through dynamic module imports."
+            },
+            {
+              "requirement_id": "7",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent untrusted input from causing arbitrary code modules to be loaded and executed during spider generation."
+            }
+          ],
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [
+              "This closely duplicates the requirements already validated from Pull Request #6870 (\"prevent user-supplied input from causing arbitrary code to be executed through dynamic module imports\" and \"prevent untrusted input from causing arbitrary code modules to be loaded and executed during spider generation\"), which appear to originate from the same underlying fix. This is recorded as an observation, not a defect."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6880",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6880,
+      "timestamp": "2025-06-09T02:45:09+00:00",
+      "title": "Fix: Unsafe Data Processing Method Allows Malicious Code Execution in scrapy/exporters.py",
+      "error": "AgentResponseError: Risposta non valida dall'agente \"assessment\": nessun oggetto JSON trovato. Ricevuto: \"\""
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6881",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6881,
+      "timestamp": "2025-06-09T02:51:14+00:00",
+      "title": "Fix: Unsafe XML Processing Library Could Allow Malicious Attacks in scrapy/http/request/rpc.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 852 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall process XML-RPC request data without exposing the application to the security vulnerabilities associated with unsafe XML parsing.",
+      "generation_attempts": 2,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall process XML-RPC request data without exposing the application to XML-based security vulnerabilities such as entity expansion or external entity attacks.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "6",
+              "source_pr_number": 6869,
+              "statement": "The system shall not execute arbitrary code originating from externally supplied content."
+            },
+            {
+              "requirement_id": "1",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent user-supplied input from causing arbitrary code to be executed through dynamic module imports."
+            },
+            {
+              "requirement_id": "7",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent untrusted input from causing arbitrary code modules to be loaded and executed during spider generation."
+            },
+            {
+              "requirement_id": "2",
+              "source_pr_number": 6879,
+              "statement": "The system shall prevent user-supplied input from being used to load arbitrary code modules."
+            },
+            {
+              "requirement_id": "8",
+              "source_pr_number": 6879,
+              "statement": "The system shall prevent user-supplied input from causing arbitrary modules to be imported and executed."
+            },
+            {
+              "requirement_id": "3",
+              "source_pr_number": 6880,
+              "statement": "The system shall not execute arbitrary code when processing serialized data in the export functionality."
+            }
+          ],
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The evidence states only that xmlrpc 'is not inherently safe from vulnerabilities' and that a defused alternative should be used; it does not name the specific attack types (entity expansion, external entity attacks) that the candidate asserts.",
+              "The named attack vectors appear to come from general knowledge of XML security rather than from the text of the PR."
+            ],
+            "unsupported_claims": [
+              "entity expansion",
+              "external entity attacks"
+            ],
+            "missing_information": [],
+            "revision_instructions": [
+              "Remove the specific attack types 'entity expansion' and 'external entity attacks': the evidence gives no such detail, only a generic statement that xmlrpc is not inherently safe.",
+              "State the requirement at the level of generality the evidence supports: that processing of XML-RPC data must not expose the system to the vulnerabilities associated with unsafe XML parsing, without naming particular attack mechanisms."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "The system shall process XML-RPC request data without exposing the application to the security vulnerabilities associated with unsafe XML parsing.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "6",
+              "source_pr_number": 6869,
+              "statement": "The system shall not execute arbitrary code originating from externally supplied content."
+            },
+            {
+              "requirement_id": "1",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent user-supplied input from causing arbitrary code to be executed through dynamic module imports."
+            },
+            {
+              "requirement_id": "7",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent untrusted input from causing arbitrary code modules to be loaded and executed during spider generation."
+            },
+            {
+              "requirement_id": "2",
+              "source_pr_number": 6879,
+              "statement": "The system shall prevent user-supplied input from being used to load arbitrary code modules."
+            },
+            {
+              "requirement_id": "8",
+              "source_pr_number": 6879,
+              "statement": "The system shall prevent user-supplied input from causing arbitrary modules to be imported and executed."
+            },
+            {
+              "requirement_id": "3",
+              "source_pr_number": 6880,
+              "statement": "The system shall not execute arbitrary code when processing serialized data in the export functionality."
+            }
+          ],
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [
+              "This mirrors the level of generality used in previously accepted security requirements (e.g. Pull Request #6869's 'shall not execute arbitrary code originating from externally supplied content'), which similarly states a category of vulnerability rather than a specific attack mechanism, without inventing detail the evidence does not give."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6899",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6899,
+      "timestamp": "2025-06-21T01:51:04+00:00",
+      "title": "Fix typing of dynamic `request` attribute on `Failure` with a cast subclass",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 937 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence explicitly states this is a static typing fix using a cast subclass with no change to runtime behaviour, so no externally observable behaviour is described to ground a requirement.",
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The evidence explicitly states runtime behaviour is unchanged and the change addresses only static type checker errors via a cast subclass, which is a source-level annotation concern invisible to any black-box test.",
+              "No externally observable effect, new default, or changed result is described anywhere in the evidence."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6936",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6936,
+      "timestamp": "2025-07-03T00:58:14+00:00",
+      "title": "feat(settings): Change default SCHEDULER_PRIORITY_QUEUE (closes #6924)",
+      "final_status": "REJECTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 600 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "Where the priority queue setting has not been overridden, the system shall schedule requests using a downloader-aware priority queue.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "6",
+              "source_pr_number": 6869,
+              "statement": "The system shall not execute arbitrary code originating from externally supplied content."
+            },
+            {
+              "requirement_id": "1",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent user-supplied input from causing arbitrary code to be executed through dynamic module imports."
+            },
+            {
+              "requirement_id": "7",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent untrusted input from causing arbitrary code modules to be loaded and executed during spider generation."
+            },
+            {
+              "requirement_id": "2",
+              "source_pr_number": 6879,
+              "statement": "The system shall prevent user-supplied input from being used to load arbitrary code modules."
+            },
+            {
+              "requirement_id": "8",
+              "source_pr_number": 6879,
+              "statement": "The system shall prevent user-supplied input from causing arbitrary modules to be imported and executed."
+            },
+            {
+              "requirement_id": "3",
+              "source_pr_number": 6880,
+              "statement": "The system shall not execute arbitrary code when processing serialized data in the export functionality."
+            },
+            {
+              "requirement_id": "5",
+              "source_pr_number": 6881,
+              "statement": "The system shall process XML-RPC requests without executing arbitrary code embedded in untrusted XML input."
+            },
+            {
+              "requirement_id": "9",
+              "source_pr_number": 6881,
+              "statement": "The system shall process XML-RPC request data without exposing the application to the security vulnerabilities associated with unsafe XML parsing."
+            }
+          ],
+          "assessment": {
+            "decision": "REJECT",
+            "issues": [
+              "The evidence only states that the default value of a named setting was changed to a named class (DownloaderAwarePriorityQueue); it does not describe what observable difference this makes to how requests are scheduled.",
+              "The requirement's content is the name of the queue implementation ('downloader-aware'), and removing it leaves only the trivial, already-true statement that the system schedules requests using some priority queue.",
+              "As with a named component whose behaviour is inferred from its name rather than stated by the evidence, no rewrite can ground this without inventing the functional effect of 'downloader-aware'."
+            ],
+            "unsupported_claims": [
+              "downloader-aware priority queue (specific scheduling effect)"
+            ],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6947",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6947,
+      "timestamp": "2025-07-10T15:21:39+00:00",
+      "title": "Ban more imports that import twisted.internet.reactor.",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 157 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence only states that certain imports are now banned/rolled back without describing any externally observable behaviour change a caller or user would see; the actual guarantee (e.g., preventing a specific runtime effect) is not stated.",
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The evidence describes banning/rolling back certain imports of twisted.internet.reactor, which reads as an internal lint/import-check change rather than a change to any externally observable behaviour.",
+              "No effect visible to a caller or user (e.g., a new error, a new default, a different runtime result) is stated in the evidence, so no black-box test could distinguish before and after."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    }
+  ]
+}

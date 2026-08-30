@@ -21,8 +21,10 @@ max_tokens = 1024
 
 [assessment]
 model = "claude-haiku-4-5"
-# 4096 e non 2048: nell'esecuzione del 2026-08-27 con Sonnet valutatore la
-# risposta è stata troncata a metà JSON e la Pull Request è finita in ERROR.
-# Il valutatore, quando ha correzioni da motivare, scrive molto più del
-# generatore: il suo limite va tenuto largo.
-max_tokens = 4096
+# 8192, alzato due volte per la stessa ragione. A 2048 (2026-08-27) e poi a
+# 4096 (2026-08-30) una risposta di Sonnet è stata troncata e la Pull Request è
+# finita in ERROR. Il valutatore scrive molto più del generatore quando ha
+# correzioni da motivare, e con il recupero dalla memoria attivo scrive di più
+# ancora, perché confronta il candidato con i requisiti storici. Il limite va
+# tenuto largo: un troncamento non degrada la risposta, la perde del tutto.
+max_tokens = 8192

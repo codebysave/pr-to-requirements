@@ -395,6 +395,19 @@ Questi aspetti fanno parte del design della memoria persistente perché determin
 > nel tempo, previsto per l'uso reale ma non per gli esperimenti, dove
 > falserebbe i confronti fra configurazioni.
 >
+> **Avvertenza sull'ambito `all`.** Va usato **una sola volta per corpus**.
+> Rielaborando lo stesso insieme di Pull Request, la memoria si riempie di più
+> varianti dello stesso caso — una per esecuzione — e il valutatore le incontra
+> come duplicati genuini. Nell'esecuzione del 30 agosto la Pull Request #6879 ha
+> ricevuto tre requisiti «duplicati», due dei quali erano l'esito che il sistema
+> stesso aveva prodotto per la #6870 in esecuzioni precedenti.
+>
+> Il filtro temporale protegge da un caso soltanto, ed è utile che lo faccia: è
+> **esclusivo**, quindi una Pull Request non incontra mai il requisito prodotto
+> per sé stessa in un'esecuzione precedente, perché la data coincide. Non
+> protegge invece dalle Pull Request antecedenti, che possono comparire in più
+> versioni.
+>
 > **Tassonomia delle relazioni.** La tabella `requirement_relations` è creata con
 > le cinque categorie previste dal §6.2 e le relative operazioni, ma **nessun
 > componente della pipeline la alimenta**: le relazioni osservate

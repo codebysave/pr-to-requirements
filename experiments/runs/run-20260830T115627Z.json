@@ -1,0 +1,493 @@
+{
+  "run": {
+    "generated_at": "2026-08-30T11:57:32.093924+00:00",
+    "input_file": "experiments/samples/sample-scrapy_scrapy.json",
+    "pull_requests": 9,
+    "prompt_version": "v1",
+    "workflow": {
+      "assessment_enabled": true,
+      "memory_enabled": true,
+      "max_generation_attempts": 3
+    },
+    "llm": {
+      "generation": {
+        "model": "claude-haiku-4-5",
+        "resolved_model": "claude-haiku-4-5-20251001",
+        "max_tokens": 1024,
+        "effort": null
+      },
+      "assessment": {
+        "model": "claude-haiku-4-5",
+        "resolved_model": "claude-haiku-4-5-20251001",
+        "max_tokens": 4096,
+        "effort": null
+      }
+    },
+    "usage": {
+      "per_agent": {
+        "generation": {
+          "model": "claude-haiku-4-5",
+          "calls": 15,
+          "input_tokens": 46194,
+          "output_tokens": 710,
+          "estimated_cost_usd": 0.049744
+        },
+        "assessment": {
+          "model": "claude-haiku-4-5",
+          "calls": 15,
+          "input_tokens": 67212,
+          "output_tokens": 3519,
+          "estimated_cost_usd": 0.084807
+        }
+      },
+      "total_calls": 30,
+      "total_input_tokens": 113406,
+      "total_output_tokens": 4229,
+      "total_estimated_cost_usd": 0.134551,
+      "pricing_reference_date": "2026-08-26"
+    },
+    "memory": {
+      "database": "experiments\\memory\\pr4requirements.db",
+      "run_id": "20260830T115627Z",
+      "stored_requirements": 5
+    }
+  },
+  "summary": {
+    "NOT_EXTRACTABLE": 7,
+    "REJECTED": 1,
+    "ACCEPTED": 1
+  },
+  "results": [
+    {
+      "pr_id": "scrapy-scrapy-pr-6869",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6869,
+      "timestamp": "2025-06-06T13:17:48+00:00",
+      "title": "Fix: Dangerous Code Execution Function Could Allow External Attacks in scrapy/shell.py",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 960 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 3,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall not execute code that originates from external sources in the interactive shell.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement specifies 'interactive shell' as the location, but the evidence does not establish that this is where external code execution was possible or that this is the scope of the fix.",
+              "The evidence describes a security audit that detected eval() usage and indicates remediation was applied, but does not state what specific behaviour changed for an observer or what external sources are now prevented from executing code."
+            ],
+            "unsupported_claims": [
+              "in the interactive shell"
+            ],
+            "missing_information": [
+              "what external sources or input vectors are now protected against"
+            ],
+            "revision_instructions": [
+              "Remove the specification of 'interactive shell' unless the evidence establishes that this is the specific location where external code execution was prevented.",
+              "State the behaviour at the level the evidence supports: the system must not execute code from external sources, without naming the specific component or location unless the evidence identifies it."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "The system shall not execute code that originates from external sources.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement states a security guarantee without being grounded in what the evidence establishes. The Pull Request describes a vulnerability detection and indicates that remediation was applied, but does not state what specific behaviour changed for an observer or what mechanism was used to prevent external code execution.",
+              "The requirement uses 'shall not execute' as if it describes a negative behaviour that can be observed, but security fixes work by preventing a path or validating input—the actual observable behaviour depends on what the fix did. The evidence does not establish this.",
+              "The term 'external sources' is not defined by the evidence. The Pull Request mentions only that eval() is dangerous when used on dynamic content from outside the program, but does not specify what counts as an external source or what the fix now prevents."
+            ],
+            "unsupported_claims": [
+              "code that originates from external sources",
+              "what mechanism prevents execution"
+            ],
+            "missing_information": [
+              "what the remediation applied to eval() actually does—whether it validates input, restricts the scope of evaluation, or changes how dynamic content is handled",
+              "the observable change in system behaviour that the fix produces"
+            ],
+            "revision_instructions": [
+              "Do not state the system 'shall not execute code'—this describes the absence of an action, not a behaviour an observer can check. State instead what the system must do when it encounters dynamic content before eval(): validation, sanitisation, or restriction of scope.",
+              "Remove 'that originates from external sources' unless the evidence specifies what the system now treats as untrusted and how it distinguishes it.",
+              "Ground the requirement in the actual effect of the fix: either what input is now rejected, what scope is now restricted, or what validation now occurs before eval() is called."
+            ]
+          }
+        },
+        {
+          "attempt": 3,
+          "candidate": null,
+          "refusal_reason": "The evidence reports that a security vulnerability in eval() was detected and that remediation was applied, but does not state what specific behaviour changed for an observer or what mechanism the fix used to prevent code injection—whether it validates input, restricts evaluation scope, sanitises content, or changes how dynamic content is handled.",
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The evidence establishes only that a vulnerability was detected and that remediation was applied, without stating what observable behaviour changed or what mechanism the fix uses.",
+              "The Pull Request provides no detail about the actual change: it does not say whether input is now validated, sanitised, restricted in scope, rejected entirely, or handled differently in any way an external observer could check.",
+              "A security audit report and the statement that 'remediation has been applied' do not ground a required behaviour without describing what the system now does when it encounters untrusted content.",
+              "The writer's reasoning is sound: without knowledge of what the fix actually does—not what eval() is dangerous in general, but what this specific change prevents—no requirement can be formulated that would hold true rather than merely restating the meaning of a technique name."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6870",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6870,
+      "timestamp": "2025-06-06T13:19:55+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 978 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 2,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall prevent untrusted user input from being used to dynamically load arbitrary code modules.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement prescribes a technique (preventing untrusted input from dynamic loading) rather than stating the behaviour that results from the fix. The evidence does not describe what the remediation actually does, only that one was applied.",
+              "The requirement uses terms like 'untrusted user input' and 'arbitrary code modules' that come from the security analysis rather than from what an observer of the system would see change."
+            ],
+            "unsupported_claims": [
+              "prevent untrusted user input from being used to dynamically load arbitrary code modules"
+            ],
+            "missing_information": [
+              "the actual behaviour the system exhibits after the fix—what the user can or cannot do, or what the system no longer accepts"
+            ],
+            "revision_instructions": [
+              "State what the system must not do from an observable perspective, rather than how it prevents it. The evidence describes a security fix but does not explain the mechanism applied.",
+              "Consider whether the evidence supports a requirement at all: it says a remediation was applied but does not describe what changes for a caller or user of the genspider command."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": null,
+          "refusal_reason": "The evidence states that a security vulnerability was remediated but does not describe what the system must now do or refuse to do from an observable perspective—it does not explain what behavior changed for a user or caller of the genspider command.",
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The Pull Request describes a security vulnerability and states that a remediation was applied, but it does not explain what changes for an observer—a user or caller of the genspider command.",
+              "The evidence names only the vulnerability class and the file affected, not the actual fix or its observable effect. It says 'the automated remediation process has applied the necessary changes' without describing what those changes accomplish from outside the code.",
+              "A black-box test of the system would need to know what behaviour to check for. The evidence does not provide that: it does not say what the genspider command now rejects, accepts differently, or prevents a caller from doing.",
+              "The writer correctly identified that no required behaviour is grounded in the text. The evidence establishes that a fix was made, but not what it makes the system do."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6875",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6875,
+      "timestamp": "2025-06-07T03:44:46+00:00",
+      "title": "Fix typo in cmdline.py comment: 'a argument' -> 'an argument'",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 579 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence states that only a comment was modified and that no code logic or functionality is affected, so no required behaviour of the system can be identified.",
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The evidence explicitly states that no code logic or functionality is affected and that only a comment was modified. A comment fix is not observable behaviour from outside the system and cannot be checked by a black-box test. The writer's reasoning is correct: no required behaviour can be identified."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6879",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6879,
+      "timestamp": "2025-06-09T02:36:45+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 978 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 2,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall prevent untrusted user input from being used to load arbitrary code modules.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement prescribes a technique (preventing input from reaching a function) rather than stating the observable behaviour that results from the fix.",
+              "The evidence describes a vulnerability where untrusted input was passed to importlib.import_module(), but does not state what the applied remediation does or what behaviour it guarantees for an observer."
+            ],
+            "unsupported_claims": [
+              "prevent untrusted user input from being used to load arbitrary code modules"
+            ],
+            "missing_information": [
+              "what the system now does or does not do when user input is supplied to the genspider command"
+            ],
+            "revision_instructions": [
+              "Remove the prescriptive technique of prevention and focus instead on the observable behaviour: what now happens when a user supplies input to the affected code path.",
+              "The evidence states the vulnerability but not the applied fix; without knowing the mechanism chosen (whitelisting, sanitisation, rejection, etc.), state the behaviour at the level of what an observer would see: either the system rejects the input, or the system restricts which modules can be loaded, or some other effect that the evidence must support."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": null,
+          "refusal_reason": "The evidence describes a vulnerability that was fixed but does not state what the system now does or does not do when user input is supplied to the genspider command, so any observable behaviour would be an invention rather than grounded in the text.",
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The evidence describes a vulnerability and states that 'the automated remediation process has applied the necessary changes' but does not describe what the system now does or what an observer would see when supplying input to the affected code path.",
+              "The Pull Request title and body name the vulnerability and the file affected, but provide no information about the observable behaviour after remediation: whether input is rejected, restricted to a whitelist, sanitised, or handled by some other mechanism.",
+              "Without knowing the remediation mechanism, any requirement stating a behaviour would restate the meaning of a technique name rather than ground itself in the evidence, which violates the task definition.",
+              "The writer's reasoning is sound: the evidence establishes that a fix was applied but not what the system guarantees for an observer using the genspider command after the change."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6880",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6880,
+      "timestamp": "2025-06-09T02:45:09+00:00",
+      "title": "Fix: Unsafe Data Processing Method Allows Malicious Code Execution in scrapy/exporters.py",
+      "final_status": "REJECTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 989 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 2,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall prevent malicious code execution through deserialization of untrusted data in the export process.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement asserts as fact a specific remediation technique (prevention through deserialization safety) that the evidence only suggests. The PR states that the fix 'has been applied' but does not specify what mechanism was chosen to resolve it.",
+              "The requirement assumes a particular attack surface ('untrusted data in the export process') that the evidence does not establish. The PR identifies an unsafe deserialization call but does not characterize the origin or trustworthiness of the data being deserialized.",
+              "The evidence describes an internal fix to unsafe code but does not state what observable behaviour changes for a caller or user of the export process."
+            ],
+            "unsupported_claims": [
+              "prevent malicious code execution through deserialization of untrusted data",
+              "in the export process"
+            ],
+            "missing_information": [],
+            "revision_instructions": [
+              "Remove the mechanism ('prevent malicious code execution through deserialization') and the assumed data source ('untrusted data'): the evidence describes a code fix but does not establish what an external observer would see change.",
+              "State instead the behaviour that the evidence does establish, at the level it supports it: the security guarantee that applies to callers of the export functionality after the fix."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "The system shall not execute code contained in serialized data during the export process.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "REJECT",
+            "issues": [
+              "The evidence describes an internal code fix to remove an unsafe deserialization call, but does not establish what observable behaviour changes for a caller or user of the export process.",
+              "The requirement states a behaviour that comes from the conventional understanding of 'code execution' and 'serialized data' rather than from what the evidence explicitly describes.",
+              "The evidence says only that a remediation 'has been applied' to unsafe code; it does not describe what the system now guarantees to external observers about how it handles exported data.",
+              "No black-box test could check this requirement without inspecting the code to verify the deserialization method used, because the evidence does not state what observable result or side-effect changes for a user or caller."
+            ],
+            "unsupported_claims": [
+              "The system shall not execute code contained in serialized data"
+            ],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6881",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6881,
+      "timestamp": "2025-06-09T02:51:14+00:00",
+      "title": "Fix: Unsafe XML Processing Library Could Allow Malicious Attacks in scrapy/http/request/rpc.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 852 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall process XML-RPC requests without executing arbitrary code embedded in untrusted XML input.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall process XML-RPC requests without executing arbitrary code embedded in untrusted XML input.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "ACCEPT",
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6899",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6899,
+      "timestamp": "2025-06-21T01:51:04+00:00",
+      "title": "Fix typing of dynamic `request` attribute on `Failure` with a cast subclass",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 937 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence describes a change to static typing annotations and reports that runtime behavior is unchanged, so no externally observable behaviour is established that a test could verify.",
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The evidence explicitly states that runtime behavior is unchanged and describes the change as addressing static type checking via a cast subclass used only for typing purposes. No externally observable behaviour is established.",
+              "A black-box test cannot verify this change: it involves only static type annotations and internal casting mechanisms. The system behaves identically before and after from an observer's perspective.",
+              "The writer's reasoning is correct: the Pull Request solves a typing problem in the source code, not a functional requirement of the system."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6936",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6936,
+      "timestamp": "2025-07-03T00:58:14+00:00",
+      "title": "feat(settings): Change default SCHEDULER_PRIORITY_QUEUE (closes #6924)",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 600 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 2,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "Where the scheduler priority queue has not been overridden, the system shall use DownloaderAwarePriorityQueue.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "5",
+              "source_pr_number": 6881,
+              "statement": "The system shall process XML-RPC requests without executing arbitrary code embedded in untrusted XML input."
+            }
+          ],
+          "assessment": {
+            "decision": "REVISE",
+            "issues": [
+              "The requirement names a specific implementation (DownloaderAwarePriorityQueue) rather than stating the behaviour that implementation provides. The evidence does not describe what DownloaderAwarePriorityQueue does or how it differs from the previous default, so the reader cannot understand what observable change results from this requirement without external knowledge of the queue type."
+            ],
+            "unsupported_claims": [
+              "DownloaderAwarePriorityQueue"
+            ],
+            "missing_information": [
+              "The functional behaviour that distinguishes the new queue from the previous default - what it guarantees or changes for an observer of the system"
+            ],
+            "revision_instructions": [
+              "Remove the queue name. The evidence establishes only that the default was changed to a specific queue type, not what that queue does or why it matters to users of the system.",
+              "State instead the observable behaviour that this queue provides - what changes in how the scheduler prioritises tasks, or what it guarantees about task ordering or handling. The Pull Request description does not provide this, so you may need to state the requirement in general terms: that a different prioritisation strategy is used by default when not overridden."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": null,
+          "refusal_reason": "The evidence states that the default scheduler priority queue was changed to a specific implementation, but does not describe what observable behaviour that implementation provides or how it differs from the previous default, so any requirement naming the behaviour would be invented rather than grounded in the text.",
+          "retrieved_requirements": [
+            {
+              "requirement_id": "5",
+              "source_pr_number": 6881,
+              "statement": "The system shall process XML-RPC requests without executing arbitrary code embedded in untrusted XML input."
+            }
+          ],
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The evidence states only that a default was changed to a specific implementation (DownloaderAwarePriorityQueue), without describing what observable behaviour that implementation provides or how it differs from the previous default.",
+              "The Pull Request body names the queue type and confirms backward compatibility, but does not establish what changes for an observer of the system - what the scheduler now does differently, what tasks it prioritises differently, or what guarantee it provides.",
+              "Any requirement that states what DownloaderAwarePriorityQueue does would rest on recognising the name rather than on information in the text, and would be equally true of any system containing such a queue.",
+              "The writer's reasoning is sound: the evidence grounds a change to a configuration default, not a change to observable system behaviour."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6947",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6947,
+      "timestamp": "2025-07-10T15:21:39+00:00",
+      "title": "Ban more imports that import twisted.internet.reactor.",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 157 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence describes a change to which imports are allowed but does not state what observable behaviour the system must guarantee as a result.",
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "issues": [
+              "The evidence describes an internal control on which imports are permitted—a code organisation and modularity constraint—but does not establish any required behaviour that an observer outside the code could detect. The Pull Request states what imports are banned, not what the system must do, provide, or guarantee in a way that would fail a black-box test. No functional behaviour of the system changes as a result of banning certain imports; only the internal structure of the codebase changes."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    }
+  ]
+}
