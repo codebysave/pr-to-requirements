@@ -233,9 +233,13 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         "--memory-scope",
         choices=(MEMORY_SCOPE_RUN, MEMORY_SCOPE_ALL),
         default=MEMORY_SCOPE_RUN,
-        help="quali requisiti storici puo' vedere il valutatore: soltanto quelli "
-        "prodotti da questa esecuzione (run, predefinito, rende confrontabili le "
-        "esecuzioni fra loro) oppure quelli di tutte (all, memoria che si accumula)",
+        help="quali requisiti storici puo' vedere il valutatore. "
+        "'run' (predefinito): solo quelli prodotti da questa esecuzione, cosi' due "
+        "esecuzioni restano confrontabili. "
+        "'all': quelli di tutte le esecuzioni, cioe' una memoria che si accumula "
+        "davvero nel tempo -- da usare una volta sola per corpus, perche' "
+        "rielaborando le stesse Pull Request la memoria si riempie di varianti "
+        "dello stesso caso e il valutatore le vede come duplicati",
     )
     parser.add_argument(
         "--memory-db",

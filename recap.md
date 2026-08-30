@@ -13,6 +13,135 @@ soltanto lo stato delle caselle — `[✔]` fatto, `[ ]` da fare — e la frecci
 
 ---
 
+## 2026-08-30 (sera) — Due prove sul recupero, e tre correzioni che ne sono seguite
+
+**Branch:** `feat/memory-retrieval`
+
+### 1. Le due esecuzioni
+
+Con il recupero attivo, il campione scrapy è stato eseguito due volte: con Haiku
+su entrambi gli agenti (`run-20260830T115627Z`, $0,13) e con Sonnet
+(`run-20260830T120610Z`, $0,55, con `--memory-scope all`).
+
+| | Accettati | Non estraibili | Rifiutati | Errori |
+|---|---|---|---|---|
+| Haiku | 1 | 7 | 1 | 0 |
+| Sonnet | 4 | 3 | 1 | 1 |
+
+### 2. Una regressione di criterio, isolata e attribuita
+
+Nella prova con Haiku il valutatore ha cominciato a **pretendere di sapere quale
+tecnica avesse usato la correzione**, rifiutando le Pull Request di sicurezza
+perché «non è dato sapere quale meccanismo sia stato applicato».
+
+È in contraddizione diretta con la **Decisione 3.1 §9.1**, che stabilisce che
+l'ignoranza del meccanismo non rende una Pull Request non estraibile, e che
+porta come esempio proprio la #6870 con la formulazione corretta.
+
+Il confronto fra le due esecuzioni ha attribuito il problema:
+
+| | Haiku | Sonnet |
+|---|---|---|
+| PR in cui pretende il meccanismo | **4** | **0** |
+| PR in cui applica la regola sull'artefatto nominato | 2 | 1 |
+
+**Il prompt regge, Haiku no**: applica alla lettera una regola anche dove non si
+applica, come già osservato il 27 agosto con il *removal test*. La diagnosi
+strutturale è che il principio «il meccanismo ignoto non è un difetto» vive in
+una sezione a lato (`<what_you_are_judging>`), mentre la regola sull'artefatto
+nominato è nella procedura numerata — e la procedura vince.
+
+### 3. Un difetto reale, introdotto il 29 agosto
+
+Anche Sonnet ha però applicato la regola dove non doveva, rifiutando la **#6936**
+(cambio del valore predefinito della coda di priorità) perché il comportamento
+«si dedurrebbe dal nome».
+
+Ma la tabella della **Decisione 3.1 §9.2** — scritta insieme alla regola —
+dichiara **estraibile** il caso strutturalmente identico *«la politica di retry
+predefinita passa da intervallo fisso a exponential backoff»*, e il §6.5 ne
+porta la formulazione come esempio del quinto pattern EARS.
+
+La regola contraddiceva quindi il proprio esempio. La distinzione mancante è fra
+**«questa cosa ora esiste»**, che non fonda nulla, e **«questa impostazione ora
+vale X»**, che è un fatto sul sistema e si verifica senza sapere cosa X faccia
+internamente.
+
+**Correzione applicata.** Il passo della procedura ha ora un'eccezione esplicita
+per i valori predefiniti, con la ragione e il criterio di verifica; il prompt di
+generazione ha la stessa precisazione; l'Assessment Agent ha un esempio nuovo che
+accetta un cambio di default nominando il nuovo valore. Un test impedisce che
+l'eccezione sparisca.
+
+### 4. Il recupero dalla memoria, con Sonnet, ha funzionato bene
+
+Tre comportamenti osservati, in ordine crescente di interesse.
+
+**Segnalazione corretta.** Sulla #6879, con tre requisiti storici davanti:
+«duplica da vicino i requisiti già validati della PR #6870 (…) **questo è
+registrato come osservazione, non come difetto**» — la regola scritta poche ore
+prima, applicata alla lettera.
+
+**Nessun falso allarme.** La #6936 ha visto **otto** requisiti di sicurezza,
+tutti estranei al suo argomento, e non ne ha nominato nessuno.
+
+**Un uso che non avevamo progettato.** Accettando la #6881 riscritta, il
+valutatore ha motivato così: «rispecchia il livello di generalità usato nei
+requisiti di sicurezza già accettati (per esempio la PR #6869), che analogamente
+enuncia una categoria di vulnerabilità invece di un meccanismo d'attacco
+specifico». Ha usato la memoria come **riferimento di calibrazione del livello di
+astrazione**, cioè per restare coerente con sé stesso lungo il corpus. È il
+risultato più interessante della giornata.
+
+### 5. Il limite di token, alzato una seconda volta
+
+La #6880 è finita in `ERROR` con **4.096 token in uscita**, cioè esattamente il
+limite. Lo avevamo alzato da 2048 a 4096 il 27 agosto per la stessa ragione: il
+recupero dalla memoria allunga sia l'ingresso sia la risposta, perché il
+valutatore confronta il candidato con i requisiti storici.
+
+Portato a **8192**, con la motivazione scritta nel file: un troncamento non
+degrada la risposta, la perde del tutto.
+
+### 6. L'ambito `all` va usato una volta sola per corpus
+
+Rielaborando lo stesso campione con `--memory-scope all`, la memoria si riempie
+di **più varianti dello stesso caso**, una per esecuzione, e il valutatore le
+incontra come duplicati genuini: nella prova, la #6879 ha ricevuto tre
+«duplicati», due dei quali erano l'esito che il sistema stesso aveva prodotto per
+la #6870 in run precedenti.
+
+Il filtro temporale protegge da un caso soltanto, ed è utile che lo faccia:
+essendo **esclusivo**, una Pull Request non incontra mai il requisito prodotto
+per sé stessa in un'esecuzione precedente, perché la data coincide.
+
+Avvertenza aggiunta all'aiuto dell'opzione e alla Decisione 3.3 §13.1.
+
+### 7. Verifiche eseguite
+
+- `uv run ruff check .` e `ruff format` — puliti;
+- `uv run pytest` — **221 test passati** (1 nuovo: l'eccezione sui valori
+  predefiniti è presente in entrambi i prompt);
+- due esecuzioni reali complete, con conteggio automatico delle occorrenze del
+  ragionamento difettoso.
+
+### 8. Stato del sistema dopo questa modifica
+
+```text
+[✔] Preprocessing del dataset       (script esterno al sistema)
+[✔] Input Loader                    are.input
+[✔] Configurazione + client LLM     are.llm
+[✔] Workflow LangGraph (agenti)     are.agents
+[✔] Pipeline Runner                 are.runner
+[✔] Memoria persistente (SQLite)    are.db
+[ ] Server MCP                      are.mcp_server
+[ ] Valutazione sperimentale                         ← gold standard da rifare su OpenHands
+```
+
+Invariato: la modifica corregge criteri e limiti, non aggiunge componenti.
+
+---
+
 ## 2026-08-30 (pomeriggio) — Il recupero dalla memoria: il valutatore vede i requisiti già validati
 
 **Branch:** `feat/memory-retrieval`
