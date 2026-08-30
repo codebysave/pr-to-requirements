@@ -68,6 +68,33 @@ def test_parses_json_surrounded_by_prose() -> None:
     assert parse_json_object(text, "test") == {"decision": "REVISE"}
 
 
+def test_parses_json_followed_by_the_model_thinking_aloud() -> None:
+    """Il caso reale che ha fatto perdere una Pull Request il 30 agosto.
+
+    Il generatore ha prodotto il JSON dentro un blocco markdown e ha poi
+    continuato a ragionare. La risposta era completa e valida: perderla per
+    quello che veniva dopo era uno spreco.
+    """
+
+    text = (
+        '```json\n{"requirement": "The system shall export reports."}\n```\n\n'
+        "Wait, let me reconsider. The reviewer might object that {this} is too broad."
+    )
+
+    assert parse_json_object(text, "test") == {"requirement": "The system shall export reports."}
+
+
+def test_parses_json_when_prose_before_it_contains_a_brace() -> None:
+    text = 'The set {a, b} is irrelevant. Here is the answer: {"decision": "ACCEPT"}'
+
+    assert parse_json_object(text, "test") == {"decision": "ACCEPT"}
+
+
+def test_still_rejects_a_genuinely_malformed_object() -> None:
+    with pytest.raises(AgentResponseError, match="JSON non valido"):
+        parse_json_object('{"decision": "ACCEPT",}', "test")
+
+
 def test_rejects_response_without_json() -> None:
     with pytest.raises(AgentResponseError, match="nessun oggetto JSON"):
         parse_json_object("The requirement looks fine to me.", "test")
