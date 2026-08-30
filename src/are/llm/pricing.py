@@ -57,11 +57,31 @@ def estimate_cost_usd(model: str, usage: UsageStats) -> float | None:
     nessun valore che un valore inventato.
     """
 
-    prices = _PRICE_PER_MILLION.get(model)
+    prices = _price_for(model)
     if prices is None:
         return None
     input_price, output_price = prices
     return (usage.input_tokens * input_price + usage.output_tokens * output_price) / 1_000_000
+
+
+def _price_for(model: str) -> tuple[float, float] | None:
+    """Cerca il listino, accettando anche le versioni datate del modello.
+
+    Il fornitore restituisce l'identificativo completo (``claude-haiku-4-5-20251001``)
+    mentre il listino è indicizzato per famiglia. Il suffisso viene accettato
+    solo se è una data: un confronto per prefisso più permissivo rischierebbe
+    di attribuire a un modello il prezzo di un altro.
+    """
+
+    prices = _PRICE_PER_MILLION.get(model)
+    if prices is not None:
+        return prices
+    for famiglia, listino in _PRICE_PER_MILLION.items():
+        if model.startswith(f"{famiglia}-"):
+            suffisso = model[len(famiglia) + 1 :]
+            if suffisso.isdigit():
+                return listino
+    return None
 
 
 def _migliaia(valore: int) -> str:

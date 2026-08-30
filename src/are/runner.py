@@ -20,6 +20,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable, Protocol, Sequence
 
+from are import console
 from are.agents import RequirementState, create_initial_state
 from are.input import PullRequestRecord
 
@@ -76,8 +77,9 @@ class PipelineRunner:
             try:
                 final_state = self._graph.invoke(create_initial_state(pull_request))
             except Exception as exc:  # errore tecnico: non interrompe il batch
-                logger.error("  [ERRORE]  %s: %s", type(exc).__name__, exc)
-                logger.info("  ESITO:    interrotto da un errore tecnico")
+                logger.error("%s", console.phase("ERRORE TECNICO"))
+                logger.error("%s", console.note(f"{type(exc).__name__}: {exc}"))
+                logger.info("%s", console.outcome("interrotto da un errore tecnico"))
                 results.append(RunResult(pull_request, None, f"{type(exc).__name__}: {exc}"))
                 if self._stop_on_error:
                     break
@@ -90,28 +92,27 @@ class PipelineRunner:
 
     @staticmethod
     def _log_header(index: int, totale: int, pull_request: PullRequestRecord) -> None:
-        titolo = pull_request.title
-        if len(titolo) > 90:
-            titolo = titolo[:87] + "..."
-        logger.info("")
-        logger.info("%s", "-" * 78)
         logger.info(
-            "PR #%d  %s  (%d di %d)",
-            pull_request.pr_number,
-            pull_request.repository,
-            index,
-            totale,
+            "%s",
+            console.pull_request_header(
+                index,
+                totale,
+                pull_request.pr_number,
+                pull_request.repository,
+                pull_request.title,
+            ),
         )
-        logger.info("  %s", titolo)
-        logger.info("%s", "-" * 78)
 
     @staticmethod
     def _log_outcome(state: RequirementState) -> None:
         status = state["final_status"]
-        logger.info("  ESITO:    %s", status.value if status is not None else "SCONOSCIUTO")
-        accettato = state["accepted_requirement"]
-        if accettato:
-            logger.info('  REQUISITO: "%s"', accettato)
+        logger.info(
+            "%s",
+            console.outcome(
+                status.value if status is not None else "SCONOSCIUTO",
+                state["accepted_requirement"],
+            ),
+        )
 
     def _order(self, pull_requests: Iterable[PullRequestRecord]) -> list[PullRequestRecord]:
         records = list(pull_requests)

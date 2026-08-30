@@ -47,3 +47,23 @@ def test_format_usage_reports_unknown_cost() -> None:
     testo = format_usage("modello-sconosciuto", UsageStats(1, 10, 2))
 
     assert "n/d" in testo
+
+
+def test_prices_a_dated_model_version() -> None:
+    """Il fornitore restituisce `claude-haiku-4-5-20251001`, il listino ha la famiglia.
+
+    Senza questo, il costo della singola chiamata mostrato a console risulta
+    sempre `n/d`, perché il modello effettivo non compare nel listino.
+    """
+
+    usage = UsageStats(calls=1, input_tokens=1_000_000, output_tokens=0)
+
+    assert estimate_cost_usd("claude-haiku-4-5-20251001", usage) == 1.00
+
+
+def test_does_not_price_an_unrelated_model_by_prefix() -> None:
+    """Il suffisso vale solo se è una data: altrimenti sarebbe un prezzo inventato."""
+
+    usage = UsageStats(calls=1, input_tokens=1_000_000, output_tokens=0)
+
+    assert estimate_cost_usd("claude-haiku-4-5-turbo", usage) is None
