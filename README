@@ -17,10 +17,13 @@ Il sistema prevede due agenti:
 
 I requisiti generati, una volta validati, vengono salvati in un
 **database persistente** che funge da **memoria a lungo termine** del
-sistema. Gli agenti vi accedono tramite **MCP (Model Context Protocol)**,
-che espone tool di ricerca sui requisiti storici e permette
-all'Assessment Agent di individuare duplicazioni o incoerenze con i
-requisiti già generati.
+sistema. Prima di ogni valutazione l'Assessment Agent riceve i requisiti
+già validati, così da poter individuare duplicazioni o incoerenze con
+quanto è già stato prodotto.
+
+L'accesso alla memoria è oggi diretto. È previsto che venga esposto
+come server **MCP (Model Context Protocol)**, secondo la Decisione 3.4:
+si veda `docs/design/decisions/04-Interface-MCP.md`.
 
 ## Autori e supervisione
 
