@@ -599,7 +599,7 @@ Dicono la stessa cosa senza condividere le parole decisive: una ricerca testuale
 
 #### Perché non converrebbe, oggi
 
-- **Risolve un problema che alla nostra scala non abbiamo.** Con 5-10 Pull Request per progetto, i requisiti da mostrare sono al massimo dieci.
+- **Risolve un problema che alla nostra scala non abbiamo.** Con 5-50 Pull Request per progetto, i requisiti da mostrare non sono molti.
 - **Gli embedding sono deboli sulle negazioni.** «*The system shall execute code from untrusted input*» e «*The system shall **not** execute code from untrusted input*» sono opposti, ma per un embedding sono quasi identici. Poiché i nostri requisiti sono spesso in forma negativa, il recupero semantico rischierebbe di presentare come affine proprio il contrario del candidato — mentre il modello che legge il testo la negazione la vede.
 - **Introduce un'assunzione da difendere.** La nozione di «due requisiti dicono la stessa cosa» verrebbe da un modello di terze parti addestrato su testo generico, che non ha mai visto una specifica software. Va dichiarata fra le assunzioni della valutazione sperimentale.
 - **Aggiunge parametri arbitrari da calibrare** — `top_k` e la soglia di similarità — su un progetto che ne ha già altri non fondati.
