@@ -178,6 +178,34 @@ Queste operazioni vengono incapsulate in un componente dedicato, evitando che gl
 
 ## 8. Retrieval dei requisiti semanticamente affini
 
+> **Aggiornamento (30 agosto 2026) — la prima implementazione non usa embedding.**
+>
+> Il recupero realizzato è **esaustivo**: restituisce all'Assessment Agent tutti i
+> requisiti già validati dello stesso progetto nati da Pull Request precedenti a
+> quella in esame, senza ordinarli per somiglianza. Il paragrafo che segue
+> descrive la soluzione semantica, che resta l'evoluzione prevista e per la quale
+> lo schema è già predisposto: le colonne `embedding` ed `embedding_model`
+> esistono e non richiederanno migrazioni.
+>
+> La ragione è di scala. Un requisito occupa una trentina di token: il corpus più
+> grande di cui disponiamo ne produce poche decine, che si aggiungono al
+> messaggio del valutatore per circa mille token, cioè pochi centesimi per
+> esecuzione. La selezione dei più affini risolve un problema che a questa scala
+> non si presenta, e ne introdurrebbe tre: una dipendenza esterna, una soglia
+> arbitraria da calibrare e una nozione di «stesso significato» presa da un
+> modello di terze parti addestrato su testo generico, da dichiarare fra le
+> assunzioni della valutazione sperimentale.
+>
+> A questo si aggiunge una ragione di merito. Gli embedding distinguono male una
+> frase dal suo contrario, mentre una parte rilevante dei requisiti prodotti dal
+> sistema è in forma negativa (*«the system shall **not** ...»*) e riconoscere una
+> contraddizione significa esattamente distinguere un requisito dal suo opposto.
+> Il modello che legge il testo la negazione la vede; un embedding no.
+>
+> La scelta è sottoposta alla tutor come punto 5 di
+> `docs/meetings/open-questions-for-tutor-updated.md`, dove sono confrontate anche
+> le due implementazioni possibili del recupero semantico.
+
 Il retrieval semantico viene mantenuto **separato dalle normali query SQL**.
 
 SQLite può filtrare i requisiti eleggibili, ma una query testuale o un confronto lessicale non è sufficiente per stabilire che due requisiti esprimano lo stesso comportamento con formulazioni differenti.
@@ -343,6 +371,39 @@ Le seguenti scelte riguardano direttamente il funzionamento della memoria e, una
 
 Questi aspetti fanno parte del design della memoria persistente perché determinano come i requisiti vengono rappresentati, conservati, filtrati e recuperati.
 
+> **Aggiornamento (30 agosto 2026).** Quattro di questi punti sono ora consolidati
+> dall'implementazione.
+>
+> **Filtri applicati.** Repository di origine e data della Pull Request. Sono i
+> soli due, e nel recupero esaustivo costituiscono l'intero criterio di
+> selezione.
+>
+> **Riferimento temporale.** `source_pr_timestamp`, cioè la data della Pull
+> Request di origine, **non** `created_at`, che è il momento dell'inserimento in
+> memoria. Il filtro è esclusivo. La distinzione è sostanziale: usare la data di
+> inserimento ricostruirebbe l'ordine in cui sono state lanciate le esecuzioni,
+> non la storia del progetto. Le date sono normalizzate a UTC, così
+> l'ordinamento lessicografico delle stringhe ISO coincide con quello
+> cronologico anche fra fusi orari diversi.
+>
+> **Inizializzazione e isolamento.** Un unico file, `pr4requirements.db`,
+> condiviso da tutte le esecuzioni. L'isolamento non è affidato al nome del file
+> ma alla colonna `run_id`: il recupero vi filtra sopra, quindi ogni esecuzione
+> si comporta come se partisse da una memoria vuota, mentre resta un solo
+> artefatto da aprire, sfogliare e allegare. L'opzione `--memory-scope all`
+> rimuove il filtro e restituisce il comportamento di una memoria che si accumula
+> nel tempo, previsto per l'uso reale ma non per gli esperimenti, dove
+> falserebbe i confronti fra configurazioni.
+>
+> **Tassonomia delle relazioni.** La tabella `requirement_relations` è creata con
+> le cinque categorie previste dal §6.2 e le relative operazioni, ma **nessun
+> componente della pipeline la alimenta**: le relazioni osservate
+> dall'Assessment Agent finiscono oggi nelle `issues` del report, non nella
+> tabella. È predisposizione, non funzionalità.
+>
+> Il modello di embedding, la persistenza e il formato dei vettori, e l'indice
+> vettoriale restano aperti, per la ragione spiegata al §8.
+
 ### 13.2 Parametri da calibrare sperimentalmente
 
 Alcuni valori non devono essere fissati arbitrariamente in fase di design, ma possono essere determinati attraverso test e calibrazione sperimentale.
@@ -370,5 +431,22 @@ Similarità: calcolata nel livello applicativo
 Relazioni: tabella dedicata
 Accesso agentico alla memoria: MCP Server
 ```
+
+> **Aggiornamento (30 agosto 2026) — stato dell'implementazione.**
+>
+> ```text
+> Backend persistente:  SQLite, file unico, isolamento per run_id
+> Persistenza:          solo requisiti validati con esito ACCEPT     [fatto]
+> Accesso ai dati:      SqliteRequirementRepository                  [fatto]
+> Recupero:             ExhaustiveRequirementRetriever               [fatto]
+>                       esaustivo per progetto e data, senza embedding
+> Similarità:           non calcolata: il confronto lo fa il valutatore
+> Relazioni:            tabella creata, nessun componente la alimenta
+> Accesso agentico:     MCP Server                                   [da fare]
+> ```
+>
+> Il recupero è oggi invocato direttamente dal workflow. Il passaggio attraverso
+> il server MCP, previsto dalla Decisione 3.4, sostituirà l'implementazione
+> dietro la porta `MemoryRetriever` senza modifiche al grafo né agli agenti.
 
 La scelta mantiene contenuta la complessità infrastrutturale, fornisce una memoria strutturata e transazionale e consente di introdurre il retrieval semantico senza legare l'architettura a un database vettoriale specifico.
