@@ -9,12 +9,16 @@
 # `max_generation_attempts = 3` consente una generazione iniziale e fino a
 # due revisioni; il valore verrà verificato empiricamente.
 #
-# `memory_enabled` resta false finché la memoria persistente (Decisioni
-# 3.3/3.4) non sarà implementata.
+# `memory_enabled` governa soltanto il **recupero** dei requisiti storici, cioè
+# l'unica cosa che cambia l'input del valutatore. L'archiviazione avviene
+# comunque: sono due funzioni distinte con due interruttori distinti. Con il
+# recupero attivo il sistema diventa dipendente dall'ordine di elaborazione,
+# quindi acceso e spento sono due condizioni sperimentali diverse da riportare
+# nei risultati (Decisione 3.7).
 
 [workflow]
 assessment_enabled = true
-memory_enabled = false
+memory_enabled = true
 max_generation_attempts = 3
 
 # Lunghezza minima complessiva di titolo e corpo perché una Pull Request
