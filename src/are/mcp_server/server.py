@@ -22,11 +22,32 @@ del candidato non richiederà di aggiornare la firma del tool né i client.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import TypedDict
 
 from mcp.server.mcpserver import MCPServer
 
 from are.db import ExhaustiveRequirementRetriever, SqliteRequirementRepository
 from are.input import PullRequestRecord
+
+
+class RetrievedRequirementPayload(TypedDict):
+    """Un requisito storico, come viaggia sul protocollo."""
+
+    requirement_id: str
+    statement: str
+    source_pr_number: int
+
+
+class SearchRequirementsResult(TypedDict):
+    """Esito di ``search_requirements``. La lista puo' essere vuota."""
+
+    results: list[RetrievedRequirementPayload]
+
+
+class StoreAcceptedRequirementResult(TypedDict):
+    """Esito di ``store_accepted_requirement`` (Opzione A: nessun id esposto)."""
+
+    created_at: str
 
 
 def create_server(
@@ -65,7 +86,7 @@ def create_server(
         repository_id: str | None = None,
         before_timestamp: str | None = None,
         limit: int | None = None,
-    ) -> dict:
+    ) -> SearchRequirementsResult:
         """Interroga la memoria e restituisce i requisiti storici.
 
         Args:
@@ -126,7 +147,7 @@ def create_server(
         source_pr_number: int,
         source_pr_timestamp: str,
         evidence: str | None = None,
-    ) -> dict:
+    ) -> StoreAcceptedRequirementResult:
         """Scrive un requisito validato nella memoria.
 
         Args:

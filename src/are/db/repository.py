@@ -107,7 +107,13 @@ class SqliteRequirementRepository:
         self._path = str(database_path)
         if self._path != IN_MEMORY:
             Path(self._path).parent.mkdir(parents=True, exist_ok=True)
-        self._connection = sqlite3.connect(self._path)
+        # ``check_same_thread=False`` serve al server MCP: l'SDK esegue i tool
+        # sincroni in un thread di lavoro, mentre la connessione nasce nel
+        # thread principale, e il modulo ``sqlite3`` vieta l'uso incrociato.
+        # Le chiamate restano comunque serializzate: il workflow elabora una
+        # Pull Request alla volta e invoca un tool alla volta, quindi non ci
+        # sono due scritture concorrenti sulla stessa connessione.
+        self._connection = sqlite3.connect(self._path, check_same_thread=False)
         self._connection.row_factory = sqlite3.Row
         # I vincoli di chiave esterna in SQLite sono disattivati per
         # impostazione predefinita e vanno abilitati a ogni connessione.
