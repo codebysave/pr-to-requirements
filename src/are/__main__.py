@@ -47,6 +47,7 @@ from are.llm import (
     load_llm_config,
     resolve_model_alias,
 )
+from are.mcp_client import McpMemorySessionConfig, mcp_memory_session
 from are.runner import PipelineRunner, build_run_report, save_run_report, summarize
 
 DEFAULT_LLM_CONFIG = Path("config/llm.toml")
@@ -102,48 +103,65 @@ def main(argv: list[str] | None = None) -> int:
     memory_path = Path(args.memory_db) if args.memory_db else _default_memory_path()
     memory = SqliteRequirementRepository(memory_path, run_stamp)
 
-    # La verifica di estraibilità è deterministica: nessun modello, nessun
-    # costo, esito sempre uguale (Decisione 3.5, §4.3).
-    dependencies = WorkflowDependencies(
-        extractability_checker=DeterministicExtractabilityChecker(
-            workflow_config.min_evidence_characters
-        ),
-        generator=LLMRequirementGenerator(generation_client, args.prompt_version),
-        assessor=(
-            LLMRequirementAssessor(assessment_client, args.prompt_version)
-            if workflow_config.assessment_enabled
-            else None
-        ),
-        retriever=_build_retriever(memory, run_stamp, args.memory_scope, workflow_config),
-        store=memory,
-    )
-
-    graph = build_workflow(dependencies, workflow_config)
-    runner = PipelineRunner(graph, chronological=True)
-
-    # Archiviazione e recupero sono due funzioni distinte con due interruttori
-    # distinti: il database viene sempre scritto, mentre `memory_enabled`
-    # governa soltanto il recupero dei requisiti affini, che è ciò che cambia
-    # l'input del valutatore.
-    print(
-        f"Elaborazione di {len(pull_requests)} Pull Request "
-        f"(assessment={workflow_config.assessment_enabled}, "
-        f"recupero dalla memoria={workflow_config.memory_enabled})"
-    )
-    print(
-        f"Modelli: generazione={llm_config.generation.model}, "
-        f"valutazione={llm_config.assessment.model}"
-    )
-    ambito = (
-        "solo questa esecuzione" if args.memory_scope == MEMORY_SCOPE_RUN else "tutte le esecuzioni"
-    )
-    print(f"Memoria: {memory_path}  (il valutatore vede: {ambito})\n")
-
-    try:
-        results = runner.run(pull_requests)
-        stored_requirements = memory.count()
-    finally:
-        memory.close()
+    # Con --use-mcp l'accesso alla memoria (retrieval + scrittura) passa per il
+    # server MCP: retriever e store del grafo diventano proxy che dialogano con
+    # il sottoprocesso via stdio, mentre il repository SQLite locale viene
+    # usato solo per contare i requisiti scritti a fine run.
+    if args.use_mcp:
+        mcp_config = McpMemorySessionConfig(
+            db_path=memory_path,
+            run_id=run_stamp,
+            memory_scope=args.memory_scope,
+            max_requirements=workflow_config.max_memory_requirements,
+        )
+        try:
+            with mcp_memory_session(mcp_config) as (mcp_retriever, mcp_store):
+                dependencies = _build_dependencies(
+                    workflow_config,
+                    generation_client,
+                    assessment_client,
+                    args.prompt_version,
+                    retriever=mcp_retriever,
+                    store=mcp_store,
+                )
+                results = _run_workflow(
+                    pull_requests,
+                    dependencies,
+                    workflow_config,
+                    llm_config,
+                    memory_path,
+                    args.memory_scope,
+                    use_mcp=True,
+                )
+            # Il server MCP e' terminato: possiamo interrogare il repository
+            # locale per il conteggio finale (in produzione il server e il client
+            # scriverebbero sullo stesso file, quindi il numero e' coerente).
+            stored_requirements = memory.count()
+        finally:
+            memory.close()
+    else:
+        # Path storico: chiamate dirette al retriever e al repository, senza MCP.
+        dependencies = _build_dependencies(
+            workflow_config,
+            generation_client,
+            assessment_client,
+            args.prompt_version,
+            retriever=_build_retriever(memory, run_stamp, args.memory_scope, workflow_config),
+            store=memory,
+        )
+        try:
+            results = _run_workflow(
+                pull_requests,
+                dependencies,
+                workflow_config,
+                llm_config,
+                memory_path,
+                args.memory_scope,
+                use_mcp=False,
+            )
+            stored_requirements = memory.count()
+        finally:
+            memory.close()
 
     usage = {
         "generation": (llm_config.generation.model, generation_client.usage),
@@ -285,6 +303,14 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         type=int,
         help="elabora soltanto le prime N Pull Request del file (utile per contenere i costi)",
     )
+    parser.add_argument(
+        "--use-mcp",
+        action="store_true",
+        help="accede alla memoria (retrieval e persistenza) attraverso il "
+        "server MCP invece che chiamando direttamente il repository/retriever. "
+        "Il server viene avviato come sottoprocesso stdio e resta in vita per "
+        "tutto il run.",
+    )
     parser.add_argument("--verbose", action="store_true", help="log di dettaglio")
     return parser.parse_args(argv)
 
@@ -403,6 +429,70 @@ def _describe_usage(usage: dict[str, tuple[str, UsageStats]]) -> dict[str, objec
 
 def _default_output_path(stamp: str) -> Path:
     return DEFAULT_OUTPUT_DIR / f"run-{stamp}.json"
+
+
+def _build_dependencies(
+    workflow_config,
+    generation_client: AnthropicLLMClient,
+    assessment_client: AnthropicLLMClient,
+    prompt_version: str,
+    *,
+    retriever,
+    store,
+) -> WorkflowDependencies:
+    """Costruisce ``WorkflowDependencies`` con retriever e store iniettati.
+
+    L'unica differenza fra il path MCP e quello diretto e' quale
+    implementazione di ``retriever``/``store`` viene passata: il grafo non se
+    ne accorge, perche' entrambe rispettano lo stesso protocollo.
+    """
+
+    return WorkflowDependencies(
+        extractability_checker=DeterministicExtractabilityChecker(
+            workflow_config.min_evidence_characters
+        ),
+        generator=LLMRequirementGenerator(generation_client, prompt_version),
+        assessor=(
+            LLMRequirementAssessor(assessment_client, prompt_version)
+            if workflow_config.assessment_enabled
+            else None
+        ),
+        retriever=retriever,
+        store=store,
+    )
+
+
+def _run_workflow(
+    pull_requests,
+    dependencies: WorkflowDependencies,
+    workflow_config,
+    llm_config: LLMConfig,
+    memory_path: Path,
+    memory_scope: str,
+    *,
+    use_mcp: bool,
+) -> list:
+    """Costruisce il grafo, stampa il preambolo dell'esecuzione e lancia il runner."""
+
+    graph = build_workflow(dependencies, workflow_config)
+    runner = PipelineRunner(graph, chronological=True)
+
+    accesso = "via MCP (server come sottoprocesso)" if use_mcp else "chiamata diretta"
+    print(
+        f"Elaborazione di {len(pull_requests)} Pull Request "
+        f"(assessment={workflow_config.assessment_enabled}, "
+        f"recupero dalla memoria={workflow_config.memory_enabled})"
+    )
+    print(
+        f"Modelli: generazione={llm_config.generation.model}, "
+        f"valutazione={llm_config.assessment.model}"
+    )
+    ambito = (
+        "solo questa esecuzione" if memory_scope == MEMORY_SCOPE_RUN else "tutte le esecuzioni"
+    )
+    print(f"Memoria: {memory_path}  (accesso: {accesso}; il valutatore vede: {ambito})\n")
+
+    return runner.run(pull_requests)
 
 
 def _build_retriever(
