@@ -105,12 +105,12 @@ def main(argv: list[str] | None = None) -> int:
     # artefatti restano agganciati fra loro.
     run_stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     memory_path = Path(args.memory_db) if args.memory_db else _default_memory_path()
-    memory = SqliteRequirementRepository(memory_path, run_stamp)
 
-    # Con --use-mcp l'accesso alla memoria (retrieval + scrittura) passa per il
-    # server MCP: retriever e store del grafo diventano proxy che dialogano con
-    # il sottoprocesso via stdio, mentre il repository SQLite locale viene
-    # usato solo per contare i requisiti scritti a fine run.
+    # Con --use-mcp l'accesso alla memoria passa interamente per il server, che
+    # gira in un sottoprocesso e apre lui il database. Il processo padre non ne
+    # apre uno proprio: sarebbe una seconda connessione allo stesso file, usata
+    # per un solo conteggio, e contraddirebbe la premessa dell'isolamento -- la
+    # pipeline non deve sapere che sotto c'e' SQLite.
     if args.use_mcp:
         mcp_config = McpMemorySessionConfig(
             db_path=memory_path,
@@ -118,34 +118,29 @@ def main(argv: list[str] | None = None) -> int:
             memory_scope=args.memory_scope,
             max_requirements=workflow_config.max_memory_requirements,
         )
-        try:
-            with mcp_memory_session(mcp_config) as (mcp_retriever, mcp_store):
-                dependencies = _build_dependencies(
-                    workflow_config,
-                    generation_client,
-                    assessment_client,
-                    prompt_version,
-                    retriever=mcp_retriever,
-                    store=mcp_store,
-                    assessor_tools=args.assessor_tools,
-                )
-                results = _run_workflow(
-                    pull_requests,
-                    dependencies,
-                    workflow_config,
-                    llm_config,
-                    memory_path,
-                    args.memory_scope,
-                    use_mcp=True,
-                )
-            # Il server MCP e' terminato: possiamo interrogare il repository
-            # locale per il conteggio finale (in produzione il server e il client
-            # scriverebbero sullo stesso file, quindi il numero e' coerente).
-            stored_requirements = memory.count()
-        finally:
-            memory.close()
+        with mcp_memory_session(mcp_config) as (mcp_retriever, mcp_store):
+            dependencies = _build_dependencies(
+                workflow_config,
+                generation_client,
+                assessment_client,
+                prompt_version,
+                retriever=mcp_retriever,
+                store=mcp_store,
+                assessor_tools=args.assessor_tools,
+            )
+            results = _run_workflow(
+                pull_requests,
+                dependencies,
+                workflow_config,
+                llm_config,
+                memory_path,
+                args.memory_scope,
+                use_mcp=True,
+            )
+        stored_requirements = _count_requirements(memory_path)
     else:
         # Path storico: chiamate dirette al retriever e al repository, senza MCP.
+        memory = SqliteRequirementRepository(memory_path, run_stamp)
         dependencies = _build_dependencies(
             workflow_config,
             generation_client,
@@ -566,6 +561,18 @@ def _build_retriever(
         run_id=run_stamp if scope == MEMORY_SCOPE_RUN else None,
         max_requirements=workflow_config.max_memory_requirements,
     )
+
+
+def _count_requirements(memory_path: Path) -> int:
+    """Conta le righe del database a esecuzione conclusa.
+
+    Il conteggio e' diagnostica del runner, non memoria del workflow: si apre
+    una connessione breve al solo scopo di riportare il numero nel report,
+    dopo che il server MCP e' terminato e ha rilasciato il file.
+    """
+
+    with SqliteRequirementRepository(memory_path, "readonly") as repository:
+        return repository.count()
 
 
 def _default_memory_path() -> Path:

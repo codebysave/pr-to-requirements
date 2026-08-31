@@ -251,8 +251,22 @@ def test_memory_disabled_never_calls_retriever() -> None:
     assert final["retrieved_requirements"] == ()
 
 
-def test_memory_enabled_retrieves_after_every_generation() -> None:
-    historical = RetrievedRequirement("FR-0001", "The system shall export reports.", 0.91)
+def test_memory_is_retrieved_once_and_reused_across_revisions() -> None:
+    """Il recupero esaustivo non dipende dal candidato: i filtri sono progetto,
+    data e `run_id`, costanti per tutta l'elaborazione di una Pull Request. E
+    nulla può entrare in memoria nel frattempo, perché la scrittura avviene nel
+    nodo `accept`, che chiude la Pull Request.
+
+    Ripetere la ricerca a ogni revisione restituirebbe quindi la stessa lista.
+    Si recupera una volta e si riusa quella: il valutatore continua a riceverla
+    identica a ogni tentativo, che è la cosa che conta.
+
+    Con un retriever semantico il testo del candidato entrerebbe nel criterio e
+    la ricerca andrebbe ripetuta (Decisione 3.5, §8): allora questo test andrà
+    riscritto insieme al comportamento.
+    """
+
+    historical = RetrievedRequirement("FR-0001", "The system shall export reports.", 4242)
     retriever = RecordingRetriever([historical])
     assessor = ScriptedAssessor([REVISE, ACCEPT])
 
@@ -263,10 +277,10 @@ def test_memory_enabled_retrieves_after_every_generation() -> None:
     )
 
     assert final["final_status"] is FinalStatus.ACCEPTED
-    # Un retrieval per ciascuna generazione (Decisione 3.5, §8).
-    assert len(retriever.calls) == 2
-    assert "(v1)" in retriever.calls[0] and "(v2)" in retriever.calls[1]
-    # I requisiti recuperati arrivano all'assessor.
+    # Due generazioni, una sola interrogazione della memoria.
+    assert len(retriever.calls) == 1
+    assert "(v1)" in retriever.calls[0]
+    # Ma entrambe le valutazioni ricevono i requisiti storici.
     assert assessor.calls[0][1] == (historical,)
     assert assessor.calls[1][1] == (historical,)
 

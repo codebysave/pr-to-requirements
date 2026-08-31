@@ -148,13 +148,29 @@ class _WorkflowNodes:
         }
 
     def retrieve_memory(self, state: RequirementState) -> dict:
-        # Il retrieval è deterministico e ripetuto dopo ogni generazione
-        # (Decisione 3.5, §8): una revisione può cambiare i requisiti affini.
-        #
         # A memoria disattivata la fase non viene nemmeno annunciata: una riga
         # per ogni Pull Request su una funzionalità spenta è solo rumore.
         if not self._config.memory_enabled:
             return {"retrieved_requirements": ()}
+
+        # Il recupero esaustivo non dipende dal candidato: i filtri sono
+        # progetto, data e `run_id`, tutti costanti durante l'elaborazione di
+        # una Pull Request. E nulla può entrare in memoria nel frattempo,
+        # perché la scrittura avviene nel nodo `accept`, che chiude la Pull
+        # Request. Ripetere la ricerca a ogni revisione restituirebbe quindi
+        # la stessa lista: si recupera una volta e si riusa quella.
+        #
+        # Restituendo un aggiornamento vuoto la chiave resta com'era: lo stato
+        # è già la memoria di breve termine, non serve una struttura a parte.
+        # Riparte da zero a ogni Pull Request, perché il Runner costruisce uno
+        # stato nuovo per ciascuna.
+        #
+        # Con un retriever semantico il testo del candidato entrerebbe nel
+        # criterio e la ricerca andrebbe ripetuta a ogni revisione (Decisione
+        # 3.5, §8): questa scorciatoia andrà rimossa insieme a quel cambio.
+        if state["retrieved_requirements"]:
+            return {}
+
         candidate = state["candidate_requirement"]
         assert candidate is not None
 

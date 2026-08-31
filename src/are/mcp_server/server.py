@@ -11,12 +11,14 @@ dipendenze come parametri e i tool le catturano via closure. Questa
 struttura permette di testare il server con repository e retriever in
 memoria, senza toccare il DB reale.
 
-**Nota sulla Strada B (contratto generico).** Il tool ``search_requirements``
-accetta ``candidate_text`` nell'input anche se l'``ExhaustiveRequirementRetriever``
-attuale non lo usa. La motivazione è documentata in
-``spiegazione_semplice/Spiegazione_MCP.md`` §3: il contratto MCP viene
-mantenuto generico, così un futuro retriever semantico che usa il testo
-del candidato non richiederà di aggiornare la firma del tool né i client.
+**Nota sul contratto generico.** Il tool ``search_requirements`` accetta
+``candidate_text`` anche se l'``ExhaustiveRequirementRetriever`` attuale non lo
+usa. La descrizione di un tool MCP è leggibile da una macchina, e un contratto
+che dichiara di accettare il testo del candidato permette a un futuro retriever
+semantico di subentrare senza rinegoziare l'interfaccia né aggiornare i client.
+Le colonne per gli embedding sono già nello schema del database (Decisione 3.3):
+il contratto è coerente con una porta già lasciata aperta. Il punto è discusso
+nel punto 5 di ``docs/meetings/open-questions-for-tutor-updated.md``.
 """
 
 from __future__ import annotations
