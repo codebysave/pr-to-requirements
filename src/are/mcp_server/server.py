@@ -24,9 +24,17 @@ nel punto 5 di ``docs/meetings/open-questions-for-tutor-updated.md``.
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import TypedDict
 
 from mcp.server.mcpserver import MCPServer
+
+# ``typing_extensions`` e non ``typing``: su Python < 3.12 Pydantic rifiuta un
+# ``typing.TypedDict`` e non riesce a costruirne lo schema. L'SDK non propaga
+# l'errore -- si limita a non generare lo schema di output -- quindi il tool
+# resterebbe senza contratto e la risposta arriverebbe come semplice testo,
+# esattamente il guasto corretto in questo stesso ramo. Il progetto dichiara
+# ``requires-python = ">=3.11"`` e la CI gira su 3.11, dove la differenza si
+# manifesta.
+from typing_extensions import TypedDict
 
 from are.agents.state import RelationClaim, RelationKind
 from are.db import ExhaustiveRequirementRetriever, SqliteRequirementRepository
