@@ -69,10 +69,19 @@ class AssessmentFeedback:
 
 @dataclass(frozen=True, slots=True)
 class AssessmentResult:
-    """Decisione dell'assessment con il relativo feedback strutturato."""
+    """Decisione dell'assessment con il relativo feedback strutturato.
+
+    ``retrieved`` e ``tool_rounds`` restano vuoti nel recupero deterministico,
+    dove è il grafo a cercare e a conservare l'esito nello stato. Sono
+    valorizzati soltanto quando è il valutatore stesso a invocare il tool sulla
+    memoria: in quel caso il grafo non sa cosa il modello abbia chiesto, e
+    senza questi due campi non resterebbe traccia verificabile del recupero.
+    """
 
     decision: AssessmentDecision
     feedback: AssessmentFeedback = field(default_factory=AssessmentFeedback)
+    retrieved: tuple[RetrievedRequirement, ...] = ()
+    tool_rounds: int = 0
 
 
 @dataclass(frozen=True, slots=True)
