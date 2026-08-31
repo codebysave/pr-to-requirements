@@ -63,9 +63,49 @@ CREATE TABLE IF NOT EXISTS requirement_relations (
     relation_type         TEXT    NOT NULL CHECK (relation_type IN (
                               'DUPLICATE', 'OVERLAPS', 'REFINES', 'SUPERSEDES', 'CONFLICTS')),
     score                 REAL,
+    reason                TEXT,
     created_at            TEXT    NOT NULL,
     PRIMARY KEY (source_requirement_id, target_requirement_id, relation_type)
 );
+
+-- Vista di lettura: un requisito per riga, con le sue relazioni riassunte in
+-- una colonna. Non duplica nulla, viene calcolata a ogni interrogazione e non
+-- puo' quindi disallinearsi dalle tabelle.
+--
+-- Esiste perche' sfogliando `requirements` non c'e' alcun segnale che una riga
+-- sia in relazione con altre: bisogna sapere di dover guardare altrove. La
+-- relazione resta pero' un fatto fra DUE requisiti, quindi non puo' diventare
+-- una colonna della tabella senza perdere con chi, quante, e perche'.
+--
+-- La colonna `relations` e' vuota per i requisiti senza relazioni, che sono la
+-- maggioranza.
+CREATE VIEW requirements_overview AS
+SELECT
+    r.id,
+    r.source_repository,
+    r.source_pr_number,
+    r.statement,
+    COALESCE(
+        (
+            SELECT group_concat(riga, '  |  ')
+              FROM (
+                    SELECT rel.relation_type || ' con PR #' || bersaglio.source_pr_number
+                           || CASE WHEN rel.reason IS NULL OR rel.reason = ''
+                                   THEN '' ELSE ' -- ' || rel.reason END AS riga
+                      FROM requirement_relations rel
+                      JOIN requirements bersaglio
+                        ON bersaglio.id = rel.target_requirement_id
+                     WHERE rel.source_requirement_id = r.id
+                     ORDER BY bersaglio.source_pr_number
+                   )
+        ),
+        ''
+    ) AS relations,
+    r.source_pr_timestamp,
+    r.created_at,
+    r.run_id
+  FROM requirements r
+ ORDER BY r.id;
 """
 
 _REQUIREMENT_COLUMNS = (
@@ -120,8 +160,38 @@ class SqliteRequirementRepository:
         # I vincoli di chiave esterna in SQLite sono disattivati per
         # impostazione predefinita e vanno abilitati a ogni connessione.
         self._connection.execute("PRAGMA foreign_keys = ON")
+        self._migrate()
         self._connection.executescript(_SCHEMA)
         self._connection.commit()
+
+    def _migrate(self) -> None:
+        """Allinea un database creato da una versione precedente dello schema.
+
+        ``CREATE TABLE IF NOT EXISTS`` non modifica una tabella che esiste già:
+        su un database aperto da una versione precedente la colonna
+        ``reason`` mancherebbe, e la scrittura di una relazione fallirebbe.
+
+        La vista invece viene ricreata sempre, prima di essere ridefinita dallo
+        schema: non contiene dati, quindi ricostruirla è gratuito, e così la
+        sua definizione resta quella corrente anche su un database vecchio.
+        """
+
+        tabelle = {
+            riga["name"]
+            for riga in self._connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            )
+        }
+        if "requirement_relations" in tabelle:
+            colonne = {
+                riga["name"]
+                for riga in self._connection.execute("PRAGMA table_info(requirement_relations)")
+            }
+            if "reason" not in colonne:
+                logger.info("  [MEMORIA] aggiungo la colonna 'reason' alle relazioni")
+                self._connection.execute("ALTER TABLE requirement_relations ADD COLUMN reason TEXT")
+
+        self._connection.execute("DROP VIEW IF EXISTS requirements_overview")
 
     # -- ciclo di vita ---------------------------------------------------
 
@@ -202,15 +272,17 @@ class SqliteRequirementRepository:
                 self._connection.execute(
                     "INSERT INTO requirement_relations ("
                     "  source_requirement_id, target_requirement_id,"
-                    "  relation_type, score, created_at"
-                    ") VALUES (?, ?, ?, ?, ?)"
+                    "  relation_type, score, reason, created_at"
+                    ") VALUES (?, ?, ?, ?, ?, ?)"
                     " ON CONFLICT (source_requirement_id, target_requirement_id, relation_type)"
-                    " DO UPDATE SET created_at = excluded.created_at",
+                    " DO UPDATE SET reason = excluded.reason,"
+                    "               created_at = excluded.created_at",
                     (
                         nuovo_id,
                         int(relazione.target_requirement_id),
                         str(relazione.kind),
                         None,
+                        relazione.reason or None,
                         adesso,
                     ),
                 )
