@@ -443,6 +443,53 @@ Il comportamento completo degli agenti, la sequenza delle invocazioni e il loop 
 
 ---
 
+## 12-bis. Nota di implementazione (agosto 2026)
+
+L'interfaccia è stata realizzata. Questa nota registra i punti in cui
+l'implementazione si discosta da quanto descritto sopra, o lo precisa.
+
+**Due tool su quattro.** Il server espone `search_requirements` e
+`store_accepted_requirement`. `get_requirement` e `get_requirement_relations`
+restano descritti al §5 come parte dell'interfaccia prevista, ma non sono
+implementati: nessun componente del workflow attuale li invoca, e un tool
+senza chiamante è codice non esercitato con una firma pubblica. Vanno
+realizzati quando esisterà un consumatore che naviga la memoria — per esempio
+uno strumento di ispezione umana.
+
+**Il retrieval non è semantico.** Il §5.1 prevede `candidate_text` e `top_k`
+come parametri di una ricerca per affinità. Il retriever adottato è invece
+esaustivo entro i filtri di progetto e di data (Decisione 3.3, e punto 5 delle
+domande aperte per la tutor). Il parametro `candidate_text` resta nel contratto
+del tool ma non viene usato: la descrizione di un tool MCP è leggibile da una
+macchina, e un contratto che dichiara di accettarlo permette a un futuro
+retriever semantico di subentrare senza rinegoziare l'interfaccia. Il parametro
+`limit` è una salvaguardia contro un archivio cresciuto oltre le previsioni,
+non un `top_k`.
+
+**La scrittura non restituisce l'identificativo.** `store_accepted_requirement`
+risponde con il solo `created_at`. Il workflow non usa mai l'id dopo la
+scrittura, e restituirlo avrebbe richiesto di modificare il repository per un
+consumatore che non esiste.
+
+**I tool dichiarano il proprio schema di output.** Non è un dettaglio formale:
+senza un tipo di ritorno dichiarato, l'SDK non genera lo schema e consegna la
+risposta come testo anziché come dato strutturato. Un tool che dichiara solo
+metà del contratto non è auto-descrittivo, che è la ragione per cui si adotta
+un protocollo invece di una chiamata di funzione.
+
+**Chi invoca i tool.** Nella configurazione predefinita sono due nodi del
+grafo — `retrieve_memory` e `accept` — coerentemente con il §8 della Decisione
+3.5, che sceglie deliberatamente il recupero deterministico governato dal
+workflow anziché lasciare al modello la decisione se consultare la memoria.
+Esiste una seconda configurazione, attivabile con `--assessor-tools`, in cui è
+l'Assessment Agent a invocare `search_requirements`. I filtri di progetto e di
+data non passano comunque dal modello: lo schema del tool non li espone e il
+codice li impone a partire dalla Pull Request in esame. Quale delle due debba
+essere la configurazione di riferimento è il punto 6 delle domande aperte per
+la tutor.
+
+---
+
 ## 13. Punti da consolidare
 
 Durante l'implementazione devono essere consolidati:
