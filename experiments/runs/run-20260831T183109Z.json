@@ -1,0 +1,598 @@
+{
+  "run": {
+    "generated_at": "2026-08-31T18:34:33.017115+00:00",
+    "input_file": "experiments/samples/sample-scrapy_scrapy.json",
+    "pull_requests": 9,
+    "prompt_version": "v1",
+    "workflow": {
+      "assessment_enabled": true,
+      "memory_enabled": true,
+      "max_generation_attempts": 3,
+      "memory_access": "mcp",
+      "retrieval_driver": "graph_node"
+    },
+    "llm": {
+      "generation": {
+        "model": "claude-sonnet-5",
+        "resolved_model": "claude-sonnet-5",
+        "max_tokens": 1024,
+        "effort": null
+      },
+      "assessment": {
+        "model": "claude-sonnet-5",
+        "resolved_model": "claude-sonnet-5",
+        "max_tokens": 8192,
+        "effort": null
+      }
+    },
+    "usage": {
+      "per_agent": {
+        "generation": {
+          "model": "claude-sonnet-5",
+          "calls": 11,
+          "input_tokens": 46696,
+          "output_tokens": 904,
+          "estimated_cost_usd": 0.153648
+        },
+        "assessment": {
+          "model": "claude-sonnet-5",
+          "calls": 11,
+          "input_tokens": 76683,
+          "output_tokens": 15632,
+          "estimated_cost_usd": 0.464529
+        }
+      },
+      "total_calls": 22,
+      "total_input_tokens": 123379,
+      "total_output_tokens": 16536,
+      "total_estimated_cost_usd": 0.618177,
+      "pricing_reference_date": "2026-08-26"
+    },
+    "memory": {
+      "database": "experiments\\memory\\pr-to-requirements.db",
+      "run_id": "20260831T183109Z",
+      "stored_requirements": 21
+    }
+  },
+  "summary": {
+    "ACCEPTED": 6,
+    "NOT_EXTRACTABLE": 2,
+    "REJECTED": 1
+  },
+  "results": [
+    {
+      "pr_id": "scrapy-scrapy-pr-6869",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6869,
+      "timestamp": "2025-06-06T13:17:48+00:00",
+      "title": "Fix: Dangerous Code Execution Function Could Allow External Attacks in scrapy/shell.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 960 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall execute shell code in a way that prevents externally supplied input from being run as arbitrary code.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall execute shell code in a way that prevents externally supplied input from being run as arbitrary code.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "ACCEPT",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6870",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6870,
+      "timestamp": "2025-06-06T13:19:55+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 978 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed when importing modules.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed when importing modules.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "16",
+              "source_pr_number": 6869,
+              "statement": "The system shall execute shell code in a way that prevents externally supplied input from being run as arbitrary code."
+            }
+          ],
+          "assessment": {
+            "decision": "ACCEPT",
+            "tool_rounds": 0,
+            "relations": [
+              {
+                "type": "OVERLAPS",
+                "target_requirement_id": "16",
+                "target_pr_number": 6869,
+                "reason": "Both requirements address preventing untrusted input from causing arbitrary code execution, but in different contexts (module import vs shell execution)."
+              }
+            ],
+            "issues": [
+              "The requirement states a security-relevant behaviour observable from outside (preventing arbitrary code execution from untrusted input during module import), matching the evidence's described vulnerability without naming implementation mechanisms like importlib or whitelisting.",
+              "This is similar in theme to the requirement from Pull Request #6869 concerning shell code execution, but addresses a different context (module import vs shell execution), so it is recorded as an overlap rather than a duplicate."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6875",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6875,
+      "timestamp": "2025-06-07T03:44:46+00:00",
+      "title": "Fix typo in cmdline.py comment: 'a argument' -> 'an argument'",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 579 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence describes only a comment-only typo fix with no code logic or functionality affected, so there is no observable behaviour to state as a requirement.",
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The evidence explicitly states this is a comment-only change with no code logic or functionality affected, so there is no observable behaviour for a black-box test to check.",
+              "The writer's reasoning is correct and matches the evidence."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6879",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6879,
+      "timestamp": "2025-06-09T02:36:45+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 978 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall prevent untrusted input from causing arbitrary code modules to be loaded and executed during spider generation.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall prevent untrusted input from causing arbitrary code modules to be loaded and executed during spider generation.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "16",
+              "source_pr_number": 6869,
+              "statement": "The system shall execute shell code in a way that prevents externally supplied input from being run as arbitrary code."
+            },
+            {
+              "requirement_id": "17",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed when importing modules."
+            }
+          ],
+          "assessment": {
+            "decision": "ACCEPT",
+            "tool_rounds": 0,
+            "relations": [
+              {
+                "type": "REFINES",
+                "target_requirement_id": "17",
+                "target_pr_number": 6870,
+                "reason": "The candidate restates the same prevent-untrusted-code-loading behavior but specifies it applies during spider generation, matching the genspider.py context in this PR's evidence."
+              }
+            ],
+            "issues": [
+              "The requirement matches the security-fix pattern accepted in prior PRs: it states an observable behavior (preventing untrusted input from causing code execution) rather than a mechanism.",
+              "This is similar to the requirement from Pull Request #6870, but narrows the context to spider generation, consistent with the genspider.py file named in the evidence."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6880",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6880,
+      "timestamp": "2025-06-09T02:45:09+00:00",
+      "title": "Fix: Unsafe Data Processing Method Allows Malicious Code Execution in scrapy/exporters.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 989 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall deserialize previously serialized data without executing any code contained in that data.",
+      "generation_attempts": 2,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall export data without executing code contained in the serialized data being processed.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "16",
+              "source_pr_number": 6869,
+              "statement": "The system shall execute shell code in a way that prevents externally supplied input from being run as arbitrary code."
+            },
+            {
+              "requirement_id": "17",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed when importing modules."
+            },
+            {
+              "requirement_id": "18",
+              "source_pr_number": 6879,
+              "statement": "The system shall prevent untrusted input from causing arbitrary code modules to be loaded and executed during spider generation."
+            }
+          ],
+          "assessment": {
+            "decision": "REVISE",
+            "tool_rounds": 0,
+            "relations": [
+              {
+                "type": "OVERLAPS",
+                "target_requirement_id": "17",
+                "target_pr_number": 6870,
+                "reason": "Both concern preventing arbitrary code execution arising from processing untrusted serialized/input data, though in different components."
+              },
+              {
+                "type": "OVERLAPS",
+                "target_requirement_id": "16",
+                "target_pr_number": 6869,
+                "reason": "Both address preventing arbitrary code execution from externally supplied data, though in different mechanisms (shell execution vs. serialization)."
+              }
+            ],
+            "issues": [
+              "The evidence's stated risk is specifically about unpickling (deserializing) data, not about the export/serialization operation itself; the candidate's phrase 'export data without executing code contained in the serialized data being processed' conflates the two and produces an ambiguous claim about which operation (writing out vs. later reading back) is being guarded against code execution.",
+              "Because of this ambiguity, the sentence admits more than one reasonable interpretation, which the criteria require to be avoided."
+            ],
+            "unsupported_claims": [
+              "that the export operation itself processes serialized data such that code execution could occur"
+            ],
+            "missing_information": [],
+            "revision_instructions": [
+              "Restate the requirement to reflect what the evidence actually describes: a risk of arbitrary code execution arising from unpickling (deserializing) data, rather than asserting that the export action itself processes and could execute code from serialized input.",
+              "Remove or clarify the 'export' framing so the requirement expresses a single, unambiguous behaviour tied to what the evidence states about deserialization risk."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "The system shall deserialize previously serialized data without executing any code contained in that data.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "16",
+              "source_pr_number": 6869,
+              "statement": "The system shall execute shell code in a way that prevents externally supplied input from being run as arbitrary code."
+            },
+            {
+              "requirement_id": "17",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed when importing modules."
+            },
+            {
+              "requirement_id": "18",
+              "source_pr_number": 6879,
+              "statement": "The system shall prevent untrusted input from causing arbitrary code modules to be loaded and executed during spider generation."
+            }
+          ],
+          "assessment": {
+            "decision": "ACCEPT",
+            "tool_rounds": 0,
+            "relations": [
+              {
+                "type": "OVERLAPS",
+                "target_requirement_id": "16",
+                "target_pr_number": 6869,
+                "reason": "Both require prevention of arbitrary code execution from externally supplied input, though this one is scoped to deserialization rather than shell execution."
+              },
+              {
+                "type": "OVERLAPS",
+                "target_requirement_id": "17",
+                "target_pr_number": 6870,
+                "reason": "Both address preventing arbitrary code execution from untrusted input, but this one concerns deserialization rather than module importing."
+              },
+              {
+                "type": "OVERLAPS",
+                "target_requirement_id": "18",
+                "target_pr_number": 6879,
+                "reason": "Both concern preventing arbitrary code execution from untrusted input, but this one applies to deserialization rather than spider generation."
+              }
+            ],
+            "issues": [
+              "The requirement now correctly ties the code-execution risk to deserialization, matching the evidence's description of the pickle vulnerability, and avoids naming the pickle mechanism, satisfying the removal test."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6881",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6881,
+      "timestamp": "2025-06-09T02:51:14+00:00",
+      "title": "Fix: Unsafe XML Processing Library Could Allow Malicious Attacks in scrapy/http/request/rpc.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 852 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall process XML-RPC request data without exposing the application to security vulnerabilities associated with unsafe XML parsing.",
+      "generation_attempts": 2,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall process XML-RPC request data without exposing the application to XML-based security vulnerabilities such as entity expansion or external entity attacks.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "16",
+              "source_pr_number": 6869,
+              "statement": "The system shall execute shell code in a way that prevents externally supplied input from being run as arbitrary code."
+            },
+            {
+              "requirement_id": "17",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed when importing modules."
+            },
+            {
+              "requirement_id": "18",
+              "source_pr_number": 6879,
+              "statement": "The system shall prevent untrusted input from causing arbitrary code modules to be loaded and executed during spider generation."
+            },
+            {
+              "requirement_id": "19",
+              "source_pr_number": 6880,
+              "statement": "The system shall deserialize previously serialized data without executing any code contained in that data."
+            }
+          ],
+          "assessment": {
+            "decision": "REVISE",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The evidence states only that xmlrpc 'is not inherently safe from vulnerabilities' and that defusedxml.xmlrpc was substituted; it does not name the specific attack types.",
+              "The candidate specifies 'entity expansion or external entity attacks' as examples, which come from general knowledge of XML vulnerabilities and defusedxml's purpose rather than from the evidence itself."
+            ],
+            "unsupported_claims": [
+              "entity expansion",
+              "external entity attacks"
+            ],
+            "missing_information": [],
+            "revision_instructions": [
+              "Remove the specific attack types 'entity expansion' and 'external entity attacks': the evidence only states that xmlrpc is unsafe in general and that a safer replacement was applied, without naming particular attack mechanisms.",
+              "State the general behaviour that XML-RPC request processing must not expose the application to the security vulnerabilities associated with unsafe XML parsing, at the level of generality the evidence supports."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "The system shall process XML-RPC request data without exposing the application to security vulnerabilities associated with unsafe XML parsing.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "16",
+              "source_pr_number": 6869,
+              "statement": "The system shall execute shell code in a way that prevents externally supplied input from being run as arbitrary code."
+            },
+            {
+              "requirement_id": "17",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed when importing modules."
+            },
+            {
+              "requirement_id": "18",
+              "source_pr_number": 6879,
+              "statement": "The system shall prevent untrusted input from causing arbitrary code modules to be loaded and executed during spider generation."
+            },
+            {
+              "requirement_id": "19",
+              "source_pr_number": 6880,
+              "statement": "The system shall deserialize previously serialized data without executing any code contained in that data."
+            }
+          ],
+          "assessment": {
+            "decision": "ACCEPT",
+            "tool_rounds": 0,
+            "relations": [
+              {
+                "type": "OVERLAPS",
+                "target_requirement_id": "17",
+                "target_pr_number": 6870,
+                "reason": "Both requirements guarantee that processing external/untrusted input does not expose the application to security vulnerabilities, though one concerns module imports and this one concerns XML-RPC parsing."
+              }
+            ],
+            "issues": [
+              "The requirement now states the behaviour at the general level the evidence supports, without inventing specific attack types.",
+              "This is a security fix stated as an observable guarantee (no exposure to XML-based vulnerabilities), which is checkable via black-box testing."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6899",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6899,
+      "timestamp": "2025-06-21T01:51:04+00:00",
+      "title": "Fix typing of dynamic `request` attribute on `Failure` with a cast subclass",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 937 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence describes a static typing fix that explicitly preserves runtime behaviour, so no externally observable behaviour change can be identified from the text.",
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The evidence explicitly states runtime behaviour is unchanged and the change addresses only static type-checker errors via a cast subclass used solely for typing purposes.",
+              "This is a pure static typing fix with no externally observable effect, matching the definition's explicit example of a change that fails the black-box test."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6936",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6936,
+      "timestamp": "2025-07-03T00:58:14+00:00",
+      "title": "feat(settings): Change default SCHEDULER_PRIORITY_QUEUE (closes #6924)",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 600 caratteri: la valutazione prosegue",
+      "accepted_requirement": "Where the scheduler priority queue setting has not been overridden, the system shall schedule requests using a downloader-aware priority queue.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "Where the scheduler priority queue setting has not been overridden, the system shall schedule requests using a downloader-aware priority queue.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "16",
+              "source_pr_number": 6869,
+              "statement": "The system shall execute shell code in a way that prevents externally supplied input from being run as arbitrary code."
+            },
+            {
+              "requirement_id": "17",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed when importing modules."
+            },
+            {
+              "requirement_id": "18",
+              "source_pr_number": 6879,
+              "statement": "The system shall prevent untrusted input from causing arbitrary code modules to be loaded and executed during spider generation."
+            },
+            {
+              "requirement_id": "19",
+              "source_pr_number": 6880,
+              "statement": "The system shall deserialize previously serialized data without executing any code contained in that data."
+            },
+            {
+              "requirement_id": "20",
+              "source_pr_number": 6881,
+              "statement": "The system shall process XML-RPC request data without exposing the application to security vulnerabilities associated with unsafe XML parsing."
+            }
+          ],
+          "assessment": {
+            "decision": "ACCEPT",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6947",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6947,
+      "timestamp": "2025-07-10T15:21:39+00:00",
+      "title": "Ban more imports that import twisted.internet.reactor.",
+      "final_status": "REJECTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 157 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "If a module other than an approved entry point imports twisted.internet.reactor, then the system shall report this as a banned import.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "16",
+              "source_pr_number": 6869,
+              "statement": "The system shall execute shell code in a way that prevents externally supplied input from being run as arbitrary code."
+            },
+            {
+              "requirement_id": "17",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed when importing modules."
+            },
+            {
+              "requirement_id": "18",
+              "source_pr_number": 6879,
+              "statement": "The system shall prevent untrusted input from causing arbitrary code modules to be loaded and executed during spider generation."
+            },
+            {
+              "requirement_id": "19",
+              "source_pr_number": 6880,
+              "statement": "The system shall deserialize previously serialized data without executing any code contained in that data."
+            },
+            {
+              "requirement_id": "20",
+              "source_pr_number": 6881,
+              "statement": "The system shall process XML-RPC request data without exposing the application to security vulnerabilities associated with unsafe XML parsing."
+            },
+            {
+              "requirement_id": "21",
+              "source_pr_number": 6936,
+              "statement": "Where the scheduler priority queue setting has not been overridden, the system shall schedule requests using a downloader-aware priority queue."
+            }
+          ],
+          "assessment": {
+            "decision": "REJECT",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The evidence only says that more imports of twisted.internet.reactor are now banned, echoing a prior partial rollback in PR #6941; it gives no indication of what banning consists of as an observable behaviour - whether it is enforced by a runtime guard, a raised error, or merely a test in the project's own test suite that checks source files.",
+              "The candidate invents both an 'approved entry point' concept and a 'report this as a banned import' reporting mechanism, neither of which appears in the evidence.",
+              "As stated, this looks like an internal code-quality/test-suite constraint over which modules may import a particular library at module scope, not a behaviour observable through the system's public interface by an external caller.",
+              "No rewrite can ground a requirement here because the evidence does not state any externally observable effect of the ban, only that the set of banned imports was extended."
+            ],
+            "unsupported_claims": [
+              "approved entry point",
+              "report this as a banned import"
+            ],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    }
+  ]
+}
