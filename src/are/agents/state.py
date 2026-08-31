@@ -53,6 +53,48 @@ class ExtractabilityResult:
     reason: str = ""
 
 
+class RelationKind(StrEnum):
+    """Come un requisito si pone rispetto a uno già in memoria (Decisione 3.3, §6.2).
+
+    Il vocabolario è dichiarato qui e non importato dal livello di
+    persistenza: il workflow deve poter esprimere una relazione senza sapere
+    dove finirà scritta, come per ogni altra cosa che attraversa le porte. I
+    valori coincidono con quelli accettati dal database, che li vincola.
+
+    ``CONFLICTS`` non è un duplicato più grave: è l'unico caso in cui i due
+    requisiti **non possono essere entrambi veri**. O il progetto ha cambiato
+    comportamento — e allora si tratta di ``SUPERSEDES`` — oppure uno dei due
+    è sbagliato, e serve una persona a stabilire quale.
+    """
+
+    DUPLICATE = "DUPLICATE"
+    OVERLAPS = "OVERLAPS"
+    REFINES = "REFINES"
+    SUPERSEDES = "SUPERSEDES"
+    CONFLICTS = "CONFLICTS"
+
+
+@dataclass(frozen=True, slots=True)
+class RelationClaim:
+    """Una relazione che il valutatore dichiara fra il candidato e uno storico.
+
+    Si chiama *claim* perché è un'osservazione del modello, non un fatto
+    accertato: viene registrata perché una persona possa verificarla e
+    decidere. ``target_requirement_id`` arriva dai requisiti recuperati, quindi
+    identifica una riga che esiste davvero; ``reason`` è la motivazione in
+    parole, così chi rilegge non deve ricostruirla.
+
+    La relazione **non cambia l'esito** della valutazione. Un candidato può
+    essere corretto rispetto alla propria Pull Request e duplicarne uno
+    precedente: è un fatto sul progetto, non un difetto della frase.
+    """
+
+    kind: RelationKind
+    target_requirement_id: str
+    target_pr_number: int
+    reason: str
+
+
 @dataclass(frozen=True, slots=True)
 class AssessmentFeedback:
     """Feedback strutturato prodotto dall'Assessment Agent (Decisione 3.5, §11).
@@ -82,6 +124,7 @@ class AssessmentResult:
     feedback: AssessmentFeedback = field(default_factory=AssessmentFeedback)
     retrieved: tuple[RetrievedRequirement, ...] = ()
     tool_rounds: int = 0
+    relations: tuple[RelationClaim, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

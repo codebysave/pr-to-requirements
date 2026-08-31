@@ -34,6 +34,8 @@ from .state import (
     AssessmentResult,
     GenerationOutcome,
     IterationRecord,
+    RelationClaim,
+    RelationKind,
     RetrievedRequirement,
 )
 
@@ -160,6 +162,61 @@ def _string_list(data: dict[str, Any], field: str, agent: str, raw: str) -> tupl
     if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
         raise AgentResponseError(agent, f'campo "{field}" deve essere una lista di stringhe', raw)
     return tuple(item.strip() for item in value if item.strip())
+
+
+def _relation_claims(
+    data: dict[str, Any],
+    retrieved: Sequence[RetrievedRequirement],
+    raw: str,
+) -> tuple[RelationClaim, ...]:
+    """Legge le relazioni dichiarate dal valutatore, verificandole.
+
+    Una relazione viene tenuta solo se punta a una Pull Request che il modello
+    ha davvero ricevuto: se non è fra i requisiti recuperati, l'osservazione
+    non è verificabile e va scartata invece di finire nel database. Vale anche
+    per un tipo di relazione fuori dalla tassonomia.
+
+    Le voci malformate non sollevano: una relazione è un'informazione
+    aggiuntiva, e perdere un requisito validato per un campo scritto male
+    sarebbe sproporzionato. L'anomalia viene registrata nel log.
+    """
+
+    grezze = data.get("relations", [])
+    if grezze is None:
+        return ()
+    if not isinstance(grezze, list):
+        raise AgentResponseError(ASSESSMENT_AGENT, 'campo "relations" deve essere una lista', raw)
+
+    per_pr = {item.source_pr_number: item for item in retrieved}
+    dichiarate: list[RelationClaim] = []
+    for voce in grezze:
+        if not isinstance(voce, dict):
+            logger.warning("  [VALUTA]  relazione ignorata: non è un oggetto (%r)", voce)
+            continue
+        tipo = str(voce.get("type", "")).strip().upper()
+        try:
+            kind = RelationKind(tipo)
+        except ValueError:
+            logger.warning("  [VALUTA]  relazione ignorata: tipo %r non riconosciuto", tipo)
+            continue
+        numero = voce.get("source_pr_number")
+        if not isinstance(numero, int) or numero not in per_pr:
+            logger.warning(
+                "  [VALUTA]  relazione %s ignorata: la PR #%r non è fra quelle mostrate",
+                tipo,
+                numero,
+            )
+            continue
+        motivo = voce.get("reason")
+        dichiarate.append(
+            RelationClaim(
+                kind=kind,
+                target_requirement_id=per_pr[numero].requirement_id,
+                target_pr_number=numero,
+                reason=motivo.strip() if isinstance(motivo, str) else "",
+            )
+        )
+    return tuple(dichiarate)
 
 
 def _format_pull_request(pull_request: PullRequestRecord) -> str:
@@ -386,6 +443,9 @@ class LLMRequirementAssessor:
             ),
         )
 
+        visti = recuperati or tuple(retrieved_requirements)
+        relazioni = _relation_claims(data, visti, response.text)
+
         passata = decision is AssessmentDecision.ACCEPT
         rilievi = (
             feedback.issues
@@ -412,11 +472,20 @@ class LLMRequirementAssessor:
                 "  [VALUTA]  attenzione: REVISE senza istruzioni di revisione (PR %s)",
                 pull_request.id,
             )
+        for relazione in relazioni:
+            logger.info(
+                "%s",
+                console.result(f"{relazione.kind} rispetto alla PR #{relazione.target_pr_number}"),
+            )
+            if relazione.reason:
+                logger.info("%s", console.quoted(relazione.reason))
+
         return AssessmentResult(
             decision=decision,
             feedback=feedback,
             retrieved=recuperati,
             tool_rounds=giri,
+            relations=relazioni,
         )
 
     def _converse_with_tools(

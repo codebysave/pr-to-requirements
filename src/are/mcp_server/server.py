@@ -28,6 +28,7 @@ from typing import TypedDict
 
 from mcp.server.mcpserver import MCPServer
 
+from are.agents.state import RelationClaim, RelationKind
 from are.db import ExhaustiveRequirementRetriever, SqliteRequirementRepository
 from are.input import PullRequestRecord
 
@@ -149,6 +150,7 @@ def create_server(
         source_pr_number: int,
         source_pr_timestamp: str,
         evidence: str | None = None,
+        relations: list[dict] | None = None,
     ) -> StoreAcceptedRequirementResult:
         """Scrive un requisito validato nella memoria.
 
@@ -159,6 +161,11 @@ def create_server(
             source_pr_timestamp: data della PR di origine (ISO-8601).
             evidence: title + body della PR, opzionale. Salvato nel DB
                 per rendere la memoria leggibile da sola.
+            relations: relazioni con requisiti gia' in memoria, dichiarate dal
+                valutatore. Ciascuna ha ``type`` (uno fra DUPLICATE, OVERLAPS,
+                REFINES, SUPERSEDES, CONFLICTS), ``target_requirement_id``,
+                ``target_pr_number`` e ``reason``. Vengono scritte nella stessa
+                transazione del requisito.
 
         Returns:
             ``{"created_at": <ISO-8601 UTC>}``.
@@ -181,7 +188,16 @@ def create_server(
             title="",
             body=evidence or "",
         )
-        repository.store_accepted(record, statement)
+        dichiarate = tuple(
+            RelationClaim(
+                kind=RelationKind(str(voce["type"]).upper()),
+                target_requirement_id=str(voce["target_requirement_id"]),
+                target_pr_number=int(voce["target_pr_number"]),
+                reason=str(voce.get("reason", "")),
+            )
+            for voce in (relations or [])
+        )
+        repository.store_accepted(record, statement, dichiarate)
 
         return {"created_at": datetime.now(timezone.utc).isoformat()}
 

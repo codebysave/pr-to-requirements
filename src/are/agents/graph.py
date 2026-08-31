@@ -231,7 +231,16 @@ class _WorkflowNodes:
 
         # La scrittura permanente avviene qui, fuori dagli agenti, soltanto
         # dopo ACCEPT (Decisione 3.5, §17).
-        self._deps.store.store_accepted(state["pull_request"], candidate)
+        #
+        # Insieme al requisito si registrano le relazioni che il valutatore ha
+        # dichiarato con quelli storici. Non cambiano l'esito -- il requisito
+        # e' gia' stato accettato -- ma restano nel database perche' una
+        # persona possa rivederle: un duplicato e' ridondanza innocua, una
+        # contraddizione e' un difetto dell'insieme che qualcuno deve
+        # risolvere.
+        assessment = state["assessment"]
+        relazioni = assessment.relations if assessment is not None else ()
+        self._deps.store.store_accepted(state["pull_request"], candidate, relazioni)
 
         update: dict = {
             "final_status": FinalStatus.ACCEPTED,

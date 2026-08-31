@@ -19,6 +19,7 @@ from .state import (
     ExtractabilityResult,
     GenerationOutcome,
     IterationRecord,
+    RelationClaim,
     RetrievedRequirement,
 )
 
@@ -90,7 +91,19 @@ class MemoryRetriever(Protocol):
 class AcceptedRequirementStore(Protocol):
     """Persistenza del requisito validato, invocata dal controller dopo ACCEPT."""
 
-    def store_accepted(self, pull_request: PullRequestRecord, statement: str) -> None: ...
+    def store_accepted(
+        self,
+        pull_request: PullRequestRecord,
+        statement: str,
+        relations: Sequence[RelationClaim] = (),
+    ) -> None:
+        """Persiste il requisito e le relazioni dichiarate dal valutatore.
+
+        Le relazioni vengono scritte insieme al requisito, dalla stessa
+        implementazione: l'identificativo della riga appena inserita non deve
+        uscire dallo store, perche' nessun altro componente ne ha bisogno.
+        """
+        ...
 
 
 class NullMemoryRetriever:
@@ -107,7 +120,12 @@ class NullMemoryRetriever:
 class NullRequirementStore:
     """Store inerte, usato finché la memoria persistente non è disponibile."""
 
-    def store_accepted(self, pull_request: PullRequestRecord, statement: str) -> None:
+    def store_accepted(
+        self,
+        pull_request: PullRequestRecord,
+        statement: str,
+        relations: Sequence[RelationClaim] = (),
+    ) -> None:
         return None
 
 

@@ -112,9 +112,11 @@ class RecordingRetriever:
 class RecordingStore:
     def __init__(self):
         self.stored: list[tuple[str, str]] = []
+        self.relations: list = []
 
-    def store_accepted(self, pull_request, statement):
+    def store_accepted(self, pull_request, statement, relations=()):
         self.stored.append((pull_request.id, statement))
+        self.relations.extend(relations)
 
 
 def run_workflow(

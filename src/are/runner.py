@@ -232,6 +232,19 @@ def _serialize_assessment(assessment: Any) -> dict[str, Any] | None:
         # iniziativa. Vale 0 con il recupero deterministico, dove a cercare e'
         # il grafo: e' il dato che distingue le due configurazioni nei report.
         "tool_rounds": assessment.tool_rounds,
+        # Le relazioni dichiarate con i requisiti storici. Finiscono anche nel
+        # database, ma qui restano legate al tentativo che le ha prodotte:
+        # rileggendo un report si vede cosa il valutatore aveva osservato in
+        # quel momento, senza dover interrogare la memoria.
+        "relations": [
+            {
+                "type": str(relazione.kind),
+                "target_requirement_id": relazione.target_requirement_id,
+                "target_pr_number": relazione.target_pr_number,
+                "reason": relazione.reason,
+            }
+            for relazione in assessment.relations
+        ],
         "issues": list(feedback.issues),
         "unsupported_claims": list(feedback.unsupported_claims),
         "missing_information": list(feedback.missing_information),
