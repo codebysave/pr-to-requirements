@@ -625,6 +625,54 @@ La domanda non è quale soluzione sia tecnicamente migliore in assoluto, ma **qu
 
 ---
 
+## 6. Chi deve invocare i tool MCP: il workflow o gli agenti?
+
+### Questione aperta
+
+L'accesso alla memoria persistente passa ora attraverso un server MCP, come previsto dalla Decisione 3.4. Resta però aperta una scelta che il documento di design non affronta esplicitamente, e che cambia la natura del contributo: **chi è il consumatore dei tool**.
+
+Nell'uso canonico del Model Context Protocol il consumatore è il **modello**: l'applicazione dichiara i tool disponibili e il modello decide, mentre ragiona, se e quando invocarli. Nella nostra implementazione il consumatore è invece il **workflow**: sono due nodi del grafo — `retrieve_memory` e `accept` — a chiamare i tool, mentre gli agenti ricevono i requisiti storici già recuperati, sotto forma di testo dentro il proprio messaggio.
+
+La distinzione è rilevante perché la traccia dello Stage 2 della proposta è intitolata *«AI Agents con integrazione MCP e strumenti di sviluppo»*, formulazione che si presta a essere letta come «gli agenti usano MCP».
+
+### Soluzione adottata: recupero deterministico governato dal workflow
+
+Il grafo recupera i requisiti storici prima di ogni valutazione e li consegna al valutatore insieme al candidato. La scelta non è di comodo: ha una motivazione metodologica.
+
+- **Il recupero resta deterministico.** Se fosse il modello a decidere quando cercare, a volte cercherebbe e a volte no: la condizione sperimentale «con memoria» smetterebbe di essere una condizione e diventerebbe una variabile aleatoria.
+- **Il progetto ha già perso una fonte di determinismo.** I parametri di campionamento (`temperature`, `top_p`, `top_k`) non esistono più nell'API dei modelli attuali, e la variabilità fra repliche va misurata anziché soppressa (si veda la Decisione 3.2). Aggiungere una seconda sorgente di variabilità rende l'esperimento più difficile da interpretare, non più ricco.
+- **L'attribuzione degli errori resta netta.** Con il recupero deterministico, se un duplicato non viene riconosciuto la causa è una sola: il valutatore aveva il requisito storico davanti e non se n'è accorto. Con il recupero guidato dall'agente si aggiungerebbe una seconda ipotesi indistinguibile — che non abbia cercato affatto.
+- **La scrittura resta comunque fuori dagli agenti.** Il tool `store_accepted_requirement` è invocato dal nodo `accept` dopo un `ACCEPT`, e non verrebbe esposto al modello in nessuna delle due varianti: la garanzia che in memoria entrino soltanto requisiti validati non può dipendere da una decisione del modello.
+
+### Cosa la soluzione adottata dimostra, e cosa non dimostra
+
+**Dimostra** che l'architettura a porte regge: l'intero livello di accesso ai dati è stato sostituito con uno basato su un protocollo diverso e su un processo separato, senza modificare una riga del grafo né degli agenti.
+
+**Non dimostra** un agente che usa uno strumento. Oggi, alla domanda «dove l'agente invoca il tool?», la risposta è: in nessun punto.
+
+### Alternativa: esporre `search_requirements` all'Assessment Agent
+
+Tecnicamente realizzabile con l'infrastruttura già presente. Il modello riceverebbe la dichiarazione del tool, interromperebbe la propria risposta per invocarlo, e riprenderebbe il ragionamento con i risultati.
+
+Un vincolo di sicurezza va segnalato, perché è la parte non ovvia: **i filtri non potrebbero essere lasciati al modello**. Il messaggio dell'agente contiene soltanto titolo e corpo della Pull Request, non il nome del repository né la data — quindi il modello non è nemmeno in grado di riempire correttamente quei parametri. Sarebbe il client a imporli prima di inoltrare la chiamata al server. Il modello otterrebbe libertà sul *quando* cercare, mai sul *cosa gli è permesso vedere*: l'isolamento per progetto e la coerenza temporale resterebbero garantiti dal codice.
+
+Il costo non è trascurabile: ogni giro di tool è una chiamata al modello in più, con l'intera conversazione rispedita, e il numero di invocazioni per Pull Request diventa imprevedibile (zero incluso).
+
+### Da discutere con la tutor
+
+- L'integrazione MCP prevista dallo Stage 2 richiede che siano **gli agenti** a invocare i tool, oppure è sufficiente che MCP sia lo **strato standardizzato di accesso alla memoria**, come nell'implementazione attuale?
+- La motivazione metodologica del recupero deterministico — mantenere interpretabile il confronto fra configurazioni — è ritenuta sufficiente a giustificare la scelta, o prevale il valore dimostrativo dell'uso canonico del protocollo?
+- Se la variante con i tool è ritenuta necessaria, ha senso realizzarla come **seconda condizione sperimentale** anziché come sostituzione, confrontando recupero deterministico e recupero guidato dall'agente? Il confronto costituirebbe un risultato in sé — *dare all'agente il controllo del recupero aiuta o peggiora?* — e un caso di verifica esiste già: la coppia di Pull Request con corpo identico #6870 e #6879 del corpus OpenHands, sulla quale il recupero deterministico riconosce il duplicato.
+- Considerato il tempo residuo e il fatto che il *gold standard* non è ancora annotato, questa estensione ha priorità rispetto alla valutazione quantitativa del sistema?
+
+**Soluzione adottata:** tool MCP invocati dal workflow; recupero deterministico prima di ogni valutazione; scrittura eseguita dal nodo `accept` dopo `ACCEPT`.
+
+**Predisposizione:** l'infrastruttura MCP (server, tool, client, sessione stdio) è completa e collaudata. Il passaggio alla variante con i tool non richiederebbe modifiche al server né al protocollo, ma l'estensione del client LLM alla gestione dei blocchi `tool_use` e `tool_result`.
+
+**Decisione definitiva:** _da definire con la tutor._
+
+---
+
 ## Nuovi punti da aggiungere
 
 Le successive questioni progettuali ancora aperte verranno aggiunte a questo documento mantenendo, quando applicabile, la stessa struttura:

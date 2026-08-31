@@ -16,6 +16,10 @@ dependencies = [
     "langgraph>=1.2.11",
     "mcp>=2.1.1",
     "python-dotenv>=1.2.3",
+    # Importato direttamente dal server MCP: su Python < 3.12 Pydantic accetta
+    # soltanto i TypedDict di typing_extensions. Arriverebbe comunque come
+    # dipendenza indiretta, ma un import diretto va dichiarato.
+    "typing-extensions>=4.12",
 ]
 
 [tool.setuptools.packages.find]

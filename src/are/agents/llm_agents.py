@@ -19,8 +19,9 @@ from typing import Any, Sequence
 
 from are import console
 from are.input import PullRequestRecord
-from are.llm import LLMClient, LLMResponse, UsageStats, estimate_cost_usd
+from are.llm import LLMClient, LLMResponse, ToolResult, UsageStats, estimate_cost_usd
 
+from .memory_tool import MemorySearchTool, unique_by_id
 from .prompts import (
     ASSESSMENT_AGENT,
     DEFAULT_PROMPT_VERSION,
@@ -33,6 +34,8 @@ from .state import (
     AssessmentResult,
     GenerationOutcome,
     IterationRecord,
+    RelationClaim,
+    RelationKind,
     RetrievedRequirement,
 )
 
@@ -161,6 +164,61 @@ def _string_list(data: dict[str, Any], field: str, agent: str, raw: str) -> tupl
     return tuple(item.strip() for item in value if item.strip())
 
 
+def _relation_claims(
+    data: dict[str, Any],
+    retrieved: Sequence[RetrievedRequirement],
+    raw: str,
+) -> tuple[RelationClaim, ...]:
+    """Legge le relazioni dichiarate dal valutatore, verificandole.
+
+    Una relazione viene tenuta solo se punta a una Pull Request che il modello
+    ha davvero ricevuto: se non è fra i requisiti recuperati, l'osservazione
+    non è verificabile e va scartata invece di finire nel database. Vale anche
+    per un tipo di relazione fuori dalla tassonomia.
+
+    Le voci malformate non sollevano: una relazione è un'informazione
+    aggiuntiva, e perdere un requisito validato per un campo scritto male
+    sarebbe sproporzionato. L'anomalia viene registrata nel log.
+    """
+
+    grezze = data.get("relations", [])
+    if grezze is None:
+        return ()
+    if not isinstance(grezze, list):
+        raise AgentResponseError(ASSESSMENT_AGENT, 'campo "relations" deve essere una lista', raw)
+
+    per_pr = {item.source_pr_number: item for item in retrieved}
+    dichiarate: list[RelationClaim] = []
+    for voce in grezze:
+        if not isinstance(voce, dict):
+            logger.warning("  [VALUTA]  relazione ignorata: non è un oggetto (%r)", voce)
+            continue
+        tipo = str(voce.get("type", "")).strip().upper()
+        try:
+            kind = RelationKind(tipo)
+        except ValueError:
+            logger.warning("  [VALUTA]  relazione ignorata: tipo %r non riconosciuto", tipo)
+            continue
+        numero = voce.get("source_pr_number")
+        if not isinstance(numero, int) or numero not in per_pr:
+            logger.warning(
+                "  [VALUTA]  relazione %s ignorata: la PR #%r non è fra quelle mostrate",
+                tipo,
+                numero,
+            )
+            continue
+        motivo = voce.get("reason")
+        dichiarate.append(
+            RelationClaim(
+                kind=kind,
+                target_requirement_id=per_pr[numero].requirement_id,
+                target_pr_number=numero,
+                reason=motivo.strip() if isinstance(motivo, str) else "",
+            )
+        )
+    return tuple(dichiarate)
+
+
 def _format_pull_request(pull_request: PullRequestRecord) -> str:
     return f"PULL REQUEST TITLE:\n{pull_request.title}\n\nPULL REQUEST BODY:\n{pull_request.body}"
 
@@ -280,16 +338,43 @@ class LLMRequirementGenerator:
 
 
 class LLMRequirementAssessor:
-    """Requirement Assessment Agent (Decisioni 3.1, §12 e 3.5, §4.2)."""
+    """Requirement Assessment Agent (Decisioni 3.1, §12 e 3.5, §4.2).
 
-    def __init__(self, client: LLMClient, prompt_version: str = DEFAULT_PROMPT_VERSION) -> None:
+    Con ``memory_tool`` valorizzato il valutatore non riceve più i requisiti
+    storici già pronti nel messaggio: gli viene dichiarato un tool e decide
+    lui se e quando invocarlo. È la seconda condizione sperimentale, non un
+    rimpiazzo della prima (si veda il punto 6 delle domande aperte per la
+    tutor).
+
+    ``max_tool_rounds`` limita i giri di invocazione. Serve perché ogni giro è
+    una chiamata a pagamento in più e la conversazione viene rispedita per
+    intero: senza limite, un modello che continuasse a chiedere farebbe
+    crescere il costo senza convergere.
+    """
+
+    def __init__(
+        self,
+        client: LLMClient,
+        prompt_version: str = DEFAULT_PROMPT_VERSION,
+        *,
+        memory_tool: MemorySearchTool | None = None,
+        max_tool_rounds: int = 3,
+    ) -> None:
         self._client = client
         self._prompt_version = prompt_version
         self._system = load_prompt(ASSESSMENT_AGENT, prompt_version)
+        self._memory_tool = memory_tool
+        self._max_tool_rounds = max_tool_rounds
 
     @property
     def prompt_version(self) -> str:
         return self._prompt_version
+
+    @property
+    def uses_tools(self) -> bool:
+        """Il recupero è deciso dal modello anziché dal grafo."""
+
+        return self._memory_tool is not None
 
     def assess(
         self,
@@ -320,9 +405,17 @@ class LLMRequirementAssessor:
         user_message = self._build_message(
             pull_request, candidate, retrieved_requirements, history, generation_refusal
         )
-        response = self._client.complete(system=self._system, user_message=user_message)
-        _log_call(response)
-        _log_exchange(self._system, user_message, response.text)
+        if self._memory_tool is None:
+            response = self._client.complete(system=self._system, user_message=user_message)
+            _log_call(response)
+            _log_exchange(self._system, user_message, response.text)
+            recuperati: tuple[RetrievedRequirement, ...] = ()
+            giri = 0
+        else:
+            response, recuperati, giri = self._converse_with_tools(
+                user_message, pull_request, candidate
+            )
+
         data = parse_json_object(response.text, ASSESSMENT_AGENT)
 
         raw_decision = _require_non_empty_string(
@@ -350,6 +443,9 @@ class LLMRequirementAssessor:
             ),
         )
 
+        visti = recuperati or tuple(retrieved_requirements)
+        relazioni = _relation_claims(data, visti, response.text)
+
         passata = decision is AssessmentDecision.ACCEPT
         rilievi = (
             feedback.issues
@@ -376,7 +472,103 @@ class LLMRequirementAssessor:
                 "  [VALUTA]  attenzione: REVISE senza istruzioni di revisione (PR %s)",
                 pull_request.id,
             )
-        return AssessmentResult(decision=decision, feedback=feedback)
+        for relazione in relazioni:
+            logger.info(
+                "%s",
+                console.result(f"{relazione.kind} rispetto alla PR #{relazione.target_pr_number}"),
+            )
+            if relazione.reason:
+                logger.info("%s", console.quoted(relazione.reason))
+
+        return AssessmentResult(
+            decision=decision,
+            feedback=feedback,
+            retrieved=recuperati,
+            tool_rounds=giri,
+            relations=relazioni,
+        )
+
+    def _converse_with_tools(
+        self,
+        user_message: str,
+        pull_request: PullRequestRecord,
+        candidate: str | None,
+    ) -> tuple[LLMResponse, tuple[RetrievedRequirement, ...], int]:
+        """Conduce la conversazione finché il modello smette di chiedere tool.
+
+        Restituisce anche l'insieme dei requisiti che il modello ha
+        effettivamente ottenuto e il numero di giri compiuti: senza questa
+        traccia il report non permetterebbe di verificare se abbia cercato.
+        """
+
+        assert self._memory_tool is not None
+        strumenti = [self._memory_tool.definition]
+        scambi: list[tuple[LLMResponse, list[ToolResult]]] = []
+        gruppi: list[tuple[RetrievedRequirement, ...]] = []
+
+        for giro in range(self._max_tool_rounds + 1):
+            response = self._client.converse(
+                system=self._system,
+                user_message=user_message,
+                exchanges=scambi,
+                tools=strumenti,
+            )
+            _log_call(response)
+            _log_exchange(self._system, user_message, response.text)
+
+            if not response.wants_tools:
+                return response, unique_by_id(gruppi), len(scambi)
+
+            if giro == self._max_tool_rounds:
+                # Il modello continua a chiedere: si chiude lo scambio
+                # rispondendo che non ci sono altre ricerche disponibili, così
+                # che possa comunque produrre una decisione.
+                logger.warning(
+                    "  [VALUTA]  limite di %d invocazioni raggiunto (PR %s)",
+                    self._max_tool_rounds,
+                    pull_request.id,
+                )
+                scambi.append(
+                    (
+                        response,
+                        [
+                            ToolResult(
+                                call_id=chiamata.id,
+                                content=(
+                                    "no further searches are available; "
+                                    "decide with what you have"
+                                ),
+                                is_error=True,
+                            )
+                            for chiamata in response.tool_calls
+                        ],
+                    )
+                )
+                finale = self._client.converse(
+                    system=self._system, user_message=user_message, exchanges=scambi
+                )
+                _log_call(finale)
+                _log_exchange(self._system, user_message, finale.text)
+                return finale, unique_by_id(gruppi), len(scambi)
+
+            logger.info(
+                "%s",
+                console.note(f"il valutatore interroga la memoria ({len(response.tool_calls)})"),
+            )
+            esiti: list[ToolResult] = []
+            for chiamata in response.tool_calls:
+                esito, ottenuti = self._memory_tool.execute(chiamata, pull_request, candidate)
+                esiti.append(esito)
+                gruppi.append(ottenuti)
+                if ottenuti:
+                    logger.info("%s", console.result(f"{len(ottenuti)} requisiti recuperati"))
+                    for elemento in ottenuti:
+                        logger.info("%s", console.quoted(elemento.statement))
+                else:
+                    logger.info("%s", console.result("nessun requisito precedente", console.OK))
+            scambi.append((response, esiti))
+
+        raise AssertionError("il ciclo dei tool deve terminare con un return")
 
     def _build_message(
         self,
@@ -397,7 +589,10 @@ class LLMRequirementAssessor:
             )
         else:
             sections.append(f"CANDIDATE REQUIREMENT:\n{candidate}")
-        if retrieved_requirements:
+        # Con il tool attivo lo storico non entra nel messaggio: è il modello a
+        # chiederlo. Scriverlo comunque lo darebbe due volte, e renderebbe
+        # inutile la scelta che la configurazione vuole misurare.
+        if retrieved_requirements and self._memory_tool is None:
             lines = [
                 f"- (from Pull Request #{item.source_pr_number}) {item.statement}"
                 for item in retrieved_requirements

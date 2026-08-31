@@ -11,12 +11,14 @@ dipendenze come parametri e i tool le catturano via closure. Questa
 struttura permette di testare il server con repository e retriever in
 memoria, senza toccare il DB reale.
 
-**Nota sulla Strada B (contratto generico).** Il tool ``search_requirements``
-accetta ``candidate_text`` nell'input anche se l'``ExhaustiveRequirementRetriever``
-attuale non lo usa. La motivazione è documentata in
-``spiegazione_semplice/Spiegazione_MCP.md`` §3: il contratto MCP viene
-mantenuto generico, così un futuro retriever semantico che usa il testo
-del candidato non richiederà di aggiornare la firma del tool né i client.
+**Nota sul contratto generico.** Il tool ``search_requirements`` accetta
+``candidate_text`` anche se l'``ExhaustiveRequirementRetriever`` attuale non lo
+usa. La descrizione di un tool MCP è leggibile da una macchina, e un contratto
+che dichiara di accettare il testo del candidato permette a un futuro retriever
+semantico di subentrare senza rinegoziare l'interfaccia né aggiornare i client.
+Le colonne per gli embedding sono già nello schema del database (Decisione 3.3):
+il contratto è coerente con una porta già lasciata aperta. Il punto è discusso
+nel punto 5 di ``docs/meetings/open-questions-for-tutor-updated.md``.
 """
 
 from __future__ import annotations
@@ -25,8 +27,38 @@ from datetime import datetime, timezone
 
 from mcp.server.mcpserver import MCPServer
 
+# ``typing_extensions`` e non ``typing``: su Python < 3.12 Pydantic rifiuta un
+# ``typing.TypedDict`` e non riesce a costruirne lo schema. L'SDK non propaga
+# l'errore -- si limita a non generare lo schema di output -- quindi il tool
+# resterebbe senza contratto e la risposta arriverebbe come semplice testo,
+# esattamente il guasto corretto in questo stesso ramo. Il progetto dichiara
+# ``requires-python = ">=3.11"`` e la CI gira su 3.11, dove la differenza si
+# manifesta.
+from typing_extensions import TypedDict
+
+from are.agents.state import RelationClaim, RelationKind
 from are.db import ExhaustiveRequirementRetriever, SqliteRequirementRepository
 from are.input import PullRequestRecord
+
+
+class RetrievedRequirementPayload(TypedDict):
+    """Un requisito storico, come viaggia sul protocollo."""
+
+    requirement_id: str
+    statement: str
+    source_pr_number: int
+
+
+class SearchRequirementsResult(TypedDict):
+    """Esito di ``search_requirements``. La lista puo' essere vuota."""
+
+    results: list[RetrievedRequirementPayload]
+
+
+class StoreAcceptedRequirementResult(TypedDict):
+    """Esito di ``store_accepted_requirement`` (Opzione A: nessun id esposto)."""
+
+    created_at: str
 
 
 def create_server(
@@ -65,7 +97,7 @@ def create_server(
         repository_id: str | None = None,
         before_timestamp: str | None = None,
         limit: int | None = None,
-    ) -> dict:
+    ) -> SearchRequirementsResult:
         """Interroga la memoria e restituisce i requisiti storici.
 
         Args:
@@ -126,7 +158,8 @@ def create_server(
         source_pr_number: int,
         source_pr_timestamp: str,
         evidence: str | None = None,
-    ) -> dict:
+        relations: list[dict] | None = None,
+    ) -> StoreAcceptedRequirementResult:
         """Scrive un requisito validato nella memoria.
 
         Args:
@@ -136,6 +169,11 @@ def create_server(
             source_pr_timestamp: data della PR di origine (ISO-8601).
             evidence: title + body della PR, opzionale. Salvato nel DB
                 per rendere la memoria leggibile da sola.
+            relations: relazioni con requisiti gia' in memoria, dichiarate dal
+                valutatore. Ciascuna ha ``type`` (uno fra DUPLICATE, OVERLAPS,
+                REFINES, SUPERSEDES, CONFLICTS), ``target_requirement_id``,
+                ``target_pr_number`` e ``reason``. Vengono scritte nella stessa
+                transazione del requisito.
 
         Returns:
             ``{"created_at": <ISO-8601 UTC>}``.
@@ -158,7 +196,16 @@ def create_server(
             title="",
             body=evidence or "",
         )
-        repository.store_accepted(record, statement)
+        dichiarate = tuple(
+            RelationClaim(
+                kind=RelationKind(str(voce["type"]).upper()),
+                target_requirement_id=str(voce["target_requirement_id"]),
+                target_pr_number=int(voce["target_pr_number"]),
+                reason=str(voce.get("reason", "")),
+            )
+            for voce in (relations or [])
+        )
+        repository.store_accepted(record, statement, dichiarate)
 
         return {"created_at": datetime.now(timezone.utc).isoformat()}
 

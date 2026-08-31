@@ -25,7 +25,9 @@ import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 from types import TracebackType
+from typing import Sequence
 
+from are.agents.state import RelationClaim
 from are.input import PullRequestRecord
 
 from .models import RelationType, RequirementRelation, StoredRequirement
@@ -107,7 +109,13 @@ class SqliteRequirementRepository:
         self._path = str(database_path)
         if self._path != IN_MEMORY:
             Path(self._path).parent.mkdir(parents=True, exist_ok=True)
-        self._connection = sqlite3.connect(self._path)
+        # ``check_same_thread=False`` serve al server MCP: l'SDK esegue i tool
+        # sincroni in un thread di lavoro, mentre la connessione nasce nel
+        # thread principale, e il modulo ``sqlite3`` vieta l'uso incrociato.
+        # Le chiamate restano comunque serializzate: il workflow elabora una
+        # Pull Request alla volta e invoca un tool alla volta, quindi non ci
+        # sono due scritture concorrenti sulla stessa connessione.
+        self._connection = sqlite3.connect(self._path, check_same_thread=False)
         self._connection.row_factory = sqlite3.Row
         # I vincoli di chiave esterna in SQLite sono disattivati per
         # impostazione predefinita e vanno abilitati a ogni connessione.
@@ -141,8 +149,13 @@ class SqliteRequirementRepository:
 
     # -- scrittura -------------------------------------------------------
 
-    def store_accepted(self, pull_request: PullRequestRecord, statement: str) -> None:
-        """Persiste un requisito accettato (Decisione 3.3, §5).
+    def store_accepted(
+        self,
+        pull_request: PullRequestRecord,
+        statement: str,
+        relations: Sequence[RelationClaim] = (),
+    ) -> None:
+        """Persiste un requisito accettato e le sue relazioni (Decisione 3.3, §5).
 
         Invocata dal controller dopo `ACCEPT`, mai dagli agenti: nella memoria
         entrano soltanto requisiti che hanno superato la valutazione.
@@ -150,11 +163,19 @@ class SqliteRequirementRepository:
         L'evidenza salvata è il testo della Pull Request di origine, così il
         database resta leggibile da solo, senza il file JSON di partenza a
         fianco.
+
+        Le relazioni vengono scritte nella stessa transazione del requisito:
+        l'identificativo appena assegnato serve solo qui e non esce dallo
+        store. Una relazione che punta a un requisito inesistente viene
+        scartata con un avviso invece di far fallire la scrittura: il requisito
+        è stato validato e va conservato comunque, mentre l'osservazione del
+        modello su un identificativo sbagliato non vale la perdita del dato.
         """
 
         evidence = f"{pull_request.title}\n\n{pull_request.body}".strip()
+        adesso = _to_utc_iso(datetime.now(timezone.utc))
         with self._connection:
-            self._connection.execute(
+            cursore = self._connection.execute(
                 "INSERT INTO requirements ("
                 "  statement, source_repository, source_pr_number,"
                 "  source_pr_timestamp, evidence, created_at, run_id"
@@ -165,11 +186,50 @@ class SqliteRequirementRepository:
                     pull_request.pr_number,
                     _to_utc_iso(pull_request.timestamp),
                     evidence or None,
-                    _to_utc_iso(datetime.now(timezone.utc)),
+                    adesso,
                     self._run_id,
                 ),
             )
+            nuovo_id = int(cursore.lastrowid or 0)
+            for relazione in relations:
+                if not self._requirement_exists(relazione.target_requirement_id):
+                    logger.warning(
+                        "  [MEMORIA] relazione %s scartata: il requisito %s non esiste",
+                        relazione.kind,
+                        relazione.target_requirement_id,
+                    )
+                    continue
+                self._connection.execute(
+                    "INSERT INTO requirement_relations ("
+                    "  source_requirement_id, target_requirement_id,"
+                    "  relation_type, score, created_at"
+                    ") VALUES (?, ?, ?, ?, ?)"
+                    " ON CONFLICT (source_requirement_id, target_requirement_id, relation_type)"
+                    " DO UPDATE SET created_at = excluded.created_at",
+                    (
+                        nuovo_id,
+                        int(relazione.target_requirement_id),
+                        str(relazione.kind),
+                        None,
+                        adesso,
+                    ),
+                )
+                logger.info(
+                    "  [MEMORIA] relazione %s verso la PR #%s",
+                    relazione.kind,
+                    relazione.target_pr_number,
+                )
         logger.info("  [MEMORIA] requisito archiviato per la PR #%s", pull_request.pr_number)
+
+    def _requirement_exists(self, requirement_id: str) -> bool:
+        try:
+            numero = int(requirement_id)
+        except (TypeError, ValueError):
+            return False
+        riga = self._connection.execute(
+            "SELECT 1 FROM requirements WHERE id = ?", (numero,)
+        ).fetchone()
+        return riga is not None
 
     def save_relation(
         self,

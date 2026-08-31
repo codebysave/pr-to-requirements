@@ -1022,13 +1022,14 @@ class GenerationOutcome:
       tag: "Step 06 · MCP + Memory",
       title: "Memory Retrieval",
       body: `
-        <p><strong>In una frase.</strong> Il ponte con la memoria a lungo termine: dopo la generazione, il sistema dovrebbe interrogare i requisiti storici semanticamente simili al candidato e passarli all'Assessment come contesto. È lo step con la maggiore parte da fare: <strong>DB c'è, retrieval semantico e server MCP no</strong>.</p>
+        <p><strong>In una frase.</strong> Il ponte con la memoria a lungo termine: dopo la generazione il sistema interroga i requisiti già validati e li passa all'Assessment come contesto. <strong>Database, recupero e server MCP ci sono</strong>; il recupero è esaustivo entro i filtri di progetto e di data, non semantico.</p>
 
-        <h4>Il concetto (obiettivo del design)</h4>
-        <p>Dopo che il Generator ha prodotto un candidato, il sistema fa una <strong>query semantica</strong> sui requisiti già validati e restituisce una <strong>lista top-k</strong> (es. i 5 più simili). Poi passa il tutto all'Assessment, che così può classificare la relazione: <code>NEW</code>, <code>DUPLICATE</code>, <code>OVERLAPS</code>, <code>REFINES</code>, <code>SUPERSEDES</code>, <code>CONFLICTS</code>.</p>
+        <h4>Il concetto</h4>
+        <p>Dopo che il Generator ha prodotto un candidato, il sistema recupera i requisiti già validati <strong>dello stesso progetto</strong> e <strong>nati da Pull Request precedenti</strong>, e li passa all'Assessment, che così può segnalare la relazione: duplicazione, sovrapposizione, raffinamento, conflitto.</p>
+        <p>Il recupero è <strong>esaustivo</strong>, non ordinato per somiglianza: a questa scala un requisito occupa una trentina di token e mostrarli tutti costa pochi centesimi, mentre un recupero semantico introdurrebbe una dipendenza, una soglia arbitraria e una debolezza nota sulle negazioni — che è proprio ciò che serve riconoscere. Il punto è discusso con la tutor (punto 5 delle domande aperte); le colonne per gli embedding sono già nello schema.</p>
 
         <h4>Perché il retrieval PRIMA dell'Assessment (non dopo)</h4>
-        <p>Domanda ricorrente: "non è l'Assessment che guarda la memoria?". <strong>No</strong>: il retrieval è un helper, l'Assessment è il giudice. Metafora: in un processo, l'ufficiale giudiziario che va in archivio a recuperare i casi simili non è il giudice. Il giudice decide dopo che il fascicolo è sul suo tavolo.</p>
+        <p>Domanda ricorrente: "non è l'Assessment che guarda la memoria?". Nella configurazione predefinita <strong>no</strong>: il retrieval è un helper, l'Assessment è il giudice. Metafora: in un processo, l'ufficiale giudiziario che va in archivio a recuperare i casi simili non è il giudice. Il giudice decide dopo che il fascicolo è sul suo tavolo.</p>
         <p>Meccanica: <code>assess()</code> ha <code>retrieved_requirements</code> come <strong>parametro in ingresso</strong>. I risultati vengono <strong>incollati nel prompt</strong> del valutatore sotto <code>PREVIOUSLY VALIDATED REQUIREMENTS:</code>. L'Assessment li <em>consuma</em>, non li cerca.</p>
         <p>Ordine forzato: il retrieval usa il candidato come query → il candidato deve esistere prima → serve dopo lo Step 04. E serve prima dello Step 07 perché l'Assessment lo consuma. Sequenza obbligata: <code>04 → 05 → 06 → 07</code>.</p>
 
@@ -1041,11 +1042,13 @@ class GenerationOutcome:
         </ul>
         <p>Schema con <strong>due tabelle</strong>: <code>requirements</code> (con colonne <code>embedding</code> e <code>embedding_model</code> <em>predisposte ma non usate</em>) e <code>requirement_relations</code> (per le relazioni tra requisiti — esiste, vuota).</p>
 
-        <p><strong>⚠️ Retrieval semantico — NON implementato.</strong> Il nodo del grafo (<code>retrieve_memory</code>) esiste, il campo nello stato (<code>retrieved_requirements</code>) esiste, ma il retriever vero (che calcola similarità sugli embedding) non c'è. Nei run attuali:</p>
-<pre>"workflow": { "assessment_enabled": true, "memory_enabled": false, "max_generation_attempts": 3 }</pre>
-        <p><code>memory_enabled: false</code> → retrieval disattivato. La scrittura sul DB avviene comunque (<code>stored_requirements: 3</code>): il database si popola in vista del completamento.</p>
+        <p><strong>✅ Recupero esaustivo</strong> (<code>ExhaustiveRequirementRetriever</code>). Filtra su progetto, data della Pull Request di origine e <code>run_id</code>. Quest'ultimo isola l'esecuzione: senza, una run vedrebbe i requisiti prodotto dalle precedenti e i confronti fra configurazioni perderebbero senso. Si recupera <strong>una volta per Pull Request</strong>: i filtri non dipendono dal candidato e nulla può entrare in memoria mentre la Pull Request è in lavorazione, quindi ripetere la ricerca a ogni revisione darebbe la stessa lista.</p>
 
-        <p><strong>❌ Server MCP — cartella VUOTA.</strong> <code>src/are/mcp_server/</code> contiene solo un <code>__init__.py</code> vuoto. Il server che dovrebbe esporre tool come <code>search_requirements</code> agli agenti non è ancora stato scritto.</p>
+        <p><strong>✅ Server MCP</strong> (<code>src/are/mcp_server/</code>). Espone due tool, <code>search_requirements</code> e <code>store_accepted_requirement</code>, e gira come sottoprocesso via stdio. Si attiva con <code>--use-mcp</code>: il grafo non cambia di una riga, perché il client MCP implementa le stesse porte delle implementazioni dirette. È la dimostrazione pratica che l'architettura a porte regge.</p>
+
+        <p><strong>✅ Due configurazioni di recupero.</strong> Nella predefinita è il nodo del grafo a cercare, in modo deterministico. Con <code>--assessor-tools</code> è invece l'Assessment Agent a invocare il tool, decidendo lui se e quando. I filtri restano comunque imposti dal codice: lo schema del tool non li espone, e il modello non conosce né il nome del repository né la data. Quale debba essere la configurazione di riferimento è il punto 6 delle domande aperte per la tutor.</p>
+
+        <p><strong>⚠️ Retrieval semantico — non implementato, e per scelta.</strong> Le colonne <code>embedding</code> ed <code>embedding_model</code> restano predisposte nello schema per il giorno in cui la memoria crescesse oltre quanto sta comodamente in un messaggio.</p>
 
         <h4>Oggi vs domani</h4>
         <p><strong>Oggi</strong> — accesso diretto: il controller chiama <code>repository.store_accepted(...)</code>. Nessun MCP.</p>

@@ -148,13 +148,29 @@ class _WorkflowNodes:
         }
 
     def retrieve_memory(self, state: RequirementState) -> dict:
-        # Il retrieval è deterministico e ripetuto dopo ogni generazione
-        # (Decisione 3.5, §8): una revisione può cambiare i requisiti affini.
-        #
         # A memoria disattivata la fase non viene nemmeno annunciata: una riga
         # per ogni Pull Request su una funzionalità spenta è solo rumore.
         if not self._config.memory_enabled:
             return {"retrieved_requirements": ()}
+
+        # Il recupero esaustivo non dipende dal candidato: i filtri sono
+        # progetto, data e `run_id`, tutti costanti durante l'elaborazione di
+        # una Pull Request. E nulla può entrare in memoria nel frattempo,
+        # perché la scrittura avviene nel nodo `accept`, che chiude la Pull
+        # Request. Ripetere la ricerca a ogni revisione restituirebbe quindi
+        # la stessa lista: si recupera una volta e si riusa quella.
+        #
+        # Restituendo un aggiornamento vuoto la chiave resta com'era: lo stato
+        # è già la memoria di breve termine, non serve una struttura a parte.
+        # Riparte da zero a ogni Pull Request, perché il Runner costruisce uno
+        # stato nuovo per ciascuna.
+        #
+        # Con un retriever semantico il testo del candidato entrerebbe nel
+        # criterio e la ricerca andrebbe ripetuta a ogni revisione (Decisione
+        # 3.5, §8): questa scorciatoia andrà rimossa insieme a quel cambio.
+        if state["retrieved_requirements"]:
+            return {}
+
         candidate = state["candidate_requirement"]
         assert candidate is not None
 
@@ -197,7 +213,12 @@ class _WorkflowNodes:
             candidate=candidate,
             assessment=result,
             refusal_reason=refusal,
-            retrieved=tuple(state["retrieved_requirements"]),
+            # Con il recupero deterministico i requisiti storici stanno nello
+            # stato; con quello guidato dall'agente li conosce solo il
+            # valutatore, che li riporta nel proprio esito. La traccia nel
+            # report deve dire cosa e' stato davvero mostrato al modello, in
+            # entrambe le configurazioni.
+            retrieved=result.retrieved or tuple(state["retrieved_requirements"]),
         )
         return {
             "assessment": result,
@@ -210,7 +231,16 @@ class _WorkflowNodes:
 
         # La scrittura permanente avviene qui, fuori dagli agenti, soltanto
         # dopo ACCEPT (Decisione 3.5, §17).
-        self._deps.store.store_accepted(state["pull_request"], candidate)
+        #
+        # Insieme al requisito si registrano le relazioni che il valutatore ha
+        # dichiarato con quelli storici. Non cambiano l'esito -- il requisito
+        # e' gia' stato accettato -- ma restano nel database perche' una
+        # persona possa rivederle: un duplicato e' ridondanza innocua, una
+        # contraddizione e' un difetto dell'insieme che qualcuno deve
+        # risolvere.
+        assessment = state["assessment"]
+        relazioni = assessment.relations if assessment is not None else ()
+        self._deps.store.store_accepted(state["pull_request"], candidate, relazioni)
 
         update: dict = {
             "final_status": FinalStatus.ACCEPTED,

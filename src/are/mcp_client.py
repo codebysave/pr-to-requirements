@@ -27,13 +27,13 @@ import sys
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any, Iterator, Sequence
 
 import anyio.from_thread
 from mcp.client import Client
 from mcp.client.stdio import StdioServerParameters
 
-from are.agents.state import RetrievedRequirement
+from are.agents.state import RelationClaim, RetrievedRequirement
 from are.input import PullRequestRecord
 
 
@@ -66,26 +66,33 @@ class _McpBridge:
     def call_tool(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         """Invoca un tool MCP dal grafo sincrono, restituendo il dict strutturato.
 
-        Il risultato del tool viene prodotto da un ``dict`` Python restituito
-        dalla funzione decorata con ``@server.tool()``; l'SDK lo propaga come
-        ``structuredContent`` del ``CallToolResult``. Se il tool restituisce
-        anche testo non strutturato (non e' il nostro caso), viene ignorato.
+        L'SDK espone i campi del ``CallToolResult`` in ``snake_case``:
+        ``is_error`` e ``structured_content``. Vi si accede direttamente e non
+        con ``getattr`` e un valore predefinito: un nome sbagliato deve
+        sollevare un errore, non essere scambiato per una risposta valida. Con
+        ``getattr(result, "isError", False)`` un tool fallito risultava
+        riuscito, e il guasto vero emergeva molto piu' avanti sotto forma di
+        messaggio fuorviante.
+
+        ``structured_content`` e' valorizzato soltanto se il tool dichiara un
+        tipo di ritorno: e' l'annotazione a far generare all'SDK lo schema di
+        output. Senza, la risposta arriverebbe come semplice testo.
         """
 
         result = self._portal.call(self._client.call_tool, name, arguments)
-        if getattr(result, "isError", False):
+        if result.is_error:
             # Il messaggio di errore, se presente, sta nel primo blocco testuale.
             text = _first_text_block(result)
             raise RuntimeError(
                 f"tool MCP {name!r} ha restituito un errore: {text or 'nessun dettaglio'}"
             )
-        structured = getattr(result, "structuredContent", None)
-        if structured is None:
+        if result.structured_content is None:
             raise RuntimeError(
-                f"tool MCP {name!r} non ha restituito structuredContent; "
-                "il server dovrebbe emettere un dict strutturato"
+                f"tool MCP {name!r} non ha restituito structured_content: "
+                "il tool deve dichiarare un tipo di ritorno perche' l'SDK "
+                "produca lo schema di output"
             )
-        return structured
+        return result.structured_content
 
 
 class McpMemoryRetriever:
@@ -136,7 +143,12 @@ class McpAcceptedRequirementStore:
     def __init__(self, bridge: _McpBridge) -> None:
         self._bridge = bridge
 
-    def store_accepted(self, pull_request: PullRequestRecord, statement: str) -> None:
+    def store_accepted(
+        self,
+        pull_request: PullRequestRecord,
+        statement: str,
+        relations: Sequence[RelationClaim] = (),
+    ) -> None:
         evidence = f"{pull_request.title}\n\n{pull_request.body}".strip() or None
         self._bridge.call_tool(
             "store_accepted_requirement",
@@ -146,6 +158,15 @@ class McpAcceptedRequirementStore:
                 "source_pr_number": pull_request.pr_number,
                 "source_pr_timestamp": pull_request.timestamp.isoformat(),
                 "evidence": evidence,
+                "relations": [
+                    {
+                        "type": str(relazione.kind),
+                        "target_requirement_id": relazione.target_requirement_id,
+                        "target_pr_number": relazione.target_pr_number,
+                        "reason": relazione.reason,
+                    }
+                    for relazione in relations
+                ],
             },
         )
 
@@ -173,16 +194,16 @@ def mcp_memory_session(
     server_params = _build_server_params(config, server_command)
 
     with anyio.from_thread.start_blocking_portal() as portal:
-        client_cm = Client(server_params)
-        client: Client = portal.call(client_cm.__aenter__)
-        try:
+        # Ingresso e uscita dal client devono avvenire nello stesso task del
+        # loop: i cancel scope di anyio lo impongono, e il client MCP ne apre
+        # uno per il task group che gestisce il sottoprocesso. Due
+        # ``portal.call`` distinti per ``__aenter__`` e ``__aexit__`` girano in
+        # task diversi e la sessione non si apre nemmeno. ``anyio`` fornisce
+        # ``wrap_async_context_manager`` esattamente per questo caso: un solo
+        # oggetto che entra ed esce dallo stesso task.
+        with portal.wrap_async_context_manager(Client(server_params)) as client:
             bridge = _McpBridge(portal, client)
             yield McpMemoryRetriever(bridge), McpAcceptedRequirementStore(bridge)
-        finally:
-            # ``__aexit__`` viene chiamato con tre None quando l'uscita e' pulita;
-            # in caso di eccezione il context manager esterno propaga comunque
-            # l'eccezione originale al chiamante.
-            portal.call(client_cm.__aexit__, None, None, None)
 
 
 def _build_server_params(

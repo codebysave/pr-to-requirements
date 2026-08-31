@@ -1,0 +1,212 @@
+{
+  "run": {
+    "generated_at": "2026-08-31T17:27:17.352887+00:00",
+    "input_file": "experiments/samples/sample-scrapy_scrapy.json",
+    "pull_requests": 2,
+    "prompt_version": "v1",
+    "workflow": {
+      "assessment_enabled": true,
+      "memory_enabled": true,
+      "max_generation_attempts": 3,
+      "memory_access": "mcp",
+      "retrieval_driver": "graph_node"
+    },
+    "llm": {
+      "generation": {
+        "model": "claude-haiku-4-5",
+        "resolved_model": "claude-haiku-4-5-20251001",
+        "max_tokens": 1024,
+        "effort": null
+      },
+      "assessment": {
+        "model": "claude-haiku-4-5",
+        "resolved_model": "claude-haiku-4-5-20251001",
+        "max_tokens": 8192,
+        "effort": null
+      }
+    },
+    "usage": {
+      "per_agent": {
+        "generation": {
+          "model": "claude-haiku-4-5",
+          "calls": 5,
+          "input_tokens": 16049,
+          "output_tokens": 177,
+          "estimated_cost_usd": 0.016934
+        },
+        "assessment": {
+          "model": "claude-haiku-4-5",
+          "calls": 5,
+          "input_tokens": 24028,
+          "output_tokens": 1352,
+          "estimated_cost_usd": 0.030788
+        }
+      },
+      "total_calls": 10,
+      "total_input_tokens": 40077,
+      "total_output_tokens": 1529,
+      "total_estimated_cost_usd": 0.047722,
+      "pricing_reference_date": "2026-08-26"
+    },
+    "memory": {
+      "database": "experiments\\memory\\pr-to-requirements.db",
+      "run_id": "20260831T172652Z",
+      "stored_requirements": 10
+    }
+  },
+  "summary": {
+    "REJECTED": 1,
+    "ACCEPTED": 1
+  },
+  "results": [
+    {
+      "pr_id": "scrapy-scrapy-pr-6869",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6869,
+      "timestamp": "2025-06-06T13:17:48+00:00",
+      "title": "Fix: Dangerous Code Execution Function Could Allow External Attacks in scrapy/shell.py",
+      "final_status": "REJECTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 960 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 2,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall not execute code from external sources through dynamic code evaluation in the shell module.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "REVISE",
+            "tool_rounds": 0,
+            "issues": [
+              "The requirement prescribes a mechanism (dynamic code evaluation) rather than stating the observable behaviour. The evidence describes a security vulnerability that has been remediated, but does not establish what the system shall do or guarantee to an observer.",
+              "The phrase 'from external sources' is vague and unsupported: the evidence does not define what constitutes an external source in this context, nor does it state that the remediation distinguishes between external and internal sources.",
+              "The requirement names a specific module (shell module) which may be implementation detail rather than a necessary constraint."
+            ],
+            "unsupported_claims": [
+              "through dynamic code evaluation",
+              "external sources",
+              "in the shell module"
+            ],
+            "missing_information": [
+              "what specific behaviour changed or is now guaranteed as a result of the remediation"
+            ],
+            "revision_instructions": [
+              "Remove the mechanism ('dynamic code evaluation') and state instead what the system must guarantee about code execution that observers can verify.",
+              "Remove or clarify 'external sources': the evidence does not establish what distinguishes external from internal, or whether the remediation makes this distinction.",
+              "Consider whether the shell module is essential to the requirement or an implementation detail that should be removed."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "The system shall not execute code supplied through the eval() function in a manner that allows code injection attacks.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "REJECT",
+            "tool_rounds": 0,
+            "issues": [
+              "The requirement prescribes a mechanism (eval() function) rather than stating observable behaviour. Naming the function does not ground the requirement in what the evidence establishes.",
+              "The evidence describes a vulnerability that has been remediated but does not state what the remediation does or what the system now guarantees. The phrase 'remediation has been applied' establishes only that something changed, not what changed.",
+              "The phrase 'code injection attacks' is vague and unsupported. The evidence identifies eval() as the vulnerability but does not specify what attacks the remediation prevents or what an observer should verify.",
+              "The requirement restates the meaning of the function name rather than stating a behaviour the evidence describes. Any system containing eval() could be said to 'execute code supplied through eval()', so the requirement carries no information from this Pull Request."
+            ],
+            "unsupported_claims": [
+              "eval() function",
+              "code injection attacks",
+              "in a manner that allows code injection attacks"
+            ],
+            "missing_information": [
+              "what the remediation actually does",
+              "what the system must guarantee about code execution that an observer can verify"
+            ],
+            "revision_instructions": [
+              "Remove the reference to eval(): the evidence names it as the problem but does not state which remediation was applied or what observable change results.",
+              "State instead the behaviour that the evidence establishes. The evidence describes a vulnerability being fixed but provides no detail of what the fix guarantees. Without that detail, no requirement can be grounded. Consider whether the evidence is sufficient to write a requirement at all, or whether you should state that it grounds none."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6870",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6870,
+      "timestamp": "2025-06-06T13:19:55+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 978 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall prevent the genspider command from executing code supplied through user input.",
+      "generation_attempts": 3,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall prevent user-supplied input to the spider template loader from causing arbitrary code to be executed.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "REVISE",
+            "tool_rounds": 0,
+            "issues": [
+              "The requirement names the 'spider template loader' as the mechanism for preventing code execution, but the evidence describes the vulnerability in terms of `importlib.import_module()` being called with untrusted input. The evidence does not establish what mechanism was used to fix it.",
+              "The requirement prescribes a technique (preventing input to a loader) rather than stating the observable behaviour: what must no longer happen when untrusted input is provided."
+            ],
+            "unsupported_claims": [
+              "spider template loader"
+            ],
+            "missing_information": [
+              "what specific behaviour the system must prevent (the evidence mentions 'arbitrary code execution' but the requirement must state what observable failure no longer occurs)"
+            ],
+            "revision_instructions": [
+              "Remove the reference to the 'spider template loader': this names an implementation mechanism, not a behaviour.",
+              "State instead the behaviour the evidence establishes: what the system must no longer permit when untrusted input is supplied to the affected code path."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "The system shall prevent untrusted user input to importlib.import_module() from causing arbitrary code execution.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "REVISE",
+            "tool_rounds": 0,
+            "issues": [
+              "The requirement names a specific function, `importlib.import_module()`, which is an implementation detail. The evidence describes a vulnerability in how that function is called, not a requirement to control the function itself.",
+              "The requirement prescribes a mechanism (controlling input to a function) rather than stating the observable behaviour: what must no longer happen when untrusted input reaches the affected code path.",
+              "The phrase 'untrusted user input to importlib.import_module()' conflates two things: the function is an implementation detail, and the actual requirement is about the system's response to untrusted input in general, not specifically to this function."
+            ],
+            "unsupported_claims": [
+              "importlib.import_module()"
+            ],
+            "missing_information": [
+              "the observable behaviour that must be enforced: the system must not execute code supplied by an untrusted source in the affected command"
+            ],
+            "revision_instructions": [
+              "Remove the reference to `importlib.import_module()`: this names the implementation mechanism, not the behaviour.",
+              "State instead what the system must prevent: the execution of code or modules supplied through untrusted input in the genspider command context.",
+              "Frame the requirement in terms of what the system shall not permit an observer to see happen, not in terms of which function is involved."
+            ]
+          }
+        },
+        {
+          "attempt": 3,
+          "candidate": "The system shall prevent the genspider command from executing code supplied through user input.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "ACCEPT",
+            "tool_rounds": 0,
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    }
+  ]
+}

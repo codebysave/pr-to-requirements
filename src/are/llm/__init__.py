@@ -1,6 +1,16 @@
 """API pubblica del livello di accesso agli LLM di PR-to-Requirements."""
 
-from .client import API_KEY_ENV_VAR, AnthropicLLMClient, LLMClient, LLMResponse
+from .client import (
+    API_KEY_ENV_VAR,
+    AnthropicLLMClient,
+    ConversingLLMClient,
+    LLMClient,
+    LLMResponse,
+    ToolCall,
+    ToolDefinition,
+    ToolResult,
+    serialize_tool_content,
+)
 from .config import (
     AGENT_SECTIONS,
     MODEL_ALIASES,
@@ -31,6 +41,7 @@ __all__ = [
     "PRICING_REFERENCE_DATE",
     "AgentLLMSettings",
     "AnthropicLLMClient",
+    "ConversingLLMClient",
     "InvalidLLMConfigError",
     "LLMCallError",
     "LLMClient",
@@ -40,9 +51,13 @@ __all__ = [
     "LLMConfigFileError",
     "LLMResponse",
     "MissingApiKeyError",
+    "ToolCall",
+    "ToolDefinition",
+    "ToolResult",
     "UsageStats",
     "estimate_cost_usd",
     "format_usage",
     "load_llm_config",
     "resolve_model_alias",
+    "serialize_tool_content",
 ]
