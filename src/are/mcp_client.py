@@ -27,13 +27,13 @@ import sys
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any, Iterator, Sequence
 
 import anyio.from_thread
 from mcp.client import Client
 from mcp.client.stdio import StdioServerParameters
 
-from are.agents.state import RetrievedRequirement
+from are.agents.state import RelationClaim, RetrievedRequirement
 from are.input import PullRequestRecord
 
 
@@ -143,7 +143,12 @@ class McpAcceptedRequirementStore:
     def __init__(self, bridge: _McpBridge) -> None:
         self._bridge = bridge
 
-    def store_accepted(self, pull_request: PullRequestRecord, statement: str) -> None:
+    def store_accepted(
+        self,
+        pull_request: PullRequestRecord,
+        statement: str,
+        relations: Sequence[RelationClaim] = (),
+    ) -> None:
         evidence = f"{pull_request.title}\n\n{pull_request.body}".strip() or None
         self._bridge.call_tool(
             "store_accepted_requirement",
@@ -153,6 +158,15 @@ class McpAcceptedRequirementStore:
                 "source_pr_number": pull_request.pr_number,
                 "source_pr_timestamp": pull_request.timestamp.isoformat(),
                 "evidence": evidence,
+                "relations": [
+                    {
+                        "type": str(relazione.kind),
+                        "target_requirement_id": relazione.target_requirement_id,
+                        "target_pr_number": relazione.target_pr_number,
+                        "reason": relazione.reason,
+                    }
+                    for relazione in relations
+                ],
             },
         )
 
