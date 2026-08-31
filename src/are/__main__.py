@@ -33,7 +33,6 @@ from are.agents.prompts import DEFAULT_PROMPT_VERSION
 from are.db import ExhaustiveRequirementRetriever, SqliteRequirementRepository
 from are.env import load_environment
 from are.input import PullRequestInputError, PullRequestLoader
-from are.mcp_client import McpMemorySession, McpMemorySessionConfig
 from are.llm import (
     MODEL_ALIASES,
     PRICING_REFERENCE_DATE,
@@ -48,6 +47,7 @@ from are.llm import (
     load_llm_config,
     resolve_model_alias,
 )
+from are.mcp_client import McpMemorySessionConfig, mcp_memory_session
 from are.runner import PipelineRunner, build_run_report, save_run_report, summarize
 
 DEFAULT_LLM_CONFIG = Path("config/llm.toml")
@@ -115,7 +115,7 @@ def main(argv: list[str] | None = None) -> int:
             max_requirements=workflow_config.max_memory_requirements,
         )
         try:
-            with McpMemorySession(mcp_config) as (mcp_retriever, mcp_store):
+            with mcp_memory_session(mcp_config) as (mcp_retriever, mcp_store):
                 dependencies = _build_dependencies(
                     workflow_config,
                     generation_client,

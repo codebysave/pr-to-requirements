@@ -10,7 +10,7 @@ async gira in un thread di background, e le chiamate sincrone del grafo
 vengono trasportate al loop dal portal. Il grafo non conosce ``asyncio``.
 
 Il ciclo di vita e' un unico sottoprocesso per l'intero run: viene avviato
-all'ingresso del context manager :class:`McpMemorySession` e terminato
+all'ingresso del context manager :class:`mcp_memory_session` e terminato
 all'uscita. Riutilizzare la sessione fra Pull Request evita il costo di
 riavvio del processo e mantiene stabile la connessione al DB.
 
@@ -26,9 +26,8 @@ from __future__ import annotations
 import sys
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterator, Sequence
+from typing import Any, Iterator
 
 import anyio.from_thread
 from mcp.client import Client
@@ -152,7 +151,7 @@ class McpAcceptedRequirementStore:
 
 
 @contextmanager
-def McpMemorySession(
+def mcp_memory_session(
     config: McpMemorySessionConfig,
     *,
     server_command: str | None = None,
