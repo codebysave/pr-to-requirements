@@ -197,7 +197,12 @@ class _WorkflowNodes:
             candidate=candidate,
             assessment=result,
             refusal_reason=refusal,
-            retrieved=tuple(state["retrieved_requirements"]),
+            # Con il recupero deterministico i requisiti storici stanno nello
+            # stato; con quello guidato dall'agente li conosce solo il
+            # valutatore, che li riporta nel proprio esito. La traccia nel
+            # report deve dire cosa e' stato davvero mostrato al modello, in
+            # entrambe le configurazioni.
+            retrieved=result.retrieved or tuple(state["retrieved_requirements"]),
         )
         return {
             "assessment": result,

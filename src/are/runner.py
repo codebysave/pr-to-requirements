@@ -228,6 +228,10 @@ def _serialize_assessment(assessment: Any) -> dict[str, Any] | None:
     feedback = assessment.feedback
     return {
         "decision": assessment.decision.value,
+        # Quante volte il valutatore ha interrogato la memoria di sua
+        # iniziativa. Vale 0 con il recupero deterministico, dove a cercare e'
+        # il grafo: e' il dato che distingue le due configurazioni nei report.
+        "tool_rounds": assessment.tool_rounds,
         "issues": list(feedback.issues),
         "unsupported_claims": list(feedback.unsupported_claims),
         "missing_information": list(feedback.missing_information),

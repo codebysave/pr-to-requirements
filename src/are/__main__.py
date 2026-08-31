@@ -21,6 +21,7 @@ from pathlib import Path
 from are import console
 from are.agents import (
     DeterministicExtractabilityChecker,
+    NullMemoryRetriever,
     WorkflowDependencies,
     build_workflow,
     load_workflow_config,
@@ -29,6 +30,7 @@ from are.agents.llm_agents import (
     LLMRequirementAssessor,
     LLMRequirementGenerator,
 )
+from are.agents.memory_tool import MemorySearchTool
 from are.agents.prompts import DEFAULT_PROMPT_VERSION
 from are.db import ExhaustiveRequirementRetriever, SqliteRequirementRepository
 from are.env import load_environment
@@ -56,6 +58,7 @@ DEFAULT_OUTPUT_DIR = Path("experiments/runs")
 DEFAULT_MEMORY_DIR = Path("experiments/memory")
 MEMORY_SCOPE_RUN = "run"
 MEMORY_SCOPE_ALL = "all"
+TOOL_PROMPT_VERSION = "v2"
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -92,6 +95,7 @@ def main(argv: list[str] | None = None) -> int:
 
     llm_config = _apply_model_overrides(load_llm_config(args.llm_config), args)
     workflow_config = load_workflow_config(args.workflow_config)
+    prompt_version = _resolve_prompt_version(args)
 
     generation_client = AnthropicLLMClient(llm_config.generation)
     assessment_client = AnthropicLLMClient(llm_config.assessment)
@@ -120,9 +124,10 @@ def main(argv: list[str] | None = None) -> int:
                     workflow_config,
                     generation_client,
                     assessment_client,
-                    args.prompt_version,
+                    prompt_version,
                     retriever=mcp_retriever,
                     store=mcp_store,
+                    assessor_tools=args.assessor_tools,
                 )
                 results = _run_workflow(
                     pull_requests,
@@ -145,9 +150,10 @@ def main(argv: list[str] | None = None) -> int:
             workflow_config,
             generation_client,
             assessment_client,
-            args.prompt_version,
+            prompt_version,
             retriever=_build_retriever(memory, run_stamp, args.memory_scope, workflow_config),
             store=memory,
+            assessor_tools=args.assessor_tools,
         )
         try:
             results = _run_workflow(
@@ -177,11 +183,13 @@ def main(argv: list[str] | None = None) -> int:
         metadata={
             "input_file": str(args.input),
             "pull_requests": len(pull_requests),
-            "prompt_version": args.prompt_version,
+            "prompt_version": prompt_version,
             "workflow": {
                 "assessment_enabled": workflow_config.assessment_enabled,
                 "memory_enabled": workflow_config.memory_enabled,
                 "max_generation_attempts": workflow_config.max_generation_attempts,
+                "memory_access": "mcp" if args.use_mcp else "direct",
+                "retrieval_driver": "assessor_tool" if args.assessor_tools else "graph_node",
             },
             "llm": _describe_llm_config(llm_config, resolved_models),
             "usage": _describe_usage(usage),
@@ -276,8 +284,9 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     )
     parser.add_argument(
         "--prompt-version",
-        default=DEFAULT_PROMPT_VERSION,
-        help=f"versione dei prompt da usare (default: {DEFAULT_PROMPT_VERSION})",
+        default=None,
+        help=f"versione dei prompt da usare (default: {DEFAULT_PROMPT_VERSION}, "
+        f"oppure {TOOL_PROMPT_VERSION} con --assessor-tools)",
     )
     alias = ", ".join(MODEL_ALIASES)
     parser.add_argument(
@@ -310,6 +319,15 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         "server MCP invece che chiamando direttamente il repository/retriever. "
         "Il server viene avviato come sottoprocesso stdio e resta in vita per "
         "tutto il run.",
+    )
+    parser.add_argument(
+        "--assessor-tools",
+        action="store_true",
+        help="il valutatore interroga la memoria da se', invocando un tool, invece "
+        "di riceverne il contenuto gia' pronto nel messaggio. Il recupero smette "
+        "di essere deterministico: il modello puo' non cercare affatto. Seleziona "
+        "da solo la versione v2 del prompt, che descrive il tool, a meno che "
+        "--prompt-version non sia indicata esplicitamente",
     )
     parser.add_argument("--verbose", action="store_true", help="log di dettaglio")
     return parser.parse_args(argv)
@@ -427,6 +445,27 @@ def _describe_usage(usage: dict[str, tuple[str, UsageStats]]) -> dict[str, objec
     }
 
 
+def _resolve_prompt_version(args: argparse.Namespace) -> str:
+    """Sceglie la versione dei prompt, tenendo conto di ``--assessor-tools``.
+
+    La v1 descrive requisiti «forniti» e non nomina alcun tool: usarla con il
+    recupero guidato dall'agente lascerebbe il modello senza istruzioni su
+    quando cercare. La v2 viene quindi selezionata da sola.
+
+    L'opzione ha valore predefinito ``None`` proprio per distinguere «non
+    indicata» da «indicata e uguale al predefinito»: una scelta dichiarata
+    dall'utente non va sovrascritta in silenzio, nemmeno quando coincide con
+    il valore che avremmo usato comunque.
+    """
+
+    if args.prompt_version is not None:
+        return args.prompt_version
+    if not args.assessor_tools:
+        return DEFAULT_PROMPT_VERSION
+    print(f"Recupero guidato dall'agente: uso i prompt {TOOL_PROMPT_VERSION}")
+    return TOOL_PROMPT_VERSION
+
+
 def _default_output_path(stamp: str) -> Path:
     return DEFAULT_OUTPUT_DIR / f"run-{stamp}.json"
 
@@ -439,25 +478,37 @@ def _build_dependencies(
     *,
     retriever,
     store,
+    assessor_tools: bool = False,
 ) -> WorkflowDependencies:
     """Costruisce ``WorkflowDependencies`` con retriever e store iniettati.
 
     L'unica differenza fra il path MCP e quello diretto e' quale
     implementazione di ``retriever``/``store`` viene passata: il grafo non se
     ne accorge, perche' entrambe rispettano lo stesso protocollo.
+
+    Con ``assessor_tools`` il recupero cambia padrone. Il retriever vero passa
+    al tool del valutatore, mentre al grafo ne viene dato uno inerte: cosi' il
+    nodo ``retrieve_memory`` non recupera nulla e la ricerca avviene una volta
+    sola, quando il modello decide di chiederla. Il grafo non ha bisogno di
+    sapere in quale delle due configurazioni si trova.
     """
+
+    if workflow_config.assessment_enabled:
+        assessor = LLMRequirementAssessor(
+            assessment_client,
+            prompt_version,
+            memory_tool=MemorySearchTool(retriever) if assessor_tools else None,
+        )
+    else:
+        assessor = None
 
     return WorkflowDependencies(
         extractability_checker=DeterministicExtractabilityChecker(
             workflow_config.min_evidence_characters
         ),
         generator=LLMRequirementGenerator(generation_client, prompt_version),
-        assessor=(
-            LLMRequirementAssessor(assessment_client, prompt_version)
-            if workflow_config.assessment_enabled
-            else None
-        ),
-        retriever=retriever,
+        assessor=assessor,
+        retriever=NullMemoryRetriever() if assessor_tools else retriever,
         store=store,
     )
 
