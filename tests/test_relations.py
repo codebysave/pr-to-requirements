@@ -307,3 +307,30 @@ def test_both_prompts_single_out_the_contradiction(versione: str):
     from are.agents.prompts import load_prompt
 
     assert "cannot both be true" in load_prompt("assessment", versione)
+
+
+@pytest.mark.parametrize("versione", ["v1", "v2"])
+def test_both_prompts_give_a_test_to_separate_duplicate_from_refines(versione: str):
+    """Le due definizioni sono vicine, e distinguerle a orecchio non basta: in
+    una run reale il valutatore ha etichettato `DUPLICATE` un requisito che la
+    sua stessa motivazione descriveva come piu' specifico, e il catalogo ha
+    perso il piu' preciso dei due.
+
+    Serve un criterio applicabile, non una definizione.
+    """
+
+    from are.agents.prompts import load_prompt
+
+    testo = load_prompt("assessment", versione)
+    assert "one holds and the other does not" in testo
+    assert "REFINES" in testo
+
+
+@pytest.mark.parametrize("versione", ["v1", "v2"])
+def test_both_prompts_warn_about_the_wording_that_gives_it_away(versione: str):
+    """«differing only in the added import-module context» descrive un
+    raffinamento: il contesto aggiunto e' proprio cio' che li distingue."""
+
+    from are.agents.prompts import load_prompt
+
+    assert "differing only in" in load_prompt("assessment", versione)

@@ -1,0 +1,287 @@
+{
+  "run": {
+    "generated_at": "2026-09-01T10:18:37.593638+00:00",
+    "input_file": "experiments/samples/sample-scrapy_scrapy.json",
+    "pull_requests": 4,
+    "skipped_already_processed": [
+      {
+        "pr_number": 6869,
+        "previous_status": "ACCEPTED"
+      },
+      {
+        "pr_number": 6870,
+        "previous_status": "ACCEPTED"
+      },
+      {
+        "pr_number": 6875,
+        "previous_status": "NOT_EXTRACTABLE"
+      },
+      {
+        "pr_number": 6879,
+        "previous_status": "ACCEPTED"
+      },
+      {
+        "pr_number": 6880,
+        "previous_status": "ACCEPTED"
+      }
+    ],
+    "prompt_version": "v1",
+    "workflow": {
+      "assessment_enabled": true,
+      "memory_enabled": true,
+      "max_generation_attempts": 3,
+      "memory_access": "mcp",
+      "retrieval_driver": "graph_node"
+    },
+    "llm": {
+      "generation": {
+        "model": "claude-sonnet-5",
+        "resolved_model": "claude-sonnet-5",
+        "max_tokens": 1024,
+        "effort": null
+      },
+      "assessment": {
+        "model": "claude-sonnet-5",
+        "resolved_model": "claude-sonnet-5",
+        "max_tokens": 8192,
+        "effort": null
+      }
+    },
+    "usage": {
+      "per_agent": {
+        "generation": {
+          "model": "claude-sonnet-5",
+          "calls": 4,
+          "input_tokens": 16505,
+          "output_tokens": 710,
+          "estimated_cost_usd": 0.060165
+        },
+        "assessment": {
+          "model": "claude-sonnet-5",
+          "calls": 4,
+          "input_tokens": 27574,
+          "output_tokens": 9367,
+          "estimated_cost_usd": 0.223227
+        }
+      },
+      "total_calls": 8,
+      "total_input_tokens": 44079,
+      "total_output_tokens": 10077,
+      "total_estimated_cost_usd": 0.283392,
+      "pricing_reference_date": "2026-08-26"
+    },
+    "memory": {
+      "database": "experiments\\memory\\pr-to-requirements.db",
+      "run_id": "20260901T101631Z",
+      "stored_requirements": 5
+    }
+  },
+  "summary": {
+    "REJECTED": 2,
+    "NOT_EXTRACTABLE": 1,
+    "ACCEPTED": 1
+  },
+  "results": [
+    {
+      "pr_id": "scrapy-scrapy-pr-6881",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6881,
+      "timestamp": "2025-06-09T02:51:14+00:00",
+      "title": "Fix: Unsafe XML Processing Library Could Allow Malicious Attacks in scrapy/http/request/rpc.py",
+      "final_status": "REJECTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 852 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When processing XML-RPC request data, the system shall not be vulnerable to malicious XML content that could compromise the application.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "1",
+              "source_pr_number": 6869,
+              "statement": "The system shall not execute arbitrary code derived from externally controlled input."
+            },
+            {
+              "requirement_id": "2",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed when importing modules."
+            },
+            {
+              "requirement_id": "3",
+              "source_pr_number": 6879,
+              "statement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed during module import."
+            },
+            {
+              "requirement_id": "4",
+              "source_pr_number": 6880,
+              "statement": "The system shall produce serialized output that, when later deserialized, does not result in execution of arbitrary code contained in that data."
+            }
+          ],
+          "assessment": {
+            "decision": "REJECT",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The requirement essentially states 'the system must be secure against malicious XML,' which parallels the disallowed generic security formulation rather than a checkable guarantee; 'compromise the application' does not name an observable outcome (e.g., code execution, data disclosure, denial of service).",
+              "The evidence only says xmlrpc 'is not inherently safe from vulnerabilities' and that defusedxml.xmlrpc should be used instead; it does not state what the vulnerability actually causes, so any more specific and testable claim (e.g., about entity expansion, external entity resolution, or code execution) would be invented from recognition of what defusedxml is known to protect against, not from the text.",
+              "No rewrite grounded in this evidence can state a checkable behaviour: the text supports only that an unspecified vulnerability class was mitigated by a library swap, which is a mechanism-level fact, not an observable guarantee."
+            ],
+            "unsupported_claims": [
+              "malicious XML content",
+              "compromise the application"
+            ],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6899",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6899,
+      "timestamp": "2025-06-21T01:51:04+00:00",
+      "title": "Fix typing of dynamic `request` attribute on `Failure` with a cast subclass",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 937 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence describes only a static-typing fix (adding a cast/subclass so mypy accepts a dynamic attribute) and explicitly states runtime behaviour is unchanged, so no externally observable behaviour is established.",
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The evidence explicitly states runtime behaviour is unchanged; the change is purely to satisfy static type checkers via a cast/subclass, which is not observable from outside the system.",
+              "No black-box test could distinguish the system before and after this change, so no requirement can be grounded."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6936",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6936,
+      "timestamp": "2025-07-03T00:58:14+00:00",
+      "title": "feat(settings): Change default SCHEDULER_PRIORITY_QUEUE (closes #6924)",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 600 caratteri: la valutazione prosegue",
+      "accepted_requirement": "Where the scheduler priority queue setting has not been overridden, the system shall use the downloader-aware priority queue to schedule requests.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "Where the scheduler priority queue setting has not been overridden, the system shall use the downloader-aware priority queue to schedule requests.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "1",
+              "source_pr_number": 6869,
+              "statement": "The system shall not execute arbitrary code derived from externally controlled input."
+            },
+            {
+              "requirement_id": "2",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed when importing modules."
+            },
+            {
+              "requirement_id": "3",
+              "source_pr_number": 6879,
+              "statement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed during module import."
+            },
+            {
+              "requirement_id": "4",
+              "source_pr_number": 6880,
+              "statement": "The system shall produce serialized output that, when later deserialized, does not result in execution of arbitrary code contained in that data."
+            }
+          ],
+          "assessment": {
+            "decision": "ACCEPT",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6947",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6947,
+      "timestamp": "2025-07-10T15:21:39+00:00",
+      "title": "Ban more imports that import twisted.internet.reactor.",
+      "final_status": "REJECTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 157 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "If a source module that is not explicitly permitted imports twisted.internet.reactor, then the system shall flag this as a disallowed import.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "1",
+              "source_pr_number": 6869,
+              "statement": "The system shall not execute arbitrary code derived from externally controlled input."
+            },
+            {
+              "requirement_id": "2",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed when importing modules."
+            },
+            {
+              "requirement_id": "3",
+              "source_pr_number": 6879,
+              "statement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed during module import."
+            },
+            {
+              "requirement_id": "4",
+              "source_pr_number": 6880,
+              "statement": "The system shall produce serialized output that, when later deserialized, does not result in execution of arbitrary code contained in that data."
+            },
+            {
+              "requirement_id": "5",
+              "source_pr_number": 6936,
+              "statement": "Where the scheduler priority queue setting has not been overridden, the system shall use the downloader-aware priority queue to schedule requests."
+            }
+          ],
+          "assessment": {
+            "decision": "REJECT",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The evidence states only that the set of modules disallowed from importing twisted.internet.reactor was extended (and partially reverted from an earlier PR); it does not state what observable effect occurs when a disallowed import is present.",
+              "The candidate's 'flag this as a disallowed import' behaviour is invented from what one might expect such a mechanism to do, not from anything the evidence says.",
+              "This resembles internal enforcement/tooling (e.g., a lint or test-suite check on the import graph) rather than a described runtime behaviour visible to an external caller of the system."
+            ],
+            "unsupported_claims": [
+              "explicitly permitted",
+              "flag this as a disallowed import"
+            ],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    }
+  ]
+}
