@@ -1,0 +1,316 @@
+{
+  "run": {
+    "generated_at": "2026-09-01T09:34:17.134280+00:00",
+    "input_file": "experiments/samples/sample-scrapy_scrapy.json",
+    "pull_requests": 5,
+    "prompt_version": "v1",
+    "workflow": {
+      "assessment_enabled": true,
+      "memory_enabled": true,
+      "max_generation_attempts": 3,
+      "memory_access": "mcp",
+      "retrieval_driver": "graph_node"
+    },
+    "llm": {
+      "generation": {
+        "model": "claude-sonnet-5",
+        "resolved_model": "claude-sonnet-5",
+        "max_tokens": 1024,
+        "effort": null
+      },
+      "assessment": {
+        "model": "claude-sonnet-5",
+        "resolved_model": "claude-sonnet-5",
+        "max_tokens": 8192,
+        "effort": null
+      }
+    },
+    "usage": {
+      "per_agent": {
+        "generation": {
+          "model": "claude-sonnet-5",
+          "calls": 6,
+          "input_tokens": 25576,
+          "output_tokens": 249,
+          "estimated_cost_usd": 0.080463
+        },
+        "assessment": {
+          "model": "claude-sonnet-5",
+          "calls": 6,
+          "input_tokens": 41645,
+          "output_tokens": 9985,
+          "estimated_cost_usd": 0.27471
+        }
+      },
+      "total_calls": 12,
+      "total_input_tokens": 67221,
+      "total_output_tokens": 10234,
+      "total_estimated_cost_usd": 0.355173,
+      "pricing_reference_date": "2026-08-26"
+    },
+    "memory": {
+      "database": "experiments\\memory\\pr-to-requirements.db",
+      "run_id": "20260901T093154Z",
+      "stored_requirements": 8
+    }
+  },
+  "summary": {
+    "ACCEPTED": 4,
+    "NOT_EXTRACTABLE": 1
+  },
+  "results": [
+    {
+      "pr_id": "scrapy-scrapy-pr-6869",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6869,
+      "timestamp": "2025-06-06T13:17:48+00:00",
+      "title": "Fix: Dangerous Code Execution Function Could Allow External Attacks in scrapy/shell.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 960 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall not evaluate externally supplied input as executable code.",
+      "generation_attempts": 2,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall execute shell-provided code without allowing externally supplied input to inject arbitrary code for evaluation.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "REVISE",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The requirement bundles two things: a general executive capability ('execute shell-provided code') and a security guarantee. The evidence only supports the second - that externally supplied input must not be evaluated as code - and says nothing about a broader shell-code-execution feature being a requirement in its own right.",
+              "The phrase 'shell-provided code' is inferred from the file name (scrapy/shell.py) rather than stated in the evidence, which only describes an eval() call flagged as a code-injection risk and remediated."
+            ],
+            "unsupported_claims": [
+              "execute shell-provided code"
+            ],
+            "missing_information": [],
+            "revision_instructions": [
+              "Remove the 'execute shell-provided code' clause: the evidence does not describe or require a general code-execution capability, only that untrusted input must not be evaluated as code.",
+              "State the security guarantee alone, as a single obligation: that content originating from external/untrusted sources must not be evaluated as executable code, without adding a positive execution capability the evidence does not mention."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "The system shall not evaluate externally supplied input as executable code.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "ACCEPT",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6870",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6870,
+      "timestamp": "2025-06-06T13:19:55+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 978 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall prevent user-supplied input from causing arbitrary code to be loaded and executed during spider generation.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall prevent user-supplied input from causing arbitrary code to be loaded and executed during spider generation.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "1",
+              "source_pr_number": 6869,
+              "statement": "The system shall evaluate shell input without executing arbitrary code derived from externally controlled content."
+            },
+            {
+              "requirement_id": "5",
+              "source_pr_number": 6869,
+              "statement": "The system shall not evaluate externally supplied input as executable code."
+            }
+          ],
+          "assessment": {
+            "decision": "ACCEPT",
+            "tool_rounds": 0,
+            "relations": [
+              {
+                "type": "OVERLAPS",
+                "target_requirement_id": "5",
+                "target_pr_number": 6869,
+                "reason": "Both requirements guarantee that externally supplied input is not executed as arbitrary code, though this one applies specifically during spider generation."
+              }
+            ],
+            "issues": [
+              "The requirement is grounded in the described import_module vulnerability and states a security behaviour observable from outside, consistent with the black-box test guidance for security fixes.",
+              "It overlaps with the previously validated requirements from PR #6869, which also require that externally supplied input not be executed as code, though in a different context (shell input vs. spider generation)."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6875",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6875,
+      "timestamp": "2025-06-07T03:44:46+00:00",
+      "title": "Fix typo in cmdline.py comment: 'a argument' -> 'an argument'",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 579 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence describes only a comment-text correction with no code logic or functionality change, so no observable behaviour is stated or altered.",
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The evidence explicitly states this is a comment-only typo fix with no code logic or functionality affected, so there is no observable behaviour to extract.",
+              "A black-box test cannot distinguish before/after since only comment text changed."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6879",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6879,
+      "timestamp": "2025-06-09T02:36:45+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 978 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed during module import.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed during module import.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "1",
+              "source_pr_number": 6869,
+              "statement": "The system shall evaluate shell input without executing arbitrary code derived from externally controlled content."
+            },
+            {
+              "requirement_id": "5",
+              "source_pr_number": 6869,
+              "statement": "The system shall not evaluate externally supplied input as executable code."
+            },
+            {
+              "requirement_id": "2",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded or executed when importing modules."
+            },
+            {
+              "requirement_id": "6",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent user-supplied input from causing arbitrary code to be loaded and executed during spider generation."
+            }
+          ],
+          "assessment": {
+            "decision": "ACCEPT",
+            "tool_rounds": 0,
+            "relations": [
+              {
+                "type": "DUPLICATE",
+                "target_requirement_id": "6",
+                "target_pr_number": 6870,
+                "reason": "Both state that untrusted user input must not cause arbitrary code to be loaded or executed during module import."
+              }
+            ],
+            "issues": [
+              "This states essentially the same behaviour as the requirement already validated from Pull Request #6870, which reads 'The system shall prevent untrusted user input from causing arbitrary code to be loaded or executed when importing modules.'"
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6880",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6880,
+      "timestamp": "2025-06-09T02:45:09+00:00",
+      "title": "Fix: Unsafe Data Processing Method Allows Malicious Code Execution in scrapy/exporters.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 989 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall export data without executing code contained in the serialized data.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall export data without executing code contained in the serialized data.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "1",
+              "source_pr_number": 6869,
+              "statement": "The system shall evaluate shell input without executing arbitrary code derived from externally controlled content."
+            },
+            {
+              "requirement_id": "5",
+              "source_pr_number": 6869,
+              "statement": "The system shall not evaluate externally supplied input as executable code."
+            },
+            {
+              "requirement_id": "2",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded or executed when importing modules."
+            },
+            {
+              "requirement_id": "6",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent user-supplied input from causing arbitrary code to be loaded and executed during spider generation."
+            },
+            {
+              "requirement_id": "3",
+              "source_pr_number": 6879,
+              "statement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed during module import."
+            },
+            {
+              "requirement_id": "7",
+              "source_pr_number": 6879,
+              "statement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed during module import."
+            }
+          ],
+          "assessment": {
+            "decision": "ACCEPT",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    }
+  ]
+}

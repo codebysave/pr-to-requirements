@@ -1,0 +1,349 @@
+{
+  "run": {
+    "generated_at": "2026-09-01T10:14:02.479860+00:00",
+    "input_file": "experiments/samples/sample-scrapy_scrapy.json",
+    "pull_requests": 5,
+    "skipped_already_processed": [],
+    "prompt_version": "v1",
+    "workflow": {
+      "assessment_enabled": true,
+      "memory_enabled": true,
+      "max_generation_attempts": 3,
+      "memory_access": "mcp",
+      "retrieval_driver": "graph_node"
+    },
+    "llm": {
+      "generation": {
+        "model": "claude-sonnet-5",
+        "resolved_model": "claude-sonnet-5",
+        "max_tokens": 1024,
+        "effort": null
+      },
+      "assessment": {
+        "model": "claude-sonnet-5",
+        "resolved_model": "claude-sonnet-5",
+        "max_tokens": 8192,
+        "effort": null
+      }
+    },
+    "usage": {
+      "per_agent": {
+        "generation": {
+          "model": "claude-sonnet-5",
+          "calls": 7,
+          "input_tokens": 30177,
+          "output_tokens": 292,
+          "estimated_cost_usd": 0.094911
+        },
+        "assessment": {
+          "model": "claude-sonnet-5",
+          "calls": 7,
+          "input_tokens": 48729,
+          "output_tokens": 9463,
+          "estimated_cost_usd": 0.288132
+        }
+      },
+      "total_calls": 14,
+      "total_input_tokens": 78906,
+      "total_output_tokens": 9755,
+      "total_estimated_cost_usd": 0.383043,
+      "pricing_reference_date": "2026-08-26"
+    },
+    "memory": {
+      "database": "experiments\\memory\\pr-to-requirements.db",
+      "run_id": "20260901T101149Z",
+      "stored_requirements": 4
+    }
+  },
+  "summary": {
+    "ACCEPTED": 4,
+    "NOT_EXTRACTABLE": 1
+  },
+  "results": [
+    {
+      "pr_id": "scrapy-scrapy-pr-6869",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6869,
+      "timestamp": "2025-06-06T13:17:48+00:00",
+      "title": "Fix: Dangerous Code Execution Function Could Allow External Attacks in scrapy/shell.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 960 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall not execute arbitrary code derived from externally controlled input.",
+      "generation_attempts": 2,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall evaluate shell expressions without executing arbitrary code derived from externally controlled input.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "REVISE",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The requirement asserts a positive functional capability - 'evaluate shell expressions' - that the evidence does not establish; the evidence only names eval() in shell.py without describing what it evaluates or that expression evaluation is a guaranteed capability.",
+              "The requirement joins two distinct claims: a functional capability (evaluating shell expressions) and a security constraint (not executing arbitrary code from external input), only the second of which the evidence supports."
+            ],
+            "unsupported_claims": [
+              "evaluate shell expressions"
+            ],
+            "missing_information": [],
+            "revision_instructions": [
+              "Remove the claim that the system evaluates shell expressions: the evidence names the file and the eval() call but does not state that expression evaluation is a required capability.",
+              "State only the security guarantee - that the system must not execute arbitrary code derived from externally controlled input - as a single obligation, without asserting the unrelated positive capability."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "The system shall not execute arbitrary code derived from externally controlled input.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "ACCEPT",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6870",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6870,
+      "timestamp": "2025-06-06T13:19:55+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 978 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed when importing modules.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed when importing modules.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "1",
+              "source_pr_number": 6869,
+              "statement": "The system shall not execute arbitrary code derived from externally controlled input."
+            }
+          ],
+          "assessment": {
+            "decision": "ACCEPT",
+            "tool_rounds": 0,
+            "relations": [
+              {
+                "type": "DUPLICATE",
+                "target_requirement_id": "1",
+                "target_pr_number": 6869,
+                "reason": "Both requirements state that the system must not execute arbitrary code originating from untrusted/externally controlled input, differing only in the added import-module context."
+              }
+            ],
+            "issues": [
+              "This states substantially the same behaviour as the requirement from Pull Request #6869, both prohibiting execution of code derived from untrusted input, though the candidate adds the module-import context which is supported by the evidence here."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6875",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6875,
+      "timestamp": "2025-06-07T03:44:46+00:00",
+      "title": "Fix typo in cmdline.py comment: 'a argument' -> 'an argument'",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 579 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence describes only a comment-text correction with no functional effect, so no externally observable behaviour is defined.",
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The evidence explicitly states this is a comment-only typo fix with no code logic or functionality affected, so there is no externally observable behaviour to extract."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6879",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6879,
+      "timestamp": "2025-06-09T02:36:45+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 978 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed during module import.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed during module import.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "1",
+              "source_pr_number": 6869,
+              "statement": "The system shall not execute arbitrary code derived from externally controlled input."
+            },
+            {
+              "requirement_id": "2",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed when importing modules."
+            }
+          ],
+          "assessment": {
+            "decision": "ACCEPT",
+            "tool_rounds": 0,
+            "relations": [
+              {
+                "type": "DUPLICATE",
+                "target_requirement_id": "2",
+                "target_pr_number": 6870,
+                "reason": "Both state that the system must prevent untrusted user input from causing arbitrary code to be loaded and executed during/when importing modules."
+              },
+              {
+                "type": "OVERLAPS",
+                "target_requirement_id": "1",
+                "target_pr_number": 6869,
+                "reason": "Both address preventing execution of arbitrary code derived from untrusted or externally controlled input, though 6869 is broader and not import-specific."
+              }
+            ],
+            "issues": [
+              "This states the same behaviour as the requirement from Pull Request 6870, differing only in minor wording ('during module import' vs 'when importing modules').",
+              "This also overlaps with the requirement from Pull Request 6869, which states a similar but more general prohibition on executing arbitrary code from externally controlled input."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6880",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6880,
+      "timestamp": "2025-06-09T02:45:09+00:00",
+      "title": "Fix: Unsafe Data Processing Method Allows Malicious Code Execution in scrapy/exporters.py",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 989 caratteri: la valutazione prosegue",
+      "accepted_requirement": "The system shall produce serialized output that, when later deserialized, does not result in execution of arbitrary code contained in that data.",
+      "generation_attempts": 2,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall export data without executing code contained in exported or serialized data.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "1",
+              "source_pr_number": 6869,
+              "statement": "The system shall not execute arbitrary code derived from externally controlled input."
+            },
+            {
+              "requirement_id": "2",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed when importing modules."
+            },
+            {
+              "requirement_id": "3",
+              "source_pr_number": 6879,
+              "statement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed during module import."
+            }
+          ],
+          "assessment": {
+            "decision": "REVISE",
+            "tool_rounds": 0,
+            "relations": [
+              {
+                "type": "OVERLAPS",
+                "target_requirement_id": "1",
+                "target_pr_number": 6869,
+                "reason": "Both concern preventing arbitrary code execution originating from data the system processes, though this candidate misstates the direction of the risk (export vs. later deserialization)."
+              }
+            ],
+            "issues": [
+              "The evidence describes a risk that arises when previously-exported pickled data is later *unpickled* (deserialized) and could then run arbitrary code; it does not say that the export operation itself executes code contained in the data being exported.",
+              "The candidate reframes the vulnerability as if code execution happens during export, which inverts the direction of the risk described in the evidence (the risk is on the deserialization/loading side, not the serialization/export side).",
+              "The requirement bundles two different data flows ('exported' and 'serialized') without the evidence establishing that both apply the same way."
+            ],
+            "unsupported_claims": [
+              "that the system executes code contained in exported data (as opposed to code contained in data that is later deserialized/unpickled)"
+            ],
+            "missing_information": [],
+            "revision_instructions": [
+              "Restate the security property in terms of what the evidence actually describes: a risk of arbitrary code execution when serialized data produced by the system is later deserialized (unpickled), not a risk occurring during the act of export itself.",
+              "Remove or correct the implication that the exporter executes code from the data it processes; the evidence does not support this direction of causation."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "The system shall produce serialized output that, when later deserialized, does not result in execution of arbitrary code contained in that data.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "1",
+              "source_pr_number": 6869,
+              "statement": "The system shall not execute arbitrary code derived from externally controlled input."
+            },
+            {
+              "requirement_id": "2",
+              "source_pr_number": 6870,
+              "statement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed when importing modules."
+            },
+            {
+              "requirement_id": "3",
+              "source_pr_number": 6879,
+              "statement": "The system shall prevent untrusted user input from causing arbitrary code to be loaded and executed during module import."
+            }
+          ],
+          "assessment": {
+            "decision": "ACCEPT",
+            "tool_rounds": 0,
+            "relations": [
+              {
+                "type": "OVERLAPS",
+                "target_requirement_id": "1",
+                "target_pr_number": 6869,
+                "reason": "Both require that the system not execute arbitrary code originating from data it processes, though this candidate is specific to serialized/deserialized data while PR 6869's requirement is framed more generally around externally controlled input."
+              }
+            ],
+            "issues": [
+              "The requirement now correctly reflects the direction of the vulnerability described in the evidence: risk arises when serialized output is later deserialized, not during export itself.",
+              "This overlaps conceptually with the requirement from Pull Request #6869, which also prohibits execution of arbitrary code derived from externally controlled input, though that one is framed around general input handling rather than serialization/deserialization specifically."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    }
+  ]
+}

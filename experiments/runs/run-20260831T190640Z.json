@@ -1,0 +1,335 @@
+{
+  "run": {
+    "generated_at": "2026-08-31T19:07:28.760918+00:00",
+    "input_file": "experiments/samples/sample-scrapy_scrapy.json",
+    "pull_requests": 5,
+    "prompt_version": "v1",
+    "workflow": {
+      "assessment_enabled": true,
+      "memory_enabled": true,
+      "max_generation_attempts": 3,
+      "memory_access": "mcp",
+      "retrieval_driver": "graph_node"
+    },
+    "llm": {
+      "generation": {
+        "model": "claude-haiku-4-5",
+        "resolved_model": "claude-haiku-4-5-20251001",
+        "max_tokens": 1024,
+        "effort": null
+      },
+      "assessment": {
+        "model": "claude-haiku-4-5",
+        "resolved_model": "claude-haiku-4-5-20251001",
+        "max_tokens": 8192,
+        "effort": null
+      }
+    },
+    "usage": {
+      "per_agent": {
+        "generation": {
+          "model": "claude-haiku-4-5",
+          "calls": 9,
+          "input_tokens": 28477,
+          "output_tokens": 431,
+          "estimated_cost_usd": 0.030632
+        },
+        "assessment": {
+          "model": "claude-haiku-4-5",
+          "calls": 9,
+          "input_tokens": 44886,
+          "output_tokens": 2410,
+          "estimated_cost_usd": 0.056936
+        }
+      },
+      "total_calls": 18,
+      "total_input_tokens": 73363,
+      "total_output_tokens": 2841,
+      "total_estimated_cost_usd": 0.087568,
+      "pricing_reference_date": "2026-08-26"
+    },
+    "memory": {
+      "database": "experiments\\memory\\pr-to-requirements.db",
+      "run_id": "20260831T190640Z",
+      "stored_requirements": 21
+    }
+  },
+  "summary": {
+    "REJECTED": 1,
+    "NOT_EXTRACTABLE": 4
+  },
+  "results": [
+    {
+      "pr_id": "scrapy-scrapy-pr-6869",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6869,
+      "timestamp": "2025-06-06T13:17:48+00:00",
+      "title": "Fix: Dangerous Code Execution Function Could Allow External Attacks in scrapy/shell.py",
+      "final_status": "REJECTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 960 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall prevent code injection attacks through the evaluation of externally-supplied input in the shell component.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "REJECT",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The evidence describes a code pattern that was detected and remediated, but does not state what behaviour changed for an observer or what the system now guarantees.",
+              "The requirement prescribes a defence mechanism—'prevent code injection'—rather than stating an observable behaviour. The evidence says only that eval() was present and has been addressed; it does not describe what callers of the shell component can now do or rely on.",
+              "The evidence does not establish whether the remediation eliminates the vulnerability entirely, mitigates it partially, or changes the attack surface. Without knowing what the fix was, the requirement cannot be grounded: it asserts a conclusion rather than a fact about the system."
+            ],
+            "unsupported_claims": [
+              "prevent code injection attacks",
+              "externally-supplied input"
+            ],
+            "missing_information": [],
+            "revision_instructions": [
+              "The evidence names only a problem—the presence of eval()—and says it was remediated, but does not state what the applied remedy was or what the system now does differently. A requirement grounded in this evidence cannot assert what vulnerability is prevented; it can only state facts about what changed that an observer could verify. Without access to the remediation itself, no requirement can be written that goes beyond restating the detection rule."
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6870",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6870,
+      "timestamp": "2025-06-06T13:19:55+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 978 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 2,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall prevent user-supplied input from causing arbitrary code to be executed through dynamic module imports.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "REVISE",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The requirement prescribes a technique (preventing user-supplied input from reaching dynamic module imports) rather than stating the observable behaviour that must result. The evidence does not specify which remediation was applied or what mechanism now blocks the vulnerability.",
+              "The evidence says 'the automated remediation process has applied the necessary changes' but does not state what those changes are or what behaviour they produce for an observer. A requirement built on this cannot be verified against the actual system without inspecting the code."
+            ],
+            "unsupported_claims": [
+              "prevent user-supplied input from causing arbitrary code"
+            ],
+            "missing_information": [
+              "the specific behaviour change that results from the fix - what the system now does or does not permit when genspider is invoked with certain inputs"
+            ],
+            "revision_instructions": [
+              "Remove the mechanism (preventing input from reaching imports). The evidence does not state how the fix works, only that a fix was applied.",
+              "State instead what behaviour the security fix guarantees. For example: what inputs are now rejected, what error is raised, or what is now permitted only under specific conditions. Ground this in what an external observer of the system could detect."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": null,
+          "refusal_reason": "The evidence states that a security vulnerability was remediated but does not describe what behaviour the system now exhibits or what an external observer would detect when the genspider command is invoked—whether certain inputs are now rejected, what error is raised, or what constraint is now enforced.",
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The evidence describes a security vulnerability and states that 'the automated remediation process has applied the necessary changes', but it does not specify what those changes are or what behaviour results from them.",
+              "The evidence does not describe any observable system behaviour: it does not state what inputs are now rejected, what error is raised, what happens when the genspider command is invoked with user input, or what constraint is now enforced.",
+              "Without knowing whether the remediation uses input validation, a whitelist, an allowlist, an exception, a type check, or some other mechanism, and without any statement of what an external observer would detect, no required behaviour can be grounded in the text.",
+              "The writer's reasoning is sound: a requirement cannot be validated without knowing what behaviour to test for, and the evidence provides none."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6875",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6875,
+      "timestamp": "2025-06-07T03:44:46+00:00",
+      "title": "Fix typo in cmdline.py comment: 'a argument' -> 'an argument'",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 579 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence states that only a comment was modified and that no code logic or functionality is affected, so no required behaviour of the system changes.",
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The Pull Request describes only a comment correction in source code. The evidence explicitly states that no code logic or functionality is affected. A comment change is not observable from outside the system and does not alter the behaviour of the system from the perspective of a user or caller of its public interface. No black-box test could distinguish the system before and after this change. The writer's reasoning is correct: there is no required behaviour to extract."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6879",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6879,
+      "timestamp": "2025-06-09T02:36:45+00:00",
+      "title": "Fix: Unsafe Code Loading from User Input Could Execute Malicious Programs in scrapy/commands/genspider.py",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 978 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 3,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall prevent user-supplied input from causing arbitrary code to be executed through dynamic module imports.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "REVISE",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The requirement prescribes a technique ('prevent user-supplied input from causing arbitrary code to be executed through dynamic module imports') rather than stating the observable behaviour. The evidence establishes that a vulnerability was fixed but does not specify which mitigation technique was applied.",
+              "The requirement does not follow an EARS pattern and reads as a description of the remediation mechanism rather than a system behaviour."
+            ],
+            "unsupported_claims": [
+              "prevent user-supplied input from causing arbitrary code to be executed through dynamic module imports"
+            ],
+            "missing_information": [],
+            "revision_instructions": [
+              "Remove the description of the mitigation technique. The evidence does not state whether the fix applies a whitelist, validation, constant values, or another approach.",
+              "State instead the behaviour that the system must guarantee from an observer's perspective: what must no longer be possible when genspider is invoked with untrusted input."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": "When a user invokes the genspider command with untrusted input, the system shall not execute arbitrary code supplied through that input.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "REVISE",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The requirement states what must not happen, but the evidence does not establish an observable behaviour from outside the system. A security property ('the system shall not execute arbitrary code') is not checkable as a black-box test in the way a functional requirement is: there is no observer action that produces a visible result or error confirming the guarantee holds.",
+              "The evidence says a vulnerability was fixed but does not describe what the system now does differently when genspider is invoked. It establishes that a risk was removed, not that a new capability or changed behaviour exists that an external observer can verify.",
+              "The requirement uses 'untrusted input' as a condition, but the evidence does not define what counts as untrusted or how the system distinguishes it. This makes the condition unobservable from outside."
+            ],
+            "unsupported_claims": [
+              "untrusted input (as a defined category the system recognizes)",
+              "shall not execute arbitrary code (as an externally observable behaviour rather than a security property)"
+            ],
+            "missing_information": [
+              "what the system does when genspider is invoked - what changed in its external behaviour, if anything"
+            ],
+            "revision_instructions": [
+              "Reframe the requirement around an observable change in system behaviour. Ask: what does the user see, receive, or experience differently after this fix? Does genspider reject certain inputs it previously accepted? Does it behave differently in response to specific input patterns?",
+              "Remove the abstract security property. Security guarantees like 'shall not execute' are attributes of the implementation and not behaviours checkable by invoking the system from outside.",
+              "If the fix applies validation or whitelisting, state what inputs are now accepted or rejected, and under what conditions. If it removes the use of dynamic imports entirely, state what the command now requires instead."
+            ]
+          }
+        },
+        {
+          "attempt": 3,
+          "candidate": null,
+          "refusal_reason": "The evidence describes a security vulnerability that was fixed but does not state what the system now does differently when genspider is invoked, what inputs it accepts or rejects, or what an external observer would see or experience as a result of the change.",
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The evidence describes a security vulnerability and states that a remediation was applied, but it does not specify what behaviour changed. It says a whitelist or validation 'could' prevent the attack, but does not state which approach was adopted.",
+              "The Pull Request provides no information about what the system now does when genspider is invoked: whether it rejects certain inputs, requires a whitelist, validates input, raises an error under specific conditions, or alters its behaviour in any way observable from outside.",
+              "Without knowing the mechanism applied—whether validation, whitelisting, removal of dynamic imports, or something else—no functional requirement can be grounded. Each mechanism would produce different observable behaviour, and the evidence establishes none of them.",
+              "The writer's reasoning is sound: the evidence does not establish a required behaviour, only that a risk was removed."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "scrapy-scrapy-pr-6880",
+      "repository": "scrapy/scrapy",
+      "pr_number": 6880,
+      "timestamp": "2025-06-09T02:45:09+00:00",
+      "title": "Fix: Unsafe Data Processing Method Allows Malicious Code Execution in scrapy/exporters.py",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 989 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 2,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall not execute arbitrary code when processing serialized data in the exporters module.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "REVISE",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The requirement prescribes a security outcome without establishing what serialization method the system now uses. The evidence recommends JSON or text-based formats but does not state which was applied.",
+              "The requirement states a negative constraint ('shall not execute') rather than the positive behaviour the evidence describes: what the system does instead of using pickle."
+            ],
+            "unsupported_claims": [
+              "JSON or text-based serialization format (the evidence recommends these but does not confirm adoption)"
+            ],
+            "missing_information": [
+              "What serialization method the exporters module now uses instead of pickle, which the evidence suggests but does not confirm"
+            ],
+            "revision_instructions": [
+              "State the positive behaviour: what the system now does when serializing data in the exporters module, based on what the remediation applied.",
+              "If the evidence does not confirm which format was adopted, express the requirement in general terms about the serialization method, without naming a specific format."
+            ]
+          }
+        },
+        {
+          "attempt": 2,
+          "candidate": null,
+          "refusal_reason": "The evidence reports that a remediation was applied to replace pickle but does not state which serialization method was adopted in its place, so any positive requirement about the new behaviour would be an invention.",
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The evidence describes a security vulnerability and states that 'the automated remediation process has applied the necessary changes', but it does not specify what serialization method replaced pickle.",
+              "The Pull Request recommends JSON or text-based formats as remedies but does not confirm which one was actually applied.",
+              "Without knowing what the system now does instead of using pickle, no positive requirement about the new behaviour can be stated without inventing details.",
+              "The writer's reasoning is correct: grounding a requirement would require assuming a specific serialization method that the evidence does not establish."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    }
+  ]
+}

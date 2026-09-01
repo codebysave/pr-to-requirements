@@ -68,6 +68,26 @@ CREATE TABLE IF NOT EXISTS requirement_relations (
     PRIMARY KEY (source_requirement_id, target_requirement_id, relation_type)
 );
 
+-- Ogni Pull Request elaborata, con l'esito, indipendentemente da cosa ha
+-- prodotto. Serve a sapere che cosa e' gia' stato fatto, e la tabella dei
+-- requisiti non basta a dirlo: conserva solo i successi, quindi una Pull
+-- Request rifiutata o non estraibile non vi lascia traccia e verrebbe
+-- rielaborata a ogni esecuzione, pagando ogni volta per riscoprire la stessa
+-- cosa.
+--
+-- La chiave e' progetto piu' numero: la stessa Pull Request elaborata da piu'
+-- esecuzioni resta una riga sola, aggiornata con l'esito piu' recente. Serve a
+-- rispondere "l'ho gia' vista?", non a tenerne la storia -- quella sta nei
+-- report sotto `experiments/runs/`.
+CREATE TABLE IF NOT EXISTS processed_pull_requests (
+    source_repository TEXT    NOT NULL,
+    source_pr_number  INTEGER NOT NULL,
+    final_status      TEXT    NOT NULL,
+    run_id            TEXT    NOT NULL,
+    processed_at      TEXT    NOT NULL,
+    PRIMARY KEY (source_repository, source_pr_number)
+);
+
 -- Vista di lettura: un requisito per riga, con le sue relazioni riassunte in
 -- una colonna. Non duplica nulla, viene calcolata a ogni interrogazione e non
 -- puo' quindi disallinearsi dalle tabelle.
@@ -106,6 +126,89 @@ SELECT
     r.run_id
   FROM requirements r
  ORDER BY r.id;
+
+-- Il catalogo: un requisito per comportamento, senza ripetizioni. E' l'elenco
+-- che si consegnerebbe a qualcuno come insieme dei requisiti del progetto.
+--
+-- Restano fuori due categorie, per ragioni opposte.
+--
+-- Chi ripete un requisito precedente: la relazione DUPLICATE va dal candidato
+-- nuovo verso quello gia' in memoria, quindi si nasconde chi la dichiara e si
+-- tiene quello arrivato prima, che ha introdotto il comportamento. La scelta
+-- non e' neutra -- due Pull Request con lo stesso contenuto producono lo stesso
+-- requisito, e a essere marcata e' semplicemente quella elaborata dopo -- ma un
+-- criterio serve, e l'ordine cronologico e' l'unico non arbitrario.
+--
+-- Chi e' stato superato: con SUPERSEDES vale il verso opposto, perche' il
+-- requisito obsoleto e' il bersaglio della relazione, non la fonte.
+--
+-- OVERLAPS e REFINES non escludono nulla: due requisiti che si sovrappongono in
+-- parte restano due comportamenti distinti.
+--
+-- Questa vista mostra i duplicati che il valutatore ha *riconosciuto*. Un
+-- duplicato che non ha visto resta qui, e un requisito legittimo marcato per
+-- errore sparisce: per questo `requirements` e `requirements_overview`
+-- continuano a mostrare tutto.
+CREATE VIEW requirements_unique AS
+SELECT
+    r.id,
+    r.source_repository,
+    r.source_pr_number,
+    r.statement,
+    r.source_pr_timestamp,
+    r.created_at,
+    r.run_id
+  FROM requirements r
+ WHERE NOT EXISTS (
+           SELECT 1
+             FROM requirement_relations ripete
+            WHERE ripete.source_requirement_id = r.id
+              AND ripete.relation_type = 'DUPLICATE'
+       )
+   AND NOT EXISTS (
+           SELECT 1
+             FROM requirement_relations superato
+            WHERE superato.target_requirement_id = r.id
+              AND superato.relation_type = 'SUPERSEDES'
+       )
+ ORDER BY r.id;
+
+-- Le sole relazioni che chiedono una decisione a una persona.
+--
+-- Restano fuori OVERLAPS e REFINES. Non perche' siano sbagliate, ma perche' a
+-- questo livello di generalita' sono quasi sempre vere: in un corpus di
+-- correzioni di sicurezza ogni requisito si sovrappone tematicamente a ogni
+-- altro, e la quinta Pull Request ne ha gia' dichiarate tre. Su un corpus da
+-- quaranta sarebbero quaranta, e seppellirebbero i due segnali che contano.
+--
+-- Quelli che contano sono: CONFLICTS, perche' due requisiti incompatibili non
+-- possono valere entrambi e qualcuno deve stabilire quale sopravvive;
+-- SUPERSEDES, perche' un requisito superato va ritirato; DUPLICATE, perche' un
+-- comportamento descritto due volte va consolidato.
+--
+-- L'ordinamento mette per primo cio' che e' piu' urgente: una contraddizione
+-- prima di una sostituzione, una sostituzione prima di una ripetizione.
+CREATE VIEW relations_to_review AS
+SELECT
+    rel.relation_type,
+    fonte.source_pr_number     AS pr_number,
+    fonte.statement            AS requirement,
+    bersaglio.source_pr_number AS related_pr_number,
+    bersaglio.statement        AS related_requirement,
+    rel.reason,
+    fonte.id                   AS requirement_id,
+    bersaglio.id               AS related_requirement_id,
+    rel.created_at
+  FROM requirement_relations rel
+  JOIN requirements fonte     ON fonte.id = rel.source_requirement_id
+  JOIN requirements bersaglio ON bersaglio.id = rel.target_requirement_id
+ WHERE rel.relation_type IN ('CONFLICTS', 'SUPERSEDES', 'DUPLICATE')
+ ORDER BY CASE rel.relation_type
+              WHEN 'CONFLICTS'  THEN 1
+              WHEN 'SUPERSEDES' THEN 2
+              ELSE 3
+          END,
+          rel.created_at;
 """
 
 _REQUIREMENT_COLUMNS = (
@@ -191,7 +294,8 @@ class SqliteRequirementRepository:
                 logger.info("  [MEMORIA] aggiungo la colonna 'reason' alle relazioni")
                 self._connection.execute("ALTER TABLE requirement_relations ADD COLUMN reason TEXT")
 
-        self._connection.execute("DROP VIEW IF EXISTS requirements_overview")
+        for vista in ("requirements_overview", "requirements_unique", "relations_to_review"):
+            self._connection.execute(f"DROP VIEW IF EXISTS {vista}")
 
     # -- ciclo di vita ---------------------------------------------------
 
@@ -334,7 +438,56 @@ class SqliteRequirementRepository:
                 ),
             )
 
+    def record_processed(
+        self,
+        pull_request: PullRequestRecord,
+        final_status: str,
+    ) -> None:
+        """Registra che questa Pull Request e' stata elaborata, e con quale esito.
+
+        Invocata a esecuzione conclusa per **ogni** Pull Request, non solo per
+        quelle accettate: una rifiutata o non estraibile e' comunque stata
+        elaborata, e senza questa riga verrebbe rielaborata per sempre.
+
+        Una Pull Request gia' registrata viene aggiornata invece di duplicata:
+        interessa sapere se e' stata vista, non quante volte.
+        """
+
+        with self._connection:
+            self._connection.execute(
+                "INSERT INTO processed_pull_requests ("
+                "  source_repository, source_pr_number, final_status, run_id, processed_at"
+                ") VALUES (?, ?, ?, ?, ?)"
+                " ON CONFLICT (source_repository, source_pr_number)"
+                " DO UPDATE SET final_status = excluded.final_status,"
+                "               run_id       = excluded.run_id,"
+                "               processed_at = excluded.processed_at",
+                (
+                    pull_request.repository,
+                    pull_request.pr_number,
+                    final_status,
+                    self._run_id,
+                    _to_utc_iso(datetime.now(timezone.utc)),
+                ),
+            )
+
     # -- lettura ---------------------------------------------------------
+
+    def processed_pull_requests(self, repository: str) -> dict[int, str]:
+        """I numeri delle Pull Request gia' elaborate per un progetto, con l'esito.
+
+        Restituisce una mappa numero -> esito, cosi' chi decide di saltarle puo'
+        anche dire perche'. Un progetto mai visto da' una mappa vuota.
+        """
+
+        righe = self._connection.execute(
+            "SELECT source_pr_number, final_status"
+            "  FROM processed_pull_requests"
+            " WHERE source_repository = ?",
+            (repository,),
+        ).fetchall()
+        return {riga["source_pr_number"]: riga["final_status"] for riga in righe}
+
 
     def get_by_id(self, requirement_id: int) -> StoredRequirement | None:
         row = self._connection.execute(

@@ -34,7 +34,7 @@ from are.agents.memory_tool import MemorySearchTool
 from are.agents.prompts import DEFAULT_PROMPT_VERSION
 from are.db import ExhaustiveRequirementRetriever, SqliteRequirementRepository
 from are.env import load_environment
-from are.input import PullRequestInputError, PullRequestLoader
+from are.input import PullRequestInputError, PullRequestLoader, PullRequestRecord
 from are.llm import (
     MODEL_ALIASES,
     PRICING_REFERENCE_DATE,
@@ -93,6 +93,26 @@ def main(argv: list[str] | None = None) -> int:
     if args.limit is not None:
         pull_requests = pull_requests[: args.limit]
 
+    memory_path = Path(args.memory_db) if args.memory_db else _default_memory_path()
+
+    # Il controllo avviene qui, prima di costruire qualsiasi client e prima di
+    # aprire la sessione MCP: e' una lettura del database, non richiede il
+    # modello, e saltare una Pull Request costa zero invece delle due-sei
+    # chiamate che sarebbero servite per rielaborarla.
+    saltate: list[tuple[PullRequestRecord, str]] = []
+    if args.skip_processed:
+        pull_requests, saltate = _split_already_processed(pull_requests, memory_path)
+        for record, esito in saltate:
+            print(f"  [SALTATA]  PR #{record.pr_number} -- gia' elaborata ({esito})")
+        if saltate:
+            print(
+                f"{len(saltate)} Pull Request saltate, "
+                f"{len(pull_requests)} da elaborare\n"
+            )
+        if not pull_requests:
+            print("Nessuna Pull Request nuova da elaborare.")
+            return 0
+
     llm_config = _apply_model_overrides(load_llm_config(args.llm_config), args)
     workflow_config = load_workflow_config(args.workflow_config)
     prompt_version = _resolve_prompt_version(args)
@@ -104,7 +124,6 @@ def main(argv: list[str] | None = None) -> int:
     # e identifica le righe che questa run scrive in memoria, così i tre
     # artefatti restano agganciati fra loro.
     run_stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    memory_path = Path(args.memory_db) if args.memory_db else _default_memory_path()
 
     # Con --use-mcp l'accesso alla memoria passa interamente per il server, che
     # gira in un sottoprocesso e apre lui il database. Il processo padre non ne
@@ -164,6 +183,13 @@ def main(argv: list[str] | None = None) -> int:
         finally:
             memory.close()
 
+    # Ogni Pull Request elaborata viene registrata con il suo esito, anche
+    # quando non ha prodotto nulla: e' cio' che permette a --skip-processed di
+    # non rielaborare all'infinito una PR rifiutata o non estraibile. Avviene
+    # qui e non dentro il grafo perche' e' una nota dell'esecuzione, come il
+    # report, e non un fatto del dominio.
+    _record_processed(memory_path, run_stamp, results)
+
     usage = {
         "generation": (llm_config.generation.model, generation_client.usage),
         "assessment": (llm_config.assessment.model, assessment_client.usage),
@@ -178,6 +204,10 @@ def main(argv: list[str] | None = None) -> int:
         metadata={
             "input_file": str(args.input),
             "pull_requests": len(pull_requests),
+            "skipped_already_processed": [
+                {"pr_number": record.pr_number, "previous_status": esito}
+                for record, esito in saltate
+            ],
             "prompt_version": prompt_version,
             "workflow": {
                 "assessment_enabled": workflow_config.assessment_enabled,
@@ -323,6 +353,14 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         "di essere deterministico: il modello puo' non cercare affatto. Seleziona "
         "da solo la versione v2 del prompt, che descrive il tool, a meno che "
         "--prompt-version non sia indicata esplicitamente",
+    )
+    parser.add_argument(
+        "--skip-processed",
+        action="store_true",
+        help="salta le Pull Request gia' elaborate in precedenza sullo stesso "
+        "progetto, riconosciute dal numero. Nessuna chiamata al modello: e' un "
+        "controllo sul database. Da tenere spento quando si rielabora lo stesso "
+        "corpus di proposito, per esempio per misurare la variabilita' fra repliche",
     )
     parser.add_argument("--verbose", action="store_true", help="log di dettaglio")
     return parser.parse_args(argv)
@@ -561,6 +599,58 @@ def _build_retriever(
         run_id=run_stamp if scope == MEMORY_SCOPE_RUN else None,
         max_requirements=workflow_config.max_memory_requirements,
     )
+
+
+def _split_already_processed(
+    pull_requests: list[PullRequestRecord],
+    memory_path: Path,
+) -> tuple[list[PullRequestRecord], list[tuple[PullRequestRecord, str]]]:
+    """Separa le Pull Request nuove da quelle gia' elaborate in precedenza.
+
+    Il riconoscimento e' per progetto e numero: la stessa Pull Request non viene
+    rielaborata, qualunque esito avesse avuto. Una rifiutata o non estraibile e'
+    stata elaborata comunque, e rielaborarla significherebbe pagare per
+    riscoprire la stessa cosa.
+
+    Il database viene aperto e chiuso qui, prima che la sessione MCP esista: e'
+    una lettura, e un file mancante e' semplicemente un progetto mai visto.
+    """
+
+    if not memory_path.exists():
+        return pull_requests, []
+
+    with SqliteRequirementRepository(memory_path, "lettura") as repository:
+        gia_viste: dict[str, dict[int, str]] = {}
+        nuove: list[PullRequestRecord] = []
+        saltate: list[tuple[PullRequestRecord, str]] = []
+        for record in pull_requests:
+            if record.repository not in gia_viste:
+                gia_viste[record.repository] = repository.processed_pull_requests(
+                    record.repository
+                )
+            esito = gia_viste[record.repository].get(record.pr_number)
+            if esito is None:
+                nuove.append(record)
+            else:
+                saltate.append((record, esito))
+    return nuove, saltate
+
+
+def _record_processed(memory_path: Path, run_stamp: str, results: list) -> None:
+    """Annota l'esito di ogni Pull Request elaborata in questa esecuzione.
+
+    Un errore tecnico non conta come elaborazione: la Pull Request non ha
+    ricevuto un giudizio, e alla prossima esecuzione va ritentata.
+    """
+
+    with SqliteRequirementRepository(memory_path, run_stamp) as repository:
+        for result in results:
+            if not result.succeeded:
+                continue
+            stato = result.final_state["final_status"]
+            if stato is None:
+                continue
+            repository.record_processed(result.pull_request, stato.value)
 
 
 def _count_requirements(memory_path: Path) -> int:
