@@ -376,3 +376,93 @@ def test_an_older_database_gains_the_catalogue_too(tmp_path):
 
     with SqliteRequirementRepository(percorso, RUN_ID) as repo:
         assert len(catalogo(repo)) == 1
+
+
+# -- le relazioni da rivedere ---------------------------------------------
+
+
+def da_rivedere(repository: SqliteRequirementRepository) -> list[sqlite3.Row]:
+    return list(repository._connection.execute("SELECT * FROM relations_to_review"))
+
+
+@pytest.mark.parametrize(
+    "kind", [RelationKind.CONFLICTS, RelationKind.SUPERSEDES, RelationKind.DUPLICATE]
+)
+def test_the_relations_that_need_a_decision_are_listed(repository, kind: RelationKind):
+    due_requisiti(repository, kind)
+
+    righe = da_rivedere(repository)
+    assert len(righe) == 1
+    assert righe[0]["relation_type"] == kind.value
+
+
+@pytest.mark.parametrize("kind", [RelationKind.OVERLAPS, RelationKind.REFINES])
+def test_a_thematic_relation_is_left_out(repository, kind: RelationKind):
+    """A questo livello di generalità sono quasi sempre vere: in un corpus di
+    correzioni di sicurezza ogni requisito si sovrappone a ogni altro, e
+    seppellirebbero i segnali che contano."""
+
+    due_requisiti(repository, kind)
+    assert da_rivedere(repository) == []
+
+
+def test_both_requirements_are_shown_side_by_side(repository):
+    """Per decidere servono entrambe le frasi: leggerne una sola non dice se
+    la relazione sia giusta."""
+
+    due_requisiti(repository, RelationKind.DUPLICATE)
+
+    riga = da_rivedere(repository)[0]
+    assert riga["pr_number"] == 6879
+    assert riga["related_pr_number"] == 6870
+    assert riga["requirement"] == "Il secondo."
+    assert riga["related_requirement"] == "Il primo."
+
+
+def test_the_reason_travels_with_the_relation(repository):
+    due_requisiti(repository, RelationKind.CONFLICTS)
+    assert da_rivedere(repository)[0]["reason"] == "stesso comportamento"
+
+
+def test_a_contradiction_comes_before_a_repetition(repository):
+    """L'ordine mette per primo ciò che è più urgente: due requisiti
+    incompatibili non possono valere entrambi."""
+
+    repository.store_accepted(pr(6869, "2025-01-01T10:00:00Z"), "Il primo.")
+    primo = repository.list_requirements()[0]
+    repository.store_accepted(
+        pr(6870, "2025-02-01T10:00:00Z"),
+        "Il secondo.",
+        (claim(primo.id, 6869, RelationKind.DUPLICATE),),
+    )
+    repository.store_accepted(
+        pr(6879, "2025-03-01T10:00:00Z"),
+        "Il terzo.",
+        (claim(primo.id, 6869, RelationKind.CONFLICTS),),
+    )
+
+    tipi = [riga["relation_type"] for riga in da_rivedere(repository)]
+    assert tipi == ["CONFLICTS", "DUPLICATE"]
+
+
+def test_nothing_to_review_gives_an_empty_list(repository):
+    repository.store_accepted(pr(), "The system shall export the report.")
+    assert da_rivedere(repository) == []
+
+
+def test_an_older_database_gains_this_view_too(tmp_path):
+    percorso = tmp_path / "vecchio.db"
+    vecchio_schema(percorso)
+
+    with SqliteRequirementRepository(percorso, RUN_ID) as repo:
+        assert da_rivedere(repo) == []
+
+
+def test_the_three_views_exist_together(repository):
+    viste = {
+        riga["name"]
+        for riga in repository._connection.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'view'"
+        )
+    }
+    assert viste == {"requirements_overview", "requirements_unique", "relations_to_review"}

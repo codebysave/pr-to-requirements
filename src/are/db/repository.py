@@ -152,6 +152,43 @@ SELECT
               AND superato.relation_type = 'SUPERSEDES'
        )
  ORDER BY r.id;
+
+-- Le sole relazioni che chiedono una decisione a una persona.
+--
+-- Restano fuori OVERLAPS e REFINES. Non perche' siano sbagliate, ma perche' a
+-- questo livello di generalita' sono quasi sempre vere: in un corpus di
+-- correzioni di sicurezza ogni requisito si sovrappone tematicamente a ogni
+-- altro, e la quinta Pull Request ne ha gia' dichiarate tre. Su un corpus da
+-- quaranta sarebbero quaranta, e seppellirebbero i due segnali che contano.
+--
+-- Quelli che contano sono: CONFLICTS, perche' due requisiti incompatibili non
+-- possono valere entrambi e qualcuno deve stabilire quale sopravvive;
+-- SUPERSEDES, perche' un requisito superato va ritirato; DUPLICATE, perche' un
+-- comportamento descritto due volte va consolidato.
+--
+-- L'ordinamento mette per primo cio' che e' piu' urgente: una contraddizione
+-- prima di una sostituzione, una sostituzione prima di una ripetizione.
+CREATE VIEW relations_to_review AS
+SELECT
+    rel.relation_type,
+    fonte.source_pr_number     AS pr_number,
+    fonte.statement            AS requirement,
+    bersaglio.source_pr_number AS related_pr_number,
+    bersaglio.statement        AS related_requirement,
+    rel.reason,
+    fonte.id                   AS requirement_id,
+    bersaglio.id               AS related_requirement_id,
+    rel.created_at
+  FROM requirement_relations rel
+  JOIN requirements fonte     ON fonte.id = rel.source_requirement_id
+  JOIN requirements bersaglio ON bersaglio.id = rel.target_requirement_id
+ WHERE rel.relation_type IN ('CONFLICTS', 'SUPERSEDES', 'DUPLICATE')
+ ORDER BY CASE rel.relation_type
+              WHEN 'CONFLICTS'  THEN 1
+              WHEN 'SUPERSEDES' THEN 2
+              ELSE 3
+          END,
+          rel.created_at;
 """
 
 _REQUIREMENT_COLUMNS = (
@@ -237,7 +274,7 @@ class SqliteRequirementRepository:
                 logger.info("  [MEMORIA] aggiungo la colonna 'reason' alle relazioni")
                 self._connection.execute("ALTER TABLE requirement_relations ADD COLUMN reason TEXT")
 
-        for vista in ("requirements_overview", "requirements_unique"):
+        for vista in ("requirements_overview", "requirements_unique", "relations_to_review"):
             self._connection.execute(f"DROP VIEW IF EXISTS {vista}")
 
     # -- ciclo di vita ---------------------------------------------------
