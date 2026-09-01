@@ -68,6 +68,26 @@ CREATE TABLE IF NOT EXISTS requirement_relations (
     PRIMARY KEY (source_requirement_id, target_requirement_id, relation_type)
 );
 
+-- Ogni Pull Request elaborata, con l'esito, indipendentemente da cosa ha
+-- prodotto. Serve a sapere che cosa e' gia' stato fatto, e la tabella dei
+-- requisiti non basta a dirlo: conserva solo i successi, quindi una Pull
+-- Request rifiutata o non estraibile non vi lascia traccia e verrebbe
+-- rielaborata a ogni esecuzione, pagando ogni volta per riscoprire la stessa
+-- cosa.
+--
+-- La chiave e' progetto piu' numero: la stessa Pull Request elaborata da piu'
+-- esecuzioni resta una riga sola, aggiornata con l'esito piu' recente. Serve a
+-- rispondere "l'ho gia' vista?", non a tenerne la storia -- quella sta nei
+-- report sotto `experiments/runs/`.
+CREATE TABLE IF NOT EXISTS processed_pull_requests (
+    source_repository TEXT    NOT NULL,
+    source_pr_number  INTEGER NOT NULL,
+    final_status      TEXT    NOT NULL,
+    run_id            TEXT    NOT NULL,
+    processed_at      TEXT    NOT NULL,
+    PRIMARY KEY (source_repository, source_pr_number)
+);
+
 -- Vista di lettura: un requisito per riga, con le sue relazioni riassunte in
 -- una colonna. Non duplica nulla, viene calcolata a ogni interrogazione e non
 -- puo' quindi disallinearsi dalle tabelle.
@@ -418,7 +438,56 @@ class SqliteRequirementRepository:
                 ),
             )
 
+    def record_processed(
+        self,
+        pull_request: PullRequestRecord,
+        final_status: str,
+    ) -> None:
+        """Registra che questa Pull Request e' stata elaborata, e con quale esito.
+
+        Invocata a esecuzione conclusa per **ogni** Pull Request, non solo per
+        quelle accettate: una rifiutata o non estraibile e' comunque stata
+        elaborata, e senza questa riga verrebbe rielaborata per sempre.
+
+        Una Pull Request gia' registrata viene aggiornata invece di duplicata:
+        interessa sapere se e' stata vista, non quante volte.
+        """
+
+        with self._connection:
+            self._connection.execute(
+                "INSERT INTO processed_pull_requests ("
+                "  source_repository, source_pr_number, final_status, run_id, processed_at"
+                ") VALUES (?, ?, ?, ?, ?)"
+                " ON CONFLICT (source_repository, source_pr_number)"
+                " DO UPDATE SET final_status = excluded.final_status,"
+                "               run_id       = excluded.run_id,"
+                "               processed_at = excluded.processed_at",
+                (
+                    pull_request.repository,
+                    pull_request.pr_number,
+                    final_status,
+                    self._run_id,
+                    _to_utc_iso(datetime.now(timezone.utc)),
+                ),
+            )
+
     # -- lettura ---------------------------------------------------------
+
+    def processed_pull_requests(self, repository: str) -> dict[int, str]:
+        """I numeri delle Pull Request gia' elaborate per un progetto, con l'esito.
+
+        Restituisce una mappa numero -> esito, cosi' chi decide di saltarle puo'
+        anche dire perche'. Un progetto mai visto da' una mappa vuota.
+        """
+
+        righe = self._connection.execute(
+            "SELECT source_pr_number, final_status"
+            "  FROM processed_pull_requests"
+            " WHERE source_repository = ?",
+            (repository,),
+        ).fetchall()
+        return {riga["source_pr_number"]: riga["final_status"] for riga in righe}
+
 
     def get_by_id(self, requirement_id: int) -> StoredRequirement | None:
         row = self._connection.execute(
