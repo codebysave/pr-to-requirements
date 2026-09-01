@@ -106,6 +106,52 @@ SELECT
     r.run_id
   FROM requirements r
  ORDER BY r.id;
+
+-- Il catalogo: un requisito per comportamento, senza ripetizioni. E' l'elenco
+-- che si consegnerebbe a qualcuno come insieme dei requisiti del progetto.
+--
+-- Restano fuori due categorie, per ragioni opposte.
+--
+-- Chi ripete un requisito precedente: la relazione DUPLICATE va dal candidato
+-- nuovo verso quello gia' in memoria, quindi si nasconde chi la dichiara e si
+-- tiene quello arrivato prima, che ha introdotto il comportamento. La scelta
+-- non e' neutra -- due Pull Request con lo stesso contenuto producono lo stesso
+-- requisito, e a essere marcata e' semplicemente quella elaborata dopo -- ma un
+-- criterio serve, e l'ordine cronologico e' l'unico non arbitrario.
+--
+-- Chi e' stato superato: con SUPERSEDES vale il verso opposto, perche' il
+-- requisito obsoleto e' il bersaglio della relazione, non la fonte.
+--
+-- OVERLAPS e REFINES non escludono nulla: due requisiti che si sovrappongono in
+-- parte restano due comportamenti distinti.
+--
+-- Questa vista mostra i duplicati che il valutatore ha *riconosciuto*. Un
+-- duplicato che non ha visto resta qui, e un requisito legittimo marcato per
+-- errore sparisce: per questo `requirements` e `requirements_overview`
+-- continuano a mostrare tutto.
+CREATE VIEW requirements_unique AS
+SELECT
+    r.id,
+    r.source_repository,
+    r.source_pr_number,
+    r.statement,
+    r.source_pr_timestamp,
+    r.created_at,
+    r.run_id
+  FROM requirements r
+ WHERE NOT EXISTS (
+           SELECT 1
+             FROM requirement_relations ripete
+            WHERE ripete.source_requirement_id = r.id
+              AND ripete.relation_type = 'DUPLICATE'
+       )
+   AND NOT EXISTS (
+           SELECT 1
+             FROM requirement_relations superato
+            WHERE superato.target_requirement_id = r.id
+              AND superato.relation_type = 'SUPERSEDES'
+       )
+ ORDER BY r.id;
 """
 
 _REQUIREMENT_COLUMNS = (
@@ -191,7 +237,8 @@ class SqliteRequirementRepository:
                 logger.info("  [MEMORIA] aggiungo la colonna 'reason' alle relazioni")
                 self._connection.execute("ALTER TABLE requirement_relations ADD COLUMN reason TEXT")
 
-        self._connection.execute("DROP VIEW IF EXISTS requirements_overview")
+        for vista in ("requirements_overview", "requirements_unique"):
+            self._connection.execute(f"DROP VIEW IF EXISTS {vista}")
 
     # -- ciclo di vita ---------------------------------------------------
 
