@@ -457,7 +457,13 @@ class LLMRequirementAssessor:
         logger.info("%s", console.result(esito, console.OK if passata else console.STOP))
 
         for etichetta, valori in (
-            ("problema", feedback.issues),
+            # `issues` non contiene soltanto difetti: il valutatore ci mette
+            # anche le relazioni con i requisiti storici, come il prompt gli
+            # chiede, e le motivazioni di un'accettazione, che non gli chiede
+            # nessuno. Chiamarlo «problema» faceva leggere "problema 1 di 2"
+            # sotto un ACCEPT pulito, che sembra una contraddizione e non lo e'.
+            # L'etichetta neutra dice cos'e' davvero: un'osservazione.
+            ("osservazione", feedback.issues),
             ("non supportato dall'evidenza", feedback.unsupported_claims),
             ("informazione mancante", feedback.missing_information),
             ("istruzione", feedback.revision_instructions),
