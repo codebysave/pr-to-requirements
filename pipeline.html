@@ -429,29 +429,88 @@
     .panel-head { padding: 20px 22px 16px; }
     .panel-body { padding: 20px 22px 40px; }
   }
+
+  /* --- filtri percorso ------------------------------------------------ */
+  .path-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 22px 0 0;
+    padding: 0;
+  }
+  .path-filter {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .path-filter:hover { color: var(--ink); border-color: var(--muted); }
+  .path-filter:focus-visible { outline: 2px solid var(--accent-revise); outline-offset: 2px; }
+  .path-filter[aria-pressed="true"] {
+    color: var(--ink);
+    background: var(--surface-alt);
+    border-color: var(--ink-soft);
+    font-weight: 600;
+  }
+  .path-filter .dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    margin-right: 7px;
+    vertical-align: 1px;
+  }
+
+  .diagram-scroll svg [data-path] { transition: opacity .22s ease; }
+  .diagram-scroll svg[data-hl] [data-path] { opacity: 0.08; }
+  .diagram-scroll svg[data-hl="accept"]  [data-path~="accept"],
+  .diagram-scroll svg[data-hl="revise"]  [data-path~="revise"],
+  .diagram-scroll svg[data-hl="store"]   [data-path~="store"],
+  .diagram-scroll svg[data-hl="mcp"]     [data-path~="mcp"],
+  .diagram-scroll svg[data-hl="decline"] [data-path~="decline"],
+  .diagram-scroll svg[data-hl="notextr"] [data-path~="notextr"] { opacity: 1; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .diagram-scroll svg [data-path] { transition: none; }
+  }
 </style>
 
 <div class="page">
   <header class="page-head">
     <div class="eyebrow">Diagramma interattivo · pr-to-requirements</div>
     <h1>La pipeline multi-agente, tappa per tappa</h1>
-    <p class="lede">Dalla Pull Request normalizzata al requisito validato. Otto tappe, due agenti LLM, un ciclo di revisione, due esiti terminali. Clicca ogni blocco per aprire la scheda dettagliata sul lato destro.</p>
+    <p class="lede">Dalla Pull Request normalizzata al requisito validato. Otto tappe, due agenti LLM, un ciclo di revisione, quattro esiti terminali, e due confini di processo — il fornitore del modello in alto, il server MCP in basso. Clicca ogni blocco per aprire la scheda dettagliata sul lato destro.</p>
 
     <ul class="legend">
       <li><span class="swatch" style="background: var(--tint-input)"></span>Input</li>
       <li><span class="swatch" style="background: var(--tint-deterministic)"></span>Deterministico</li>
       <li><span class="swatch" style="background: var(--tint-gate)"></span>Gate</li>
       <li><span class="swatch" style="background: var(--tint-llm)"></span>LLM Agent</li>
-      <li><span class="swatch" style="background: var(--tint-memory)"></span>Memoria + MCP</li>
+      <li><span class="swatch" style="background: var(--tint-memory)"></span>Memoria · MCP</li>
       <li><span class="swatch" style="background: var(--surface-alt); border-style: dashed"></span>Infrastruttura LLM</li>
       <li><span class="swatch" style="background: var(--tint-accepted)"></span>Esito ACCEPT</li>
       <li><span class="swatch" style="background: var(--tint-declined)"></span>Esito DECLINE</li>
     </ul>
+
+    <div class="path-filters" role="group" aria-label="Evidenzia un percorso nel diagramma">
+      <button type="button" class="path-filter" data-path="accept" aria-pressed="false"><span class="dot" style="background: var(--accent-accept)"></span>Percorso di accettazione</button>
+      <button type="button" class="path-filter" data-path="revise" aria-pressed="false"><span class="dot" style="background: var(--accent-revise)"></span>Ciclo di revisione</button>
+      <button type="button" class="path-filter" data-path="store" aria-pressed="false"><span class="dot" style="background: var(--accent-accept)"></span>Requisito salvato nel DB</button>
+      <button type="button" class="path-filter" data-path="mcp" aria-pressed="false"><span class="dot" style="background: var(--tint-memory)"></span>Dialogo con il DB via MCP</button>
+      <button type="button" class="path-filter" data-path="decline" aria-pressed="false"><span class="dot" style="background: var(--accent-decline)"></span>Requisito declinato</button>
+      <button type="button" class="path-filter" data-path="notextr" aria-pressed="false"><span class="dot" style="background: var(--accent-decline)"></span>Requisito non estraibile</button>
+    </div>
   </header>
 
   <figure class="diagram-frame">
     <div class="diagram-scroll">
-      <svg viewBox="0 0 1600 920" role="img" aria-label="Diagramma della pipeline pr-to-requirements: livello LLM Client condiviso, otto tappe più esiti e ciclo di revisione, tutte cliccabili per il dettaglio">
+      <svg viewBox="0 0 1600 1100" role="img" aria-label="Diagramma della pipeline pr-to-requirements: livello LLM Client in alto, otto tappe più esiti e ciclo di revisione, confine di processo MCP in basso, tutte cliccabili per il dettaglio">
         <defs>
           <marker id="arr-main" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto">
             <polygon points="0,0 10,5 0,10" fill="var(--muted)"/>
@@ -468,8 +527,8 @@
         </defs>
 
         <!-- === LLM Client · shared infrastructure layer (top) === -->
-        <text class="row-label" x="20" y="18">Livello LLM · astrazione fornitore condivisa dagli agenti</text>
-        <g class="block" data-step="llm-client" tabindex="0" role="button" aria-label="Livello LLM Client">
+        <text class="row-label" x="20" y="18" data-path="infra">Livello LLM · astrazione fornitore condivisa dagli agenti</text>
+        <g class="block" data-step="llm-client" tabindex="0" role="button" aria-label="Livello LLM Client" data-path="infra">
           <rect class="block-body" x="560" y="30" width="760" height="80" rx="8" fill="var(--surface-alt)" stroke-dasharray="5 4" stroke-width="1.5"/>
           <text class="block-tag" x="580" y="54">INFRASTRUTTURA · DECISIONE 3.2</text>
           <text class="block-title" x="580" y="80">LLM Client</text>
@@ -477,39 +536,28 @@
         </g>
 
         <!-- Dashed connectors: bar → block 04 and bar → block 07 -->
-        <line x1="670" y1="110" x2="670" y2="400" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 4"/>
-        <text x="683" y="258" class="flow-label" fill="var(--muted)">chiama</text>
-        <line x1="1240" y1="110" x2="1240" y2="400" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 4"/>
-        <text x="1253" y="258" class="flow-label" fill="var(--muted)">chiama</text>
+        <line x1="670" y1="110" x2="670" y2="400" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 4" data-path="infra"/>
+        <text x="683" y="258" class="flow-label" fill="var(--muted)" data-path="infra">chiama</text>
+        <line x1="1240" y1="110" x2="1240" y2="400" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 4" data-path="infra"/>
+        <text x="1253" y="258" class="flow-label" fill="var(--muted)" data-path="infra">chiama</text>
 
         <!-- === ACCEPTED terminal === -->
-        <g class="block" data-step="accepted" tabindex="0" role="button" aria-label="Esito ACCEPTED">
+        <g class="block" data-step="accepted" tabindex="0" role="button" aria-label="Esito ACCEPTED" data-path="accept store mcp">
           <rect class="block-body" x="1350" y="140" width="170" height="90" rx="6" fill="var(--tint-accepted)"/>
           <text class="block-tag" x="1370" y="164">CONTROLLED WORKFLOW</text>
           <text class="block-title" x="1370" y="192">ACCEPTED</text>
-          <text class="block-sub" x="1370" y="214">requisito persistito</text>
+          <text class="block-sub" x="1370" y="214">nodo accept · scrive</text>
         </g>
 
-        <!-- === Persist via MCP === -->
-        <g class="block" data-step="persist" tabindex="0" role="button" aria-label="Persist via MCP">
-          <rect class="block-body" x="1350" y="260" width="170" height="90" rx="6" fill="var(--surface-alt)"/>
-          <text class="block-tag" x="1370" y="284">CONTROLLER</text>
-          <text class="block-title" x="1370" y="312">Persist via MCP</text>
-          <text class="block-sub" x="1370" y="334">Repository → SQLite</text>
-        </g>
-
-        <!-- Arrow: Persist → ACCEPTED -->
-        <line x1="1435" y1="260" x2="1435" y2="234" stroke="var(--accent-accept)" stroke-width="2" marker-end="url(#arr-accept)"/>
-
-        <!-- Arrow: 08 → Persist (ACCEPT) -->
-        <line x1="1435" y1="400" x2="1435" y2="354" stroke="var(--accent-accept)" stroke-width="2" marker-end="url(#arr-accept)"/>
-        <text x="1450" y="382" class="flow-label" fill="var(--accent-accept)">ACCEPT</text>
+        <!-- Arrow: 08 → ACCEPTED (ACCEPT) -->
+        <line x1="1435" y1="400" x2="1435" y2="234" stroke="var(--accent-accept)" stroke-width="2" marker-end="url(#arr-accept)" data-path="accept store mcp"/>
+        <text x="1450" y="330" class="flow-label" fill="var(--accent-accept)" data-path="accept store mcp">ACCEPT</text>
 
         <!-- === Main pipeline row === -->
-        <text class="row-label" x="20" y="384">Main pipeline</text>
+        <text class="row-label" x="20" y="384" data-path="infra">Main pipeline</text>
 
         <!-- 01 INPUT -->
-        <g class="block" data-step="01" tabindex="0" role="button" aria-label="Step 01, PR normalizzata">
+        <g class="block" data-step="01" tabindex="0" role="button" aria-label="Step 01, PR normalizzata" data-path="accept revise store mcp decline notextr">
           <rect class="block-body" x="20" y="400" width="160" height="140" rx="6" fill="var(--tint-input)"/>
           <text class="block-num" x="34" y="424">01</text>
           <text class="block-tag" x="166" y="424" text-anchor="end">INPUT</text>
@@ -519,7 +567,7 @@
         </g>
 
         <!-- 02 LOADER -->
-        <g class="block" data-step="02" tabindex="0" role="button" aria-label="Step 02, PullRequestLoader">
+        <g class="block" data-step="02" tabindex="0" role="button" aria-label="Step 02, PullRequestLoader" data-path="accept revise store mcp decline notextr">
           <rect class="block-body" x="210" y="400" width="160" height="140" rx="6" fill="var(--tint-deterministic)"/>
           <text class="block-num" x="224" y="424">02</text>
           <text class="block-tag" x="356" y="424" text-anchor="end">DETERMINISTIC</text>
@@ -530,7 +578,7 @@
         </g>
 
         <!-- 03 EXTRACTABILITY -->
-        <g class="block" data-step="03" tabindex="0" role="button" aria-label="Step 03, Extractability">
+        <g class="block" data-step="03" tabindex="0" role="button" aria-label="Step 03, Extractability" data-path="accept revise store mcp decline notextr">
           <rect class="block-body" x="400" y="400" width="160" height="140" rx="6" fill="var(--tint-gate)"/>
           <text class="block-num" x="414" y="424">03</text>
           <text class="block-tag" x="546" y="424" text-anchor="end">ROUTING GATE</text>
@@ -540,7 +588,7 @@
         </g>
 
         <!-- 04 GENERATION -->
-        <g class="block" data-step="04" tabindex="0" role="button" aria-label="Step 04, Generation Agent">
+        <g class="block" data-step="04" tabindex="0" role="button" aria-label="Step 04, Generation Agent" data-path="accept revise store decline notextr">
           <rect class="block-body" x="590" y="400" width="160" height="140" rx="6" fill="var(--tint-llm)"/>
           <text class="block-num" x="604" y="424">04</text>
           <text class="block-tag" x="736" y="424" text-anchor="end">LLM AGENT</text>
@@ -551,7 +599,7 @@
         </g>
 
         <!-- 05 CANDIDATE -->
-        <g class="block" data-step="05" tabindex="0" role="button" aria-label="Step 05, Candidate Requirement">
+        <g class="block" data-step="05" tabindex="0" role="button" aria-label="Step 05, Candidate Requirement" data-path="accept revise store decline">
           <rect class="block-body" x="780" y="400" width="160" height="140" rx="6" fill="var(--tint-candidate)"/>
           <text class="block-num" x="794" y="424">05</text>
           <text class="block-tag" x="926" y="424" text-anchor="end">CANDIDATE</text>
@@ -562,18 +610,18 @@
         </g>
 
         <!-- 06 MEMORY RETRIEVAL -->
-        <g class="block" data-step="06" tabindex="0" role="button" aria-label="Step 06, Memory Retrieval">
+        <g class="block" data-step="06" tabindex="0" role="button" aria-label="Step 06, Memory Retrieval" data-path="accept revise store mcp decline">
           <rect class="block-body" x="970" y="400" width="160" height="140" rx="6" fill="var(--tint-memory)"/>
           <text class="block-num" x="984" y="424">06</text>
-          <text class="block-tag" x="1116" y="424" text-anchor="end">MCP + MEMORY</text>
+          <text class="block-tag" x="1116" y="424" text-anchor="end">MEMORIA</text>
           <text class="block-title" x="984" y="462">Memory</text>
           <text class="block-title" x="984" y="482">Retrieval</text>
           <text class="block-sub" x="984" y="506">search_requirements</text>
-          <text class="block-sub" x="984" y="524">Retriever → top-k</text>
+          <text class="block-sub" x="984" y="524">recupero esaustivo</text>
         </g>
 
         <!-- 07 ASSESSMENT -->
-        <g class="block" data-step="07" tabindex="0" role="button" aria-label="Step 07, Assessment Agent">
+        <g class="block" data-step="07" tabindex="0" role="button" aria-label="Step 07, Assessment Agent" data-path="accept revise store mcp decline notextr">
           <rect class="block-body" x="1160" y="400" width="160" height="140" rx="6" fill="var(--tint-llm)"/>
           <text class="block-num" x="1174" y="424">07</text>
           <text class="block-tag" x="1306" y="424" text-anchor="end">LLM AGENT</text>
@@ -584,33 +632,34 @@
         </g>
 
         <!-- 08 ROUTER -->
-        <g class="block" data-step="08" tabindex="0" role="button" aria-label="Step 08, Router">
+        <g class="block" data-step="08" tabindex="0" role="button" aria-label="Step 08, Router" data-path="accept revise store decline notextr">
           <rect class="block-body" x="1350" y="400" width="170" height="140" rx="6" fill="var(--tint-deterministic)"/>
           <text class="block-num" x="1364" y="424">08</text>
           <text class="block-tag" x="1506" y="424" text-anchor="end">DETERMINISTIC</text>
           <text class="block-title" x="1364" y="468">Router</text>
-          <text class="block-sub" x="1364" y="496">ACCEPT</text>
-          <text class="block-sub" x="1364" y="514">REVISE / REJECT</text>
+          <text class="block-sub" x="1364" y="492">ACCEPT · REVISE</text>
+          <text class="block-sub" x="1364" y="510">REJECT</text>
+          <text class="block-sub" x="1364" y="528">FAILED_VALIDATION</text>
         </g>
 
         <!-- === Main flow arrows === -->
-        <line x1="180" y1="470" x2="210" y2="470" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr-main)"/>
-        <line x1="370" y1="470" x2="400" y2="470" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr-main)"/>
-        <line x1="560" y1="470" x2="590" y2="470" stroke="var(--accent-accept)" stroke-width="1.8" marker-end="url(#arr-accept)"/>
-        <text x="575" y="462" class="flow-label" text-anchor="middle" fill="var(--accent-accept)">YES</text>
-        <line x1="750" y1="470" x2="780" y2="470" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr-main)"/>
-        <line x1="940" y1="470" x2="970" y2="470" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr-main)"/>
-        <text x="955" y="462" class="flow-label" text-anchor="middle">candidato → query</text>
-        <line x1="1130" y1="470" x2="1160" y2="470" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr-main)"/>
-        <text x="1145" y="462" class="flow-label" text-anchor="middle">top-k storici</text>
-        <line x1="1320" y1="470" x2="1350" y2="470" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr-main)"/>
+        <line x1="180" y1="470" x2="210" y2="470" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr-main)" data-path="accept revise store mcp decline notextr"/>
+        <line x1="370" y1="470" x2="400" y2="470" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr-main)" data-path="accept revise store mcp decline notextr"/>
+        <line x1="560" y1="470" x2="590" y2="470" stroke="var(--accent-accept)" stroke-width="1.8" marker-end="url(#arr-accept)" data-path="accept revise store decline notextr"/>
+        <text x="575" y="462" class="flow-label" text-anchor="middle" fill="var(--accent-accept)" data-path="accept revise store decline notextr">YES</text>
+        <line x1="750" y1="470" x2="780" y2="470" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr-main)" data-path="accept revise store decline"/>
+        <line x1="940" y1="470" x2="970" y2="470" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr-main)" data-path="accept revise store mcp decline"/>
+        <text x="955" y="462" class="flow-label" text-anchor="middle" data-path="accept revise store decline">candidato → query</text>
+        <line x1="1130" y1="470" x2="1160" y2="470" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr-main)" data-path="accept revise store mcp decline"/>
+        <text x="1145" y="462" class="flow-label" text-anchor="middle" data-path="accept revise store mcp decline">requisiti storici</text>
+        <line x1="1320" y1="470" x2="1350" y2="470" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr-main)" data-path="accept revise store decline notextr"/>
 
         <!-- === Skip: cannot_ground (04 → 07, salta 05 e 06) === -->
-        <path d="M 720 540 L 720 610 L 1200 610 L 1200 540" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr-main)"/>
-        <text x="960" y="602" class="flow-label" fill="var(--muted)" text-anchor="middle">cannot_ground · salta 05, 06</text>
+        <path d="M 720 540 L 720 610 L 1200 610 L 1200 540" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr-main)" data-path="notextr"/>
+        <text x="960" y="602" class="flow-label" fill="var(--muted)" text-anchor="middle" data-path="notextr">cannot_ground · salta 05, 06</text>
 
         <!-- === REVISE loop === -->
-        <g class="block" data-step="revise" tabindex="0" role="button" aria-label="Structured Feedback">
+        <g class="block" data-step="revise" tabindex="0" role="button" aria-label="Structured Feedback" data-path="revise">
           <rect class="block-body" x="620" y="650" width="360" height="80" rx="6" fill="var(--tint-llm)" opacity="0.55"/>
           <text class="block-tag" x="638" y="674">RETRY · MAX 3 TENTATIVI</text>
           <text class="block-title" x="638" y="702">Structured Feedback</text>
@@ -618,15 +667,15 @@
         </g>
 
         <!-- Arrow: 08 → SF -->
-        <path d="M 1400 540 L 1400 690 L 990 690" fill="none" stroke="var(--accent-revise)" stroke-width="2" marker-end="url(#arr-revise)"/>
-        <text x="1195" y="682" class="flow-label" fill="var(--accent-revise)" text-anchor="middle">REVISE</text>
+        <path d="M 1400 540 L 1400 690 L 990 690" fill="none" stroke="var(--accent-revise)" stroke-width="2" marker-end="url(#arr-revise)" data-path="revise"/>
+        <text x="1195" y="682" class="flow-label" fill="var(--accent-revise)" text-anchor="middle" data-path="revise">REVISE</text>
 
         <!-- Arrow: SF → 04 -->
-        <path d="M 670 650 L 670 540" fill="none" stroke="var(--accent-revise)" stroke-width="2" marker-end="url(#arr-revise)"/>
-        <text x="683" y="600" class="flow-label" fill="var(--accent-revise)">nuova generazione</text>
+        <path d="M 670 650 L 670 540" fill="none" stroke="var(--accent-revise)" stroke-width="2" marker-end="url(#arr-revise)" data-path="revise"/>
+        <text x="683" y="600" class="flow-label" fill="var(--accent-revise)" data-path="revise">nuova generazione</text>
 
         <!-- === DECLINE terminal === -->
-        <g class="block" data-step="decline" tabindex="0" role="button" aria-label="Esito DECLINE">
+        <g class="block" data-step="decline" tabindex="0" role="button" aria-label="Esito DECLINE" data-path="decline notextr">
           <rect class="block-body" x="1350" y="760" width="170" height="100" rx="6" fill="var(--tint-declined)"/>
           <text class="block-tag" x="1370" y="784">ESITO NEGATIVO</text>
           <text class="block-title" x="1370" y="812">DECLINE</text>
@@ -634,16 +683,57 @@
         </g>
 
         <!-- Arrow: 03 → DECLINE (NOT EXTRACTABLE) -->
-        <path d="M 480 540 L 480 820 L 1350 820" fill="none" stroke="var(--accent-decline)" stroke-width="2" marker-end="url(#arr-decline)"/>
-        <text x="900" y="812" class="flow-label" fill="var(--accent-decline)" text-anchor="middle">NOT EXTRACTABLE</text>
+        <path d="M 480 540 L 480 820 L 1350 820" fill="none" stroke="var(--accent-decline)" stroke-width="2" marker-end="url(#arr-decline)" data-path="notextr"/>
+        <text x="900" y="812" class="flow-label" fill="var(--accent-decline)" text-anchor="middle" data-path="notextr">NOT EXTRACTABLE</text>
 
         <!-- Arrow: 08 → DECLINE (REJECT / LIMIT) -->
-        <path d="M 1470 540 L 1470 760" fill="none" stroke="var(--accent-decline)" stroke-width="2" marker-end="url(#arr-decline)"/>
-        <text x="1485" y="630" class="flow-label" fill="var(--accent-decline)">REJECT / LIMIT</text>
+        <path d="M 1470 540 L 1470 760" fill="none" stroke="var(--accent-decline)" stroke-width="2" marker-end="url(#arr-decline)" data-path="decline notextr"/>
+        <text x="1485" y="622" class="flow-label" fill="var(--accent-decline)" data-path="decline">REJECT · LIMITE</text>
+        <text x="1485" y="640" class="flow-label" fill="var(--accent-decline)" data-path="notextr">NON ESTRAIBILE</text>
 
+        <!-- === Confine di processo: server MCP + database (bottom) === -->
+        <text class="row-label" x="20" y="916" data-path="infra">Persistenza · gli agenti raggiungono il database <tspan font-style="italic">soltanto</tspan> attraverso il server MCP</text>
+
+        <!-- chi chiede la memoria: il nodo 06 (predefinito) oppure l'agente 07 -->
+        <path d="M 1050 540 L 1050 572 L 1250 572" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 4" data-path="mcp"/>
+        <text x="1044" y="562" class="flow-label" fill="var(--muted)" text-anchor="end" data-path="mcp">predefinito</text>
+        <path d="M 1250 540 L 1250 572" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 4" data-path="mcp"/>
+        <text x="1264" y="562" class="flow-label" fill="var(--muted)" data-path="mcp">--assessor-tools</text>
+        <path d="M 1250 572 L 1250 944" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arr-main)" data-path="mcp"/>
+        <text x="1264" y="880" class="flow-label" fill="var(--muted)" data-path="mcp">search_requirements</text>
+
+        <!-- chi scrive: il nodo accept, dopo ACCEPT -->
+        <path d="M 1520 185 L 1566 185 L 1566 1013 L 1314 1013" fill="none" stroke="var(--accent-accept)" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arr-accept)" data-path="store mcp"/>
+        <text x="1552" y="1000" class="flow-label" fill="var(--accent-accept)" text-anchor="end" data-path="store mcp">store_accepted_requirement</text>
+
+        <!-- il server: rack a tre unita' -->
+        <g class="block" data-step="mcp" tabindex="0" role="button" aria-label="Server MCP" data-path="store mcp">
+          <rect class="block-body" x="740" y="950" width="574" height="126" rx="6" fill="var(--tint-memory)" stroke="var(--line)" stroke-width="1.5"/>
+          <line x1="740" y1="992" x2="1314" y2="992" stroke="var(--line)" stroke-width="1"/>
+          <line x1="740" y1="1034" x2="1314" y2="1034" stroke="var(--line)" stroke-width="1"/>
+          <circle cx="762" cy="971" r="4.5" fill="var(--accent-accept)"/>
+          <circle cx="762" cy="1013" r="4.5" fill="var(--muted)" opacity="0.55"/>
+          <circle cx="762" cy="1055" r="4.5" fill="var(--muted)" opacity="0.55"/>
+          <text class="block-title" x="782" y="977">Server MCP</text>
+          <text class="block-tag" x="1294" y="977" text-anchor="end">stdio + JSON-RPC</text>
+          <text class="block-sub" x="782" y="1019">search_requirements</text>
+          <text class="block-sub" x="782" y="1061">store_accepted_requirement</text>
+        </g>
+
+        <!-- il database: cilindro -->
+        <g class="block" data-step="db" tabindex="0" role="button" aria-label="Database SQLite" data-path="store mcp">
+          <path d="M 425 982 a 95 18 0 0 0 190 0 l 0 72 a 95 18 0 0 1 -190 0 z" fill="var(--tint-deterministic)" stroke="var(--line)" stroke-width="1.5"/>
+          <ellipse cx="520" cy="982" rx="95" ry="18" fill="var(--tint-deterministic)" stroke="var(--line)" stroke-width="1.5"/>
+          <path d="M 425 1002 a 95 18 0 0 0 190 0" fill="none" stroke="var(--line)" stroke-width="1" opacity="0.45"/>
+          <text class="block-title" x="520" y="1030" text-anchor="middle">SQLite</text>
+          <text class="block-sub" x="520" y="1050" text-anchor="middle">3 tabelle · 3 viste</text>
+        </g>
+
+        <!-- solo il server tocca il database -->
+        <line x1="735" y1="1013" x2="622" y2="1013" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arr-main)" data-path="store mcp"/>
       </svg>
     </div>
-    <figcaption>La barra tratteggiata in alto è il livello LLM condiviso: entrambi gli agenti (04 Generation, 07 Assessment) ci "si collegano" per parlare con Claude. Verde = flusso di accettazione. Arancio = ciclo di revisione (max 3 tentativi). Ruggine = esiti negativi senza persistenza. Il ramo sotto 04→07 rappresenta il caso <code>cannot_ground</code>: il Generator rinuncia motivatamente, si saltano Candidate e Memory Retrieval e si va direttamente all'Assessment che deve confermare o dissentire.</figcaption>
+    <figcaption>La barra tratteggiata in alto è il livello LLM condiviso: entrambi gli agenti (04 Generation, 07 Assessment) ci "si collegano" per parlare con Claude. Verde = flusso di accettazione. Arancio = ciclo di revisione (max 3 tentativi). Ruggine = esiti negativi senza persistenza. Il ramo sotto 04→07 rappresenta il caso <code>cannot_ground</code>: il Generator rinuncia motivatamente, si saltano Candidate e Memory Retrieval e si va direttamente all'Assessment, che deve confermare o dissentire. In basso le due linee tratteggiate arrivano <strong>al server MCP e si fermano lì</strong>: né il workflow né gli agenti toccano mai il database direttamente, e infatti l'unica freccia che raggiunge il cilindro parte dal server. A <strong>leggere</strong> è il nodo 06 nella configurazione predefinita, oppure l'agente 07 con <code>--assessor-tools</code>. A <strong>scrivere</strong> è il nodo <code>accept</code> — il blocco ACCEPTED — e soltanto dopo un <code>ACCEPT</code>: il Router sceglie la destinazione, non persiste nulla.</figcaption>
   </figure>
 
   <ol class="principles">
@@ -657,7 +747,15 @@
     </li>
     <li>
       <h3>Persistenza controllata</h3>
-      <p>Solo l'esito <code>ACCEPT</code> scrive nella memoria a lungo termine. Tutti gli altri esiti (<code>REJECT</code>, <code>NOT_EXTRACTABLE</code>, <code>REVISE</code> esaurito) terminano senza scrittura.</p>
+      <p>Solo l'esito <code>ACCEPT</code> scrive nella memoria a lungo termine. Tutti gli altri (<code>REJECTED</code>, <code>NOT_EXTRACTABLE</code>, <code>FAILED_VALIDATION</code>) terminano senza scrittura: nessuna promozione automatica del "miglior candidato".</p>
+    </li>
+    <li>
+      <h3>Relazioni registrate, non risolte</h3>
+      <p>Un duplicato o una contraddizione vengono <strong>accettati e annotati</strong>, non scartati: il candidato è giudicato sulla propria evidenza, e la relazione resta nel database perché sia una persona a decidere.</p>
+    </li>
+    <li>
+      <h3>Due confini, stessa regola</h3>
+      <p>Gli agenti parlano con il fornitore del modello e con la persistenza solo attraverso <strong>porte</strong>. Sostituire l'intero livello dati con il server MCP non ha richiesto una riga di modifica al grafo.</p>
     </li>
   </ol>
 </div>
@@ -1003,7 +1101,7 @@ class GenerationOutcome:
         <p>Formato: <strong>JSON</strong>. Nessun altro formato. Non esiste un file dedicato "solo al candidato" — vive dentro il file di report come parte del record della PR.</p>
 
         <p><strong>Vita 3 — Nella memoria a lungo termine, SE è accettato</strong> (per sempre, riutilizzabile).</p>
-        <p>Se il candidato ottiene <code>ACCEPT</code>, va <em>anche</em> nel database SQLite della memoria (Step 06 + Persist via MCP). Vive in <code>experiments/memory/run-*.db</code>. Da lì può essere recuperato come "requisito storico" quando l'Assessment valuta PR successive. Dettagli allo Step 06.</p>
+        <p>Se il candidato ottiene <code>ACCEPT</code>, va <em>anche</em> nel database SQLite della memoria (Step 06 + la scrittura dopo l'ACCEPT). Vive in <code>experiments/memory/run-*.db</code>. Da lì può essere recuperato come "requisito storico" quando l'Assessment valuta PR successive. Dettagli allo Step 06.</p>
 
         <h4>Come si aggancia al flusso</h4>
         <ul>
@@ -1028,6 +1126,16 @@ class GenerationOutcome:
         <p>Dopo che il Generator ha prodotto un candidato, il sistema recupera i requisiti già validati <strong>dello stesso progetto</strong> e <strong>nati da Pull Request precedenti</strong>, e li passa all'Assessment, che così può segnalare la relazione: duplicazione, sovrapposizione, raffinamento, conflitto.</p>
         <p>Il recupero è <strong>esaustivo</strong>, non ordinato per somiglianza: a questa scala un requisito occupa una trentina di token e mostrarli tutti costa pochi centesimi, mentre un recupero semantico introdurrebbe una dipendenza, una soglia arbitraria e una debolezza nota sulle negazioni — che è proprio ciò che serve riconoscere. Il punto è discusso con la tutor (punto 5 delle domande aperte); le colonne per gli embedding sono già nello schema.</p>
 
+        <h4>Chi chiama il database, esattamente</h4>
+        <table>
+          <thead><tr><th>Configurazione</th><th>Chi invoca <code>search_requirements</code></th><th>Quando</th></tr></thead>
+          <tbody>
+            <tr><td>predefinita</td><td>il <strong>nodo</strong> <code>retrieve_memory</code> del grafo</td><td>dopo ogni generazione, prima del giudizio</td></tr>
+            <tr><td><code>--assessor-tools</code></td><td>l'<strong>Assessment Agent</strong> stesso</td><td>quando lo ritiene utile, durante il giudizio</td></tr>
+          </tbody>
+        </table>
+        <p>La scrittura invece parte sempre dallo stesso punto: il <strong>nodo <code>accept</code></strong>, dopo un <code>ACCEPT</code>. Non dal Router, e non dagli agenti.</p>
+
         <h4>Perché il retrieval PRIMA dell'Assessment (non dopo)</h4>
         <p>Domanda ricorrente: "non è l'Assessment che guarda la memoria?". Nella configurazione predefinita <strong>no</strong>: il retrieval è un helper, l'Assessment è il giudice. Metafora: in un processo, l'ufficiale giudiziario che va in archivio a recuperare i casi simili non è il giudice. Il giudice decide dopo che il fascicolo è sul suo tavolo.</p>
         <p>Meccanica: <code>assess()</code> ha <code>retrieved_requirements</code> come <strong>parametro in ingresso</strong>. I risultati vengono <strong>incollati nel prompt</strong> del valutatore sotto <code>PREVIOUSLY VALIDATED REQUIREMENTS:</code>. L'Assessment li <em>consuma</em>, non li cerca.</p>
@@ -1040,7 +1148,13 @@ class GenerationOutcome:
           <li><strong>scrivere</strong> un requisito accettato (<code>store_accepted</code>): inserisce statement, repo di origine, PR number, timestamp PR, evidence (title + body), created_at, run_id;</li>
           <li><strong>leggere</strong> con filtri (<code>list_requirements</code>): per repository e/o solo requisiti con timestamp PR precedente a una data.</li>
         </ul>
-        <p>Schema con <strong>due tabelle</strong>: <code>requirements</code> (con colonne <code>embedding</code> e <code>embedding_model</code> <em>predisposte ma non usate</em>) e <code>requirement_relations</code> (per le relazioni tra requisiti — esiste, vuota).</p>
+        <p>Schema con <strong>tre tabelle</strong>:</p>
+        <ul>
+          <li><code>requirements</code> — i requisiti accettati (le colonne <code>embedding</code> e <code>embedding_model</code> restano predisposte ma non usate);</li>
+          <li><code>requirement_relations</code> — <strong>popolata</strong>: ogni relazione dichiarata dal valutatore, con il tipo, il requisito bersaglio e la motivazione;</li>
+          <li><code>processed_pull_requests</code> — quali Pull Request sono già state elaborate e con quale esito, così che <code>--skip-processed</code> possa saltarle.</li>
+        </ul>
+        <p>Sopra le tabelle ci sono <strong>tre viste</strong> per la lettura umana: <code>requirements_overview</code> (ogni requisito con le sue relazioni), <code>requirements_unique</code> (il catalogo senza i duplicati riconosciuti) e <code>relations_to_review</code> (solo le relazioni su cui serve una decisione).</p>
 
         <p><strong>✅ Recupero esaustivo</strong> (<code>ExhaustiveRequirementRetriever</code>). Filtra su progetto, data della Pull Request di origine e <code>run_id</code>. Quest'ultimo isola l'esecuzione: senza, una run vedrebbe i requisiti prodotto dalle precedenti e i confronti fra configurazioni perderebbero senso. Si recupera <strong>una volta per Pull Request</strong>: i filtri non dipendono dal candidato e nulla può entrare in memoria mentre la Pull Request è in lavorazione, quindi ripetere la ricerca a ogni revisione darebbe la stessa lista.</p>
 
@@ -1050,12 +1164,16 @@ class GenerationOutcome:
 
         <p><strong>⚠️ Retrieval semantico — non implementato, e per scelta.</strong> Le colonne <code>embedding</code> ed <code>embedding_model</code> restano predisposte nello schema per il giorno in cui la memoria crescesse oltre quanto sta comodamente in un messaggio.</p>
 
-        <h4>Oggi vs domani</h4>
-        <p><strong>Oggi</strong> — accesso diretto: il controller chiama <code>repository.store_accepted(...)</code>. Nessun MCP.</p>
-        <p><strong>Domani</strong> (obiettivo Decisione 04): Assessment → tool MCP <code>search_requirements</code> → server MCP → Retriever → Repository → SQLite. Il fatto che sotto ci sia SQLite diventa un dettaglio; cambiare DB non tocca gli agenti.</p>
+        <h4>Due percorsi verso lo stesso database</h4>
+        <p>Il codice espone due implementazioni delle stesse porte, e si sceglie da riga di comando:</p>
+        <ul>
+          <li><strong>diretto</strong> (predefinito) — il workflow chiama <code>SqliteRequirementRepository</code> nello stesso processo;</li>
+          <li><strong>via MCP</strong> (<code>--use-mcp</code>) — il workflow parla con un sottoprocesso attraverso i tool <code>search_requirements</code> e <code>store_accepted_requirement</code>.</li>
+        </ul>
+        <p><strong>Il grafo è identico nei due casi</strong>, perché entrambe le implementazioni soddisfano <code>MemoryRetriever</code> e <code>AcceptedRequirementStore</code>. È la verifica pratica dell'architettura a porte: l'intero livello dati è stato sostituito senza toccare una riga dei nodi. Dettagli nella scheda del <strong>Server MCP</strong>, la fascia in fondo al diagramma.</p>
 
-        <h4>Persist via MCP (il rettangolo viola del diagramma)</h4>
-        <p>Terzo momento della memoria: <strong>dopo</strong> un <code>ACCEPT</code>, il candidato viene scritto nella memoria a lungo termine. Oggi lo fa direttamente <code>repository.store_accepted(pull_request, statement)</code>. Nel report:</p>
+        <h4>La scrittura dopo l'ACCEPT</h4>
+        <p>Terzo momento della memoria: <strong>dopo</strong> un <code>ACCEPT</code>, il candidato viene scritto nella memoria a lungo termine — insieme alle relazioni che il valutatore ha dichiarato. Nel report:</p>
 <pre>"memory": {
   "database": "experiments\\\\memory\\\\run-20260828T142024Z.db",
   "run_id": "20260828T142024Z",
@@ -1074,36 +1192,189 @@ class GenerationOutcome:
         <h4>Il DB si tiene "leggibile da solo"</h4>
         <p>Nella riga viene salvato anche il <strong>testo dell'evidenza</strong> (title + body della PR). Motivo: se un domani apri il <code>.db</code> senza avere accanto il file JSON di sample, capisci comunque da dove arriva ogni requisito.</p>
 
-        <h4>Cosa manca per completare lo Step 06</h4>
-        <ol>
-          <li><strong><code>RequirementRetriever</code></strong> — componente che calcola embedding e li confronta (usa le colonne <code>embedding</code>/<code>embedding_model</code> già nello schema).</li>
-          <li><strong>Server MCP</strong> — espone <code>search_requirements</code> e altri tool secondo la spec del Model Context Protocol.</li>
-          <li><strong>Aggancio nel grafo</strong> — usare il retriever tramite MCP quando <code>memory_enabled=true</code>, invece del <code>NullRequirementStore</code> attuale.</li>
-        </ol>
-        <p>Sono i prossimi grossi lavori dopo la fase di revisione.</p>
+        <h4>Cosa resta aperto</h4>
+        <p><strong>Recupero semantico.</strong> Unico pezzo non costruito, e per scelta: alla scala attuale il recupero esaustivo è sufficiente e non introduce né dipendenze né soglie arbitrarie. Le colonne <code>embedding</code> ed <code>embedding_model</code> restano nello schema per il giorno in cui la memoria crescesse oltre quanto sta comodamente in un messaggio.</p>
+        <p><strong>Quale configurazione sia quella di riferimento</strong> — recupero deterministico dal nodo, oppure <code>--assessor-tools</code> con il valutatore che decide se e quando cercare. È il punto 6 delle domande aperte per la tutor.</p>
       `
     },
     "07": {
       tag: "Step 07 · LLM Agent",
       title: "Assessment Agent",
-      body: stubMessage("della Decisione 05 §Assessment, del prompt <code>prompts/assessment/v1.md</code> e del file <code>src/are/agents/llm_agents.py</code>")
+      body: `
+        <p><strong>In una frase.</strong> Il secondo agente LLM. Non riscrive il requisito: lo <em>giudica</em> rispetto alla sola evidenza, e quando trova un difetto dice quale e come ripararlo.</p>
+
+        <h4>Che cosa riceve</h4>
+        <table>
+          <thead><tr><th>Ingresso</th><th>Da dove</th></tr></thead>
+          <tbody>
+            <tr><td>il candidato</td><td>Step 05</td></tr>
+            <tr><td>l'evidenza (title + body)</td><td>Step 01 — la stessa che ha visto il Generator</td></tr>
+            <tr><td>i requisiti storici</td><td>Step 06, sotto <code>PREVIOUSLY VALIDATED REQUIREMENTS:</code></td></tr>
+            <tr><td>i tentativi precedenti</td><td>solo dalla seconda iterazione in poi</td></tr>
+          </tbody>
+        </table>
+        <p><strong>Non vede il codice.</strong> Nessun diff, nessun file sorgente: giudica se il requisito è sostenuto dal testo della Pull Request, non se è vero del programma.</p>
+
+        <h4>Le quattro decisioni</h4>
+        <table>
+          <thead><tr><th>Decisione</th><th>Significato</th><th>Dove porta</th></tr></thead>
+          <tbody>
+            <tr><td><code>ACCEPT</code></td><td>il requisito regge</td><td>persistenza</td></tr>
+            <tr><td><code>REVISE</code></td><td>c'è un difetto riparabile</td><td>torna allo Step 04 con le istruzioni</td></tr>
+            <tr><td><code>REJECT</code></td><td>dall'evidenza non si ricava alcun requisito valido</td><td>DECLINE</td></tr>
+            <tr><td><code>CONFIRM_NOT_EXTRACTABLE</code></td><td>conferma la rinuncia del Generator</td><td>DECLINE</td></tr>
+          </tbody>
+        </table>
+        <p>L'ultima esiste perché la rinuncia del Generator non è l'ultima parola: il valutatore può <strong>dissentire</strong> con <code>REVISE</code>, indicando quale comportamento ritiene identificabile.</p>
+
+        <h4>Che cosa produce, oltre alla decisione</h4>
+        <ul>
+          <li><code>issues</code> — le osservazioni sul candidato;</li>
+          <li><code>unsupported_claims</code> — i frammenti che l'evidenza non sostiene, citati testualmente;</li>
+          <li><code>missing_information</code> — che cosa servirebbe e non c'è;</li>
+          <li><code>revision_instructions</code> — istruzioni operative per la riscrittura;</li>
+          <li><code>relations</code> — come il candidato si pone rispetto ai requisiti già in memoria.</li>
+        </ul>
+
+        <h4>Le cinque relazioni</h4>
+        <table>
+          <thead><tr><th>Tipo</th><th>Quando</th></tr></thead>
+          <tbody>
+            <tr><td><code>DUPLICATE</code></td><td>stesso comportamento, formulato diversamente</td></tr>
+            <tr><td><code>OVERLAPS</code></td><td>si sovrappongono in parte</td></tr>
+            <tr><td><code>REFINES</code></td><td>il candidato è più specifico di uno esistente</td></tr>
+            <tr><td><code>SUPERSEDES</code></td><td>il candidato sostituisce un requisito superato</td></tr>
+            <tr><td><code>CONFLICTS</code></td><td>i due <strong>non possono essere veri insieme</strong></td></tr>
+          </tbody>
+        </table>
+        <p><strong>Una relazione non cambia il verdetto.</strong> Anche un duplicato o una contraddizione vengono accettati e scritti: il candidato è giudicato rispetto alla propria evidenza, e la relazione viene registrata accanto al requisito perché una persona possa ritrovarla. Rifiutare il secondo di due duplicati equivarrebbe a dire che quella Pull Request non contiene alcun requisito, il che sarebbe falso.</p>
+        <p>L'identificativo del requisito bersaglio lo risolve <strong>il codice</strong>, non il modello: il modello dichiara il numero della Pull Request che ha visto, e una relazione verso qualcosa che non gli è stato mostrato viene scartata.</p>
+
+        <h4>Due modi di guardare la memoria</h4>
+        <p><strong>Predefinito</strong> — il nodo del grafo recupera, il valutatore consuma. <strong>Con <code>--assessor-tools</code></strong> — è il valutatore a invocare il tool, decidendo se e quando. In entrambi i casi <strong>i filtri li impone il codice</strong>: lo schema del tool è volutamente vuoto, e il modello non conosce né il nome del repository né la data.</p>
+
+        <h4>Cosa NON fa</h4>
+        <p>Non riscrive il requisito (lo fa il Generator), non decide il routing (Step 08), non scrive nel database (lo fa il nodo di accettazione).</p>
+
+        <p><strong>Dove sta:</strong> <code>src/are/agents/llm_agents.py</code> · prompt in <code>prompts/assessment/</code>.</p>
+      `
     },
     "08": {
       tag: "Step 08 · Deterministic",
       title: "Router",
-      body: stubMessage("del file <code>src/are/agents/routing.py</code>", "Decide l'esito finale del candidato in base al giudizio dell'Assessment: <code>ACCEPT</code>, <code>REVISE</code> (torna a 04), <code>REJECT</code> (verso DECLINE).")
+      body: `
+        <p><strong>In una frase.</strong> Traduce la decisione del valutatore in una destinazione del grafo. È codice, non un modello: dato lo stesso stato produce sempre lo stesso instradamento.</p>
+
+        <h4>La tabella completa</h4>
+        <table>
+          <thead><tr><th>Decisione</th><th>Condizione</th><th>Destinazione</th></tr></thead>
+          <tbody>
+            <tr><td><code>CONFIRM_NOT_EXTRACTABLE</code></td><td>—</td><td><code>mark_not_extractable</code></td></tr>
+            <tr><td><code>ACCEPT</code></td><td>—</td><td><code>accept</code></td></tr>
+            <tr><td><code>REJECT</code></td><td>—</td><td><code>mark_rejected</code></td></tr>
+            <tr><td><code>REVISE</code></td><td>tentativi rimasti</td><td><code>generate</code> — nuova iterazione</td></tr>
+            <tr><td><code>REVISE</code></td><td><strong>tentativi esauriti</strong></td><td><code>mark_failed_validation</code></td></tr>
+          </tbody>
+        </table>
+
+        <h4>La riga che conta: nessuna promozione del "miglior candidato"</h4>
+        <p>Se il valutatore chiede <code>REVISE</code> all'ultimo tentativo disponibile, il requisito <strong>non viene accettato</strong>: l'esito è <code>FAILED_VALIDATION</code> e nulla viene scritto. Salvare l'ultima versione prodotta sarebbe comodo — ed è esattamente ciò che renderebbe il catalogo inaffidabile, perché conterrebbe requisiti che il valutatore aveva giudicato difettosi.</p>
+
+        <h4>I quattro esiti terminali</h4>
+        <ul>
+          <li><code>ACCEPTED</code> — requisito scritto in memoria, con le sue relazioni;</li>
+          <li><code>NOT_EXTRACTABLE</code> — dall'evidenza non si ricava alcun comportamento;</li>
+          <li><code>REJECTED</code> — il candidato è stato prodotto e respinto;</li>
+          <li><code>FAILED_VALIDATION</code> — il ciclo ha esaurito i tentativi senza convergere.</li>
+        </ul>
+        <p>Gli ultimi tre non scrivono nulla. La distinzione fra loro non è cosmetica: dice <em>a che punto</em> il sistema si è fermato, ed è ciò che rende leggibile un report.</p>
+
+        <h4>Il Router non scrive nel database</h4>
+        <p>È una confusione facile, perché è il Router a stabilire <em>se</em> un requisito verrà salvato. Ma la scrittura avviene nel nodo <code>accept</code> — il blocco ACCEPTED del diagramma — che il Router si limita a scegliere come destinazione. È lì che parte <code>store_accepted_requirement</code>, e da nessun'altra parte.</p>
+        <p>La separazione non è formale: il Router è una funzione pura che guarda lo stato e restituisce il nome di un nodo. Se scrivesse, non sarebbe più verificabile con un test che non tocca il disco.</p>
+
+        <h4>Un arco che il diagramma non mostra</h4>
+        <p>Se l'assessment è disattivato, dopo il recupero si va direttamente ad <code>accept</code>. È la configurazione delle prove tecniche, non quella di riferimento.</p>
+
+        <p><strong>Dove sta:</strong> <code>src/are/agents/routing.py</code>. Il routing è centralizzato lì: i nodi non decidono dove andare.</p>
+      `
     },
-    "persist": {
-      tag: "Controller",
-      title: "Persist via MCP",
-      body: stubMessage("delle Decisioni 03 e 04", "Corrisponde alla scrittura del requisito approvato nel database SQLite tramite un tool esposto dal server MCP.")
+    "db": {
+      tag: "Persistenza",
+      title: "Database SQLite",
+      body: `
+        <p><strong>In una frase.</strong> La memoria a lungo termine del sistema. Vive oltre il confine di processo: il workflow non la apre mai direttamente quando gira con <code>--use-mcp</code>, la raggiunge attraverso i due tool del server.</p>
+
+        <h4>Le tre tabelle</h4>
+        <table>
+          <thead><tr><th>Tabella</th><th>Che cosa contiene</th></tr></thead>
+          <tbody>
+            <tr><td><code>requirements</code></td><td>i requisiti accettati: testo, repository di origine, numero e data della Pull Request, evidenza integrale, <code>run_id</code>, data di inserimento</td></tr>
+            <tr><td><code>requirement_relations</code></td><td>le relazioni dichiarate dal valutatore: tipo, requisito bersaglio, motivazione</td></tr>
+            <tr><td><code>processed_pull_requests</code></td><td>quali Pull Request sono già state elaborate e con quale esito, così che <code>--skip-processed</code> possa saltarle</td></tr>
+          </tbody>
+        </table>
+
+        <h4>Le tre viste</h4>
+        <p>Non aggiungono dati: rendono leggibile a una persona ciò che le tabelle contengono in forma normalizzata.</p>
+        <ul>
+          <li><code>requirements_overview</code> — ogni requisito con le sue relazioni accanto;</li>
+          <li><code>requirements_unique</code> — il catalogo senza i duplicati riconosciuti;</li>
+          <li><code>relations_to_review</code> — solo le relazioni su cui serve una decisione umana.</li>
+        </ul>
+
+        <h4>Due date per ogni requisito</h4>
+        <p><code>source_pr_timestamp</code> è la data della Pull Request di origine; <code>created_at</code> è quando la riga è stata scritta. Il recupero storico usa <strong>la prima</strong>: valutando una Pull Request di aprile si vogliono in memoria solo requisiti nati da Pull Request precedenti ad aprile, non quelli inseriti prima nel database. Filtrare per <code>created_at</code> ricostruirebbe l'ordine degli esperimenti, non la storia del progetto.</p>
+
+        <h4>Leggibile da solo</h4>
+        <p>Ogni riga conserva anche il <strong>testo dell'evidenza</strong>. Aprendo il <code>.db</code> senza avere accanto il file di input si capisce comunque da dove viene ogni requisito.</p>
+
+        <p><strong>Un database per run</strong>, chiamato con il timestamp del report: esecuzioni diverse non si contaminano e i confronti fra configurazioni restano validi.</p>
+
+        <p><strong>Dove sta:</strong> <code>src/are/db/repository.py</code> · file in <code>experiments/memory/</code>.</p>
+      `
+    },
+    "mcp": {
+      tag: "Infrastruttura · MCP",
+      title: "Server MCP",
+      body: `
+        <p><strong>In una frase.</strong> Il database non è una libreria che il workflow importa: è un <strong>processo separato</strong> con cui il sistema parla attraverso il Model Context Protocol. Un solo server, due tool, due momenti diversi del flusso.</p>
+
+        <h4>Perché è disegnato come una fascia</h4>
+        <p>In alto il diagramma ha il livello LLM, in basso il server MCP. Sono <strong>i due confini del sistema</strong>: da una parte il fornitore del modello, dall'altra la persistenza. Gli agenti non sanno che cosa ci sia oltre né l'uno né l'altro — ed è precisamente la tesi dell'architettura a porte.</p>
+
+        <h4>I due tool</h4>
+        <table>
+          <thead><tr><th>Tool</th><th>Quando</th><th>Che cosa fa</th></tr></thead>
+          <tbody>
+            <tr><td><code>search_requirements</code></td><td>Step 06, dopo ogni generazione</td><td>restituisce i requisiti già validati dello stesso progetto, nati da Pull Request precedenti</td></tr>
+            <tr><td><code>store_accepted_requirement</code></td><td>dopo un <code>ACCEPT</code></td><td>scrive il requisito e le relazioni dichiarate dal valutatore</td></tr>
+          </tbody>
+        </table>
+
+        <h4>Come gira</h4>
+        <p>Sottoprocesso avviato dal client, comunicazione su <strong><code>stdio</code></strong> con protocollo <strong>JSON-RPC</strong>. Si attiva con <code>--use-mcp</code>. I tool dichiarano uno schema di ingresso e uno di uscita: il client non interpreta testo libero, riceve dati strutturati e validati.</p>
+
+        <h4>Perché il grafo non cambia di una riga</h4>
+        <p>Le porte <code>MemoryRetriever</code> e <code>AcceptedRequirementStore</code> (<code>src/are/agents/ports.py</code>) sono soddisfatte da due implementazioni: quella diretta su SQLite e quella che passa da MCP. I nodi dipendono dall'interfaccia, non dall'implementazione, quindi <strong>l'intero livello dati è stato sostituito senza toccare il workflow</strong>.</p>
+        <p>Non è un'affermazione di principio: è successo, ed è la verifica più diretta che l'architettura regge.</p>
+
+        <h4>Che cosa c'è dall'altra parte</h4>
+        <p>Tre tabelle — <code>requirements</code>, <code>requirement_relations</code>, <code>processed_pull_requests</code> — e tre viste pensate per la lettura umana: <code>requirements_overview</code>, <code>requirements_unique</code>, <code>relations_to_review</code>.</p>
+        <p><strong>Un database per run</strong>, chiamato con il timestamp del report: esecuzioni diverse non si contaminano.</p>
+
+        <h4>Cosa NON è</h4>
+        <p>Non è un secondo modello, non è un servizio di rete, non è un componente che ragiona. È un adattatore verso la persistenza che parla un protocollo standard invece di un'API interna.</p>
+
+        <p><strong>Dove sta:</strong> server in <code>src/are/mcp_server/</code>, client in <code>src/are/mcp_client.py</code>.</p>
+      `
     },
     "accepted": {
       tag: "Esito terminale",
       title: "ACCEPTED",
       body: `
-        <p>Il requisito è stato accettato dall'Assessment Agent. È stato <strong>persistito</strong> nella memoria a lungo termine tramite un tool MCP.</p>
-        <p>Da questo momento sarà disponibile come <strong>contesto storico</strong> per le PR successive: quando l'Assessment valuterà un nuovo candidato, il Memory Retrieval potrà restituire questo requisito tra i top-k semanticamente simili, permettendo la classificazione delle relazioni (<code>NEW</code>, <code>DUPLICATE</code>, <code>OVERLAPS</code>, <code>REFINES</code>, <code>SUPERSEDES</code>, <code>CONFLICTS</code>).</p>
+        <p>Il requisito è stato accettato dall'Assessment Agent e <strong>scritto nella memoria a lungo termine</strong>, insieme alle relazioni che il valutatore ha dichiarato. Con <code>--use-mcp</code> la scrittura passa dal tool <code>store_accepted_requirement</code>.</p>
+        <p>Da questo momento diventa contesto storico per le Pull Request successive: quando il valutatore esaminerà un nuovo candidato, il recupero restituirà anche questo requisito — <strong>tutti quelli che passano i filtri, non i più simili</strong> — e potrà dichiarare la relazione: <code>DUPLICATE</code>, <code>OVERLAPS</code>, <code>REFINES</code>, <code>SUPERSEDES</code>, <code>CONFLICTS</code>.</p>
       `
     },
     "decline": {
@@ -1238,4 +1509,32 @@ max_tokens = 1024</pre>
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape' && panel.dataset.open === 'true') closePanel();
   });
+
+  // --- filtri percorso: illuminano il tratto di pipeline selezionato ------
+  (function () {
+    const svgEl = document.querySelector(".diagram-scroll svg");
+    const tasti = Array.from(document.querySelectorAll(".path-filter"));
+    if (!svgEl || !tasti.length) return;
+
+    function spegni() {
+      svgEl.removeAttribute("data-hl");
+      tasti.forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
+    }
+
+    tasti.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        const percorso = btn.dataset.path;
+        const eraAcceso = svgEl.getAttribute("data-hl") === percorso;
+        spegni();
+        if (!eraAcceso) {
+          svgEl.setAttribute("data-hl", percorso);
+          btn.setAttribute("aria-pressed", "true");
+        }
+      });
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && svgEl.hasAttribute("data-hl")) spegni();
+    });
+  })();
 </script>
