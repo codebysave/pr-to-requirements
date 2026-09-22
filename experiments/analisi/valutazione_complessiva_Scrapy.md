@@ -65,7 +65,7 @@ I criteri che abbiamo applicato (Decisione 3.1) sono sei, tutti obbligatori:
 
 | # | Criterio | Che cosa richiede |
 |---|---|---|
-| 1 | **Forma ISO** | inglese, verbo `shall` (non `must`, non `should`) |
+| 1 | **Verbo prescrittivo** | uso obbligatorio del verbo `shall` (in inglese; non `must`, non `should`) |
 | 2 | **Schema EARS** | uno dei cinque: *ubiquitous*, *event-driven*, *state-driven*, *unwanted behaviour*, *optional feature* |
 | 3 | **Atomicità** | un solo obbligo per requisito |
 | 4 | **Astrazione corretta** | nessun nome di libreria, funzione, modulo o file — salvo quando il cambio di quel meccanismo è esso stesso l'oggetto della Pull Request |
