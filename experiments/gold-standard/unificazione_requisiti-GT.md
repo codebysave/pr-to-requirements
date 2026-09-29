@@ -348,3 +348,24 @@ Da compilare via via, una riga per ogni elemento discusso.
 cui abbiamo interpretato l'evidenza quando l'evidenza non decideva da sola.
 Letto tutto insieme, mostra se le nostre decisioni sono state coerenti fra loro
 — e se non lo sono state, è qui che si vede.
+
+---
+
+## Appendice — L'accordo fra i due annotatori
+
+Si compila **una sola volta**, dopo aver unificato tutte le Pull Request del
+campione — mai durante, per non lasciare che un punteggio calcolato influenzi le
+decisioni di unificazione ancora in corso (Passo 6).
+
+Si calcola sulle **schede originali**, mai sul Ground Truth: sul Ground Truth
+farebbe 100% per costruzione e non dimostrerebbe nulla. È il dato che stabilisce
+se i criteri di questa legenda siano applicabili da persone diverse in modo
+indipendente, prima ancora che il riferimento venga usato per giudicare il
+sistema.
+
+| | Valore |
+|---|---|
+| Stessa decisione di estraibilità | ___ / ___ |
+| Corrispondenza semantica fra i due requisiti | ___ `MATCH` · ___ `PARTIAL` · ___ `NO_MATCH` |
+
+**Sugli scostamenti.** _______________

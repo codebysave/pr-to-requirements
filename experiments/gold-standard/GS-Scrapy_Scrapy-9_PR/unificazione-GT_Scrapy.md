@@ -573,3 +573,24 @@ ha fatto emergere: come trattiamo un requisito **più specifico del riferimento*
 (§2 delle conseguenze) e come registriamo un'**incoerenza fra Pull Request con
 evidenza identica** (§1). Entrambe vanno decise prima, non dopo aver visto i
 numeri.
+
+---
+
+## Appendice — L'accordo fra i due annotatori
+
+Si calcola sulle **schede originali**, mai sul Ground Truth: sul Ground Truth
+farebbe 100% per costruzione e non dimostrerebbe nulla. È il dato che stabilisce
+se i criteri della legenda siano applicabili da persone diverse in modo
+indipendente.
+
+| | Valore |
+|---|---|
+| Stessa decisione di estraibilità | **9 / 9** |
+| Corrispondenza semantica fra i due requisiti | 5 `MATCH` · 1 `PARTIAL` · 0 `NO_MATCH` |
+
+**Sugli scostamenti.** L'unico è su **#6881**, dove uno di noi limitava il
+requisito alle entità esterne e l'altro copriva anche l'esecuzione di codice.
+L'unificazione ha poi stabilito che nessuna delle due letture era sostenuta
+dall'evidenza (si veda la rianotazione, sopra): non un vero disaccordo di
+lettura, ma un eccesso che entrambi condividevamo, corretto dalla stessa regola
+applicata a entrambi.
