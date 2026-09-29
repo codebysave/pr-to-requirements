@@ -20,8 +20,9 @@ acts as the **long-term memory** of the system. Before each assessment the
 Assessment Agent receives the requirements already validated, so that it can
 spot duplications or inconsistencies with what has been produced before.
 
-The memory is also exposed as an **MCP (Model Context Protocol)** server, which
-the pipeline uses when started with `--use-mcp`.
+The memory is also exposed as an **MCP (Model Context Protocol)** server,
+which the pipeline uses by default; `--no-mcp` calls the repository directly
+instead.
 
 ## Authors and supervision
 
@@ -72,7 +73,7 @@ uv run python -m are --check-api
 To process a file of Pull Requests and produce the requirements:
 
 ```bash
-uv run python -m are --input experiments/samples/sample-scrapy_scrapy.json --limit 3
+uv run python -m are --input experiments/samples/sample-scrapy_scrapy.json
 ```
 
 The run report is saved in `experiments/runs/` and holds the accepted
@@ -92,15 +93,32 @@ Useful options:
 - `--reprocess` — reprocess Pull Requests already processed for the same
   project (skipped by default)
 - `--no-mcp` — call the repository/retriever directly instead of going
-  through the MCP server (used by default)
+  through the MCP server (the MCP server is used by default)
 - `--assessor-tools` — let the assessor query the memory by itself, as a tool
 - `--verbose` — detailed logging
 
 `uv run python -m are --help` lists them all.
 
+## Gold standard
+
+Pull Requests are normalized into `experiments/samples/sample-<repo>.json`, a
+flat JSON array with `id`, `repository`, `pr_number`, `timestamp`, `title` and
+`body` per record — see the existing samples for the exact format.
+
+To evaluate the system, `experiments/gold-standard/` holds three reusable
+patterns and the datasets built from them:
+
+- `annotazione-template.md` — one annotator reads only the evidence and
+  writes a reference requirement per Pull Request, independently of the
+  other.
+- `unificazione_requisiti-GT.md` — the rules for turning two independent
+  annotations into a single Ground Truth requirement per Pull Request.
+- `confronto-GT-sistema_template.md` — how that Ground Truth is compared
+  against what the system actually produced, requirement by requirement.
+
 ## Tests
 
 ```bash
 uv run ruff check .
-uv run pytest
+ uv run pytest
 ```
