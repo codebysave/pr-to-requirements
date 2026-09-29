@@ -246,6 +246,6 @@ def test_the_launch_arguments_carry_the_database_the_run_and_the_scope():
     assert "--max-requirements=17" in args
 
 
-def test_the_default_scope_isolates_the_run():
+def test_the_default_scope_accumulates_across_runs():
     config = McpMemorySessionConfig(db_path=Path("m.db"), run_id="R1")
-    assert "--memory-scope=run" in _build_server_params(config, None).args
+    assert "--memory-scope=all" in _build_server_params(config, None).args

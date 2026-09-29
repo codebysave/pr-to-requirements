@@ -12,6 +12,14 @@ from pathlib import Path
 
 DEFAULT_PROMPT_VERSION = "v1"
 
+# Il prompt di generazione non ha mai avuto bisogno di due formulazioni: la
+# v1 era una copia identica della v2, mantenuta solo per simmetria con
+# l'agente di valutazione, dove le due versioni invece differiscono (recupero
+# deterministico contro recupero via tool). La v1 del generatore è stata
+# rimossa; questa costante documenta che "v2" qui è solo il nome del file
+# rimasto, non una revisione più recente.
+GENERATION_PROMPT_VERSION = "v2"
+
 # La cartella `prompts/` sta nella radice del repository, accanto a `src/`.
 DEFAULT_PROMPTS_DIR = Path(__file__).resolve().parents[3] / "prompts"
 

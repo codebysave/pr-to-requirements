@@ -47,7 +47,7 @@ class McpMemorySessionConfig:
 
     db_path: Path
     run_id: str
-    memory_scope: str = "run"
+    memory_scope: str = "all"
     max_requirements: int = 50
 
 

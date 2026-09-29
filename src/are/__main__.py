@@ -115,7 +115,7 @@ def main(argv: list[str] | None = None) -> int:
 
     llm_config = _apply_model_overrides(load_llm_config(args.llm_config), args)
     workflow_config = load_workflow_config(args.workflow_config)
-    prompt_version = _resolve_prompt_version(args)
+    assessment_prompt_version = _resolve_prompt_version(args.assessor_tools)
 
     generation_client = AnthropicLLMClient(llm_config.generation)
     assessment_client = AnthropicLLMClient(llm_config.assessment)
@@ -142,7 +142,7 @@ def main(argv: list[str] | None = None) -> int:
                 workflow_config,
                 generation_client,
                 assessment_client,
-                prompt_version,
+                assessment_prompt_version,
                 retriever=mcp_retriever,
                 store=mcp_store,
                 assessor_tools=args.assessor_tools,
@@ -164,7 +164,7 @@ def main(argv: list[str] | None = None) -> int:
             workflow_config,
             generation_client,
             assessment_client,
-            prompt_version,
+            assessment_prompt_version,
             retriever=_build_retriever(memory, run_stamp, args.memory_scope, workflow_config),
             store=memory,
             assessor_tools=args.assessor_tools,
@@ -208,7 +208,10 @@ def main(argv: list[str] | None = None) -> int:
                 {"pr_number": record.pr_number, "previous_status": esito}
                 for record, esito in saltate
             ],
-            "prompt_version": prompt_version,
+            "prompt_version": {
+                "generation": dependencies.generator.prompt_version,
+                "assessment": assessment_prompt_version,
+            },
             "workflow": {
                 "assessment_enabled": workflow_config.assessment_enabled,
                 "memory_enabled": workflow_config.memory_enabled,
@@ -283,14 +286,15 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument(
         "--memory-scope",
         choices=(MEMORY_SCOPE_RUN, MEMORY_SCOPE_ALL),
-        default=MEMORY_SCOPE_RUN,
+        default=MEMORY_SCOPE_ALL,
         help="quali requisiti storici puo' vedere il valutatore. "
-        "'run' (predefinito): solo quelli prodotti da questa esecuzione, cosi' due "
-        "esecuzioni restano confrontabili. "
-        "'all': quelli di tutte le esecuzioni, cioe' una memoria che si accumula "
-        "davvero nel tempo -- da usare una volta sola per corpus, perche' "
-        "rielaborando le stesse Pull Request la memoria si riempie di varianti "
-        "dello stesso caso e il valutatore le vede come duplicati",
+        "'all' (predefinito): quelli di tutte le esecuzioni, cioe' una memoria "
+        "che si accumula davvero nel tempo -- il comportamento del sistema in "
+        "uso reale, non solo durante la sperimentazione. "
+        "'run': solo quelli prodotti da questa esecuzione, cosi' due esecuzioni "
+        "restano confrontabili -- da usare per repliche o confronti fra "
+        "configurazioni, dove la memoria condivisa falserebbe la misura "
+        "facendo vedere a una run i requisiti prodotti dall'altra",
     )
     parser.add_argument(
         "--memory-db",
@@ -306,12 +310,6 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         "--workflow-config",
         default=DEFAULT_WORKFLOW_CONFIG,
         help=f"configurazione del workflow (default: {DEFAULT_WORKFLOW_CONFIG})",
-    )
-    parser.add_argument(
-        "--prompt-version",
-        default=None,
-        help=f"versione dei prompt da usare (default: {DEFAULT_PROMPT_VERSION}, "
-        f"oppure {TOOL_PROMPT_VERSION} con --assessor-tools)",
     )
     alias = ", ".join(MODEL_ALIASES)
     parser.add_argument(
@@ -338,12 +336,16 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         help="elabora soltanto le prime N Pull Request del file (utile per contenere i costi)",
     )
     parser.add_argument(
-        "--use-mcp",
-        action="store_true",
-        help="accede alla memoria (retrieval e persistenza) attraverso il "
-        "server MCP invece che chiamando direttamente il repository/retriever. "
-        "Il server viene avviato come sottoprocesso stdio e resta in vita per "
-        "tutto il run.",
+        "--no-mcp",
+        dest="use_mcp",
+        action="store_false",
+        default=True,
+        help="accede alla memoria (retrieval e persistenza) chiamando "
+        "direttamente il repository/retriever, invece che attraverso il "
+        "server MCP. Di default il sistema passa sempre per MCP: il server "
+        "viene avviato come sottoprocesso stdio e resta in vita per tutto "
+        "il run. Utile per il debug, quando si vuole escludere il server "
+        "come possibile causa di un problema.",
     )
     parser.add_argument(
         "--assessor-tools",
@@ -351,16 +353,18 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         help="il valutatore interroga la memoria da se', invocando un tool, invece "
         "di riceverne il contenuto gia' pronto nel messaggio. Il recupero smette "
         "di essere deterministico: il modello puo' non cercare affatto. Seleziona "
-        "da solo la versione v2 del prompt, che descrive il tool, a meno che "
-        "--prompt-version non sia indicata esplicitamente",
+        "da solo la versione v2 del prompt di valutazione, che descrive il tool",
     )
     parser.add_argument(
-        "--skip-processed",
-        action="store_true",
-        help="salta le Pull Request gia' elaborate in precedenza sullo stesso "
-        "progetto, riconosciute dal numero. Nessuna chiamata al modello: e' un "
-        "controllo sul database. Da tenere spento quando si rielabora lo stesso "
-        "corpus di proposito, per esempio per misurare la variabilita' fra repliche",
+        "--reprocess",
+        dest="skip_processed",
+        action="store_false",
+        default=True,
+        help="rielabora anche le Pull Request gia' elaborate in precedenza "
+        "sullo stesso progetto, riconosciute dal numero. Di default vengono "
+        "saltate (nessuna chiamata al modello: e' un controllo sul database). "
+        "Serve quando si rielabora lo stesso corpus di proposito, per esempio "
+        "per misurare la variabilita' fra repliche",
     )
     parser.add_argument("--verbose", action="store_true", help="log di dettaglio")
     return parser.parse_args(argv)
@@ -478,22 +482,22 @@ def _describe_usage(usage: dict[str, tuple[str, UsageStats]]) -> dict[str, objec
     }
 
 
-def _resolve_prompt_version(args: argparse.Namespace) -> str:
-    """Sceglie la versione dei prompt, tenendo conto di ``--assessor-tools``.
+def _resolve_prompt_version(assessor_tools: bool) -> str:
+    """Sceglie la versione del prompt di valutazione, in base a ``--assessor-tools``.
 
     La v1 descrive requisiti «forniti» e non nomina alcun tool: usarla con il
     recupero guidato dall'agente lascerebbe il modello senza istruzioni su
     quando cercare. La v2 viene quindi selezionata da sola.
 
-    L'opzione ha valore predefinito ``None`` proprio per distinguere «non
-    indicata» da «indicata e uguale al predefinito»: una scelta dichiarata
-    dall'utente non va sovrascritta in silenzio, nemmeno quando coincide con
-    il valore che avremmo usato comunque.
+    Non è configurabile da riga di comando: le uniche due formulazioni che
+    esistono sono queste, e la scelta fra loro dipende interamente da
+    ``--assessor-tools``, non da una preferenza indipendente. Chi vuole
+    provare una terza formulazione la aggiunge come nuovo file versionato e
+    modifica questa funzione, invece di passare per un'opzione che
+    permetterebbe di scegliere combinazioni incoerenti (Decisione 3.4).
     """
 
-    if args.prompt_version is not None:
-        return args.prompt_version
-    if not args.assessor_tools:
+    if not assessor_tools:
         return DEFAULT_PROMPT_VERSION
     print(f"Recupero guidato dall'agente: uso i prompt {TOOL_PROMPT_VERSION}")
     return TOOL_PROMPT_VERSION
@@ -507,7 +511,7 @@ def _build_dependencies(
     workflow_config,
     generation_client: AnthropicLLMClient,
     assessment_client: AnthropicLLMClient,
-    prompt_version: str,
+    assessment_prompt_version: str,
     *,
     retriever,
     store,
@@ -524,12 +528,16 @@ def _build_dependencies(
     nodo ``retrieve_memory`` non recupera nulla e la ricerca avviene una volta
     sola, quando il modello decide di chiederla. Il grafo non ha bisogno di
     sapere in quale delle due configurazioni si trova.
+
+    ``assessment_prompt_version`` riguarda solo il valutatore: il generatore
+    ha un'unica versione di prompt e non la riceve piu' come parametro
+    condiviso (si veda ``GENERATION_PROMPT_VERSION``).
     """
 
     if workflow_config.assessment_enabled:
         assessor = LLMRequirementAssessor(
             assessment_client,
-            prompt_version,
+            assessment_prompt_version,
             memory_tool=MemorySearchTool(retriever) if assessor_tools else None,
         )
     else:
@@ -539,7 +547,7 @@ def _build_dependencies(
         extractability_checker=DeterministicExtractabilityChecker(
             workflow_config.min_evidence_characters
         ),
-        generator=LLMRequirementGenerator(generation_client, prompt_version),
+        generator=LLMRequirementGenerator(generation_client),
         assessor=assessor,
         retriever=NullMemoryRetriever() if assessor_tools else retriever,
         store=store,

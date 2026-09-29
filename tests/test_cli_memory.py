@@ -22,18 +22,22 @@ def store() -> SqliteRequirementRepository:
 # -- opzione da riga di comando ------------------------------------------
 
 
-def test_the_default_scope_isolates_the_run() -> None:
-    """È il comportamento che rende confrontabili due esecuzioni."""
+def test_the_default_scope_accumulates_across_runs() -> None:
+    """È il comportamento del sistema in uso reale: la memoria non riparte
+    da zero a ogni esecuzione."""
 
     args = _parse_args(["--input", "x.json"])
 
-    assert args.memory_scope == MEMORY_SCOPE_RUN
-
-
-def test_the_scope_can_be_widened_to_every_run() -> None:
-    args = _parse_args(["--input", "x.json", "--memory-scope", "all"])
-
     assert args.memory_scope == MEMORY_SCOPE_ALL
+
+
+def test_the_scope_can_be_narrowed_to_a_single_run() -> None:
+    """Necessario per confronti fra configurazioni e repliche: la memoria
+    condivisa farebbe vedere a una run i requisiti prodotti dall'altra."""
+
+    args = _parse_args(["--input", "x.json", "--memory-scope", "run"])
+
+    assert args.memory_scope == MEMORY_SCOPE_RUN
 
 
 def test_an_unknown_scope_is_rejected() -> None:

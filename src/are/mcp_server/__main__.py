@@ -10,7 +10,7 @@ Uso::
     python -m are.mcp_server <db_path> <run_id>
 
     python -m are.mcp_server experiments/memory/shared.db 20260831T142024Z
-    python -m are.mcp_server experiments/memory/shared.db 20260831T142024Z --memory-scope all
+    python -m are.mcp_server experiments/memory/shared.db 20260831T142024Z --memory-scope run
 """
 
 from __future__ import annotations
@@ -36,10 +36,11 @@ def main() -> None:
     parser.add_argument(
         "--memory-scope",
         choices=["run", "all"],
-        default="run",
+        default="all",
         help=(
-            "'run' isola il retrieval al run corrente (utile per esperimenti puliti); "
-            "'all' attraversa tutti i run del DB (memoria che si accumula)."
+            "'all' (predefinito) attraversa tutti i run del DB, cioe' una memoria "
+            "che si accumula davvero nel tempo; 'run' isola il retrieval al run "
+            "corrente, utile per esperimenti e repliche confrontabili."
         ),
     )
     parser.add_argument(

@@ -86,12 +86,13 @@ Useful options:
 - `--output PATH` — choose the report file
 - `--model NAME` — `haiku`, `sonnet` or `opus` for both agents;
   `--generation-model` and `--assessment-model` set them one by one
-- `--prompt-version V` — use a different version of the prompts
-- `--memory-scope all` — let the assessor see the requirements of every run,
-  not only those of the current one
-- `--skip-processed` — skip Pull Requests already processed for the same
-  project
-- `--use-mcp` — reach the memory through the MCP server
+- `--memory-scope run` — isolate the assessor to the requirements of this run
+  only (the default, `all`, lets memory accumulate across runs; use `run` to
+  keep separate experiments or replicates comparable)
+- `--reprocess` — reprocess Pull Requests already processed for the same
+  project (skipped by default)
+- `--no-mcp` — call the repository/retriever directly instead of going
+  through the MCP server (used by default)
 - `--assessor-tools` — let the assessor query the memory by itself, as a tool
 - `--verbose` — detailed logging
 

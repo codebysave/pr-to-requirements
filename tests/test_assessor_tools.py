@@ -408,8 +408,15 @@ def test_the_v1_prompt_does_not_name_the_tool():
 
 
 @pytest.mark.parametrize("versione", ["v1", "v2"])
-def test_both_prompt_versions_load(versione: str):
+def test_both_assessment_prompt_versions_load(versione: str):
     from are.agents.prompts import load_prompt
 
     assert load_prompt("assessment", versione).strip()
-    assert load_prompt("generation", versione).strip()
+
+
+def test_the_generation_prompt_loads():
+    """Il generatore ha una sola versione: non c'è una v1 da confrontare."""
+
+    from are.agents.prompts import GENERATION_PROMPT_VERSION, load_prompt
+
+    assert load_prompt("generation", GENERATION_PROMPT_VERSION).strip()
