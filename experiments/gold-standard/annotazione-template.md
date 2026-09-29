@@ -39,7 +39,7 @@ PULL REQUEST BODY:
 
 ```
 
-## Parte A — La mia annotazione
+## La mia annotazione
 
 **Estraibilità**
 
@@ -60,70 +60,11 @@ PULL REQUEST BODY:
 
 ```
 
-## Parte B — Confronto con l'esecuzione
-
-| | |
-|---|---|
-| Run (file) | |
-| Modello generazione / valutazione | |
-| Esito del sistema | `ACCEPTED` / `REJECTED` / `NOT_EXTRACTABLE` / `FAILED_VALIDATION` |
-| Tentativi | |
-
-**Requisito generato**
-
-```text
-
-```
-
-**1. Estraibilità** — il sistema ha deciso come me?
-
-- [ ] concorde
-- [ ] discorde — il sistema dice: ______________
-
-**2. Corrispondenza semantica con il mio requisito**
-
-- [ ] `MATCH` — stesso comportamento, anche se formulato diversamente
-- [ ] `PARTIAL_MATCH` — comportamento in parte corrispondente, o più ristretto/ampio
-- [ ] `NO_MATCH` — comportamento diverso
-
-**3. Rubrica di qualità** *(sul requisito generato, indipendentemente dal mio)*
-
-| Criterio | Obbligatorio | PASS | FAIL | Note |
-|---|:---:|:---:|:---:|---|
-| Functional | **sì** | ☐ | ☐ | |
-| Evidence fidelity | **sì** | ☐ | ☐ | |
-| Necessary / supported | **sì** | ☐ | ☐ | |
-| Atomic / singular | **sì** | ☐ | ☐ | |
-| Unambiguous | **sì** | ☐ | ☐ | |
-| Verifiable | **sì** | ☐ | ☐ | |
-| Clear | no | ☐ | ☐ | |
-| Complete relative to evidence | no | ☐ | ☐ | |
-| Feasible | no | ☐ | ☐ | |
-| Consistent | no | ☐ | ☐ | |
-| Correct abstraction | no | ☐ | ☐ | |
-| Traceable | no | ☐ | ☐ | |
-
-**4. Hard gate** — se anche uno solo dei criteri obbligatori è `FAIL`, l'esito è
-`NOT_VALID`, indipendentemente dagli altri.
-
-- [ ] `VALID`
-- [ ] `NOT_VALID` — criterio che ha fatto fallire: ______________
-
-**5. Quality score** — criteri superati sul totale: ______ / 12
-
-**Note della valutazione**
-
-```text
-
-```
-
 ---
 
 <!-- Fine del blocco duplicabile. Il Riepilogo va compilato una sola volta, alla fine del documento. -->
 
-# Riepilogo
-
-## Parte A — il mio riferimento
+# Riepilogo — il mio riferimento
 
 | PR   | Estraibile | Requisito di riferimento (prime parole) |
 |------|:----------:|-----------------------------------------|
@@ -136,25 +77,3 @@ PULL REQUEST BODY:
 | #____ |            |                                         |
 | #____ |            |                                         |
 | #____ |            |                                         |
-
-## Parte B — come si è comportato il sistema
-
-| PR    | Estraibilità concorde | Corrispondenza | Validità | Quality score |
-|-------|:---------------------:|:--------------:|:--------:|:-------------:|
-| #____ |                       |                |          |               |
-| #____ |                       |                |          |               |
-| #____ |                       |                |          |               |
-| #____ |                       |                |          |               |
-| #____ |                       |                |          |               |
-| #____ |                       |                |          |               |
-| #____ |                       |                |          |               |
-| #____ |                       |                |          |               |
-| #____ |                       |                |          |               |
-
-**Metriche complessive** (Decisione 3.7, §12)
-
-- Valid Requirement Rate: ____ / ____ = ____ %
-- Unsupported Claim Rate: ____ / ____ = ____ %
-- Corrispondenza semantica: MATCH ____, PARTIAL ____, NO_MATCH ____
-- Estraibilità — accuratezza: ____ / ____
-- Quality score medio: ____ / 12

@@ -1,0 +1,396 @@
+{
+  "run": {
+    "generated_at": "2026-09-29T10:04:42.626170+00:00",
+    "input_file": "experiments/samples/sample-comet-ml_opik.json",
+    "pull_requests": 8,
+    "skipped_already_processed": [],
+    "prompt_version": {
+      "generation": "v2",
+      "assessment": "v1"
+    },
+    "workflow": {
+      "assessment_enabled": true,
+      "memory_enabled": true,
+      "max_generation_attempts": 3,
+      "memory_access": "mcp",
+      "retrieval_driver": "graph_node"
+    },
+    "llm": {
+      "generation": {
+        "model": "claude-sonnet-5",
+        "resolved_model": "claude-sonnet-5",
+        "max_tokens": 1024,
+        "effort": null
+      },
+      "assessment": {
+        "model": "claude-opus-5",
+        "resolved_model": "claude-opus-5",
+        "max_tokens": 8192,
+        "effort": null
+      }
+    },
+    "usage": {
+      "per_agent": {
+        "generation": {
+          "model": "claude-sonnet-5",
+          "calls": 8,
+          "input_tokens": 32400,
+          "output_tokens": 1496,
+          "estimated_cost_usd": 0.11964
+        },
+        "assessment": {
+          "model": "claude-opus-5",
+          "calls": 8,
+          "input_tokens": 56488,
+          "output_tokens": 4524,
+          "estimated_cost_usd": 0.39554
+        }
+      },
+      "total_calls": 16,
+      "total_input_tokens": 88888,
+      "total_output_tokens": 6020,
+      "total_estimated_cost_usd": 0.51518,
+      "pricing_reference_date": "2026-08-26"
+    },
+    "memory": {
+      "database": "experiments\\memory\\pr-to-requirements.db",
+      "run_id": "20260929T100302Z",
+      "stored_requirements": 13
+    }
+  },
+  "summary": {
+    "REJECTED": 1,
+    "ACCEPTED": 5,
+    "NOT_EXTRACTABLE": 2
+  },
+  "results": [
+    {
+      "pr_id": "comet-ml-opik-pr-2662",
+      "repository": "comet-ml/opik",
+      "pr_number": 2662,
+      "timestamp": "2025-07-03T20:21:59+00:00",
+      "title": "NA: Fix thread fields types on OpenAPI spec",
+      "final_status": "REJECTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 144 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "The system shall represent trace thread fields in the API specification with types that correctly map to the actual field data returned.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "REJECT",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The evidence states only that a specification document was corrected so that a code-generation tool produces a proper mapping; it names no field, no type, and no change observable from outside the system.",
+              "The requirement's substance - that the declared types 'correctly map to the actual field data returned' - is not stated anywhere in the evidence and cannot be checked without reading the specification source and comparing it to the code, which is not a black-box observation.",
+              "Once the unsupported elements are removed, nothing remains but the fact that a specification file was edited, so no rewrite can produce a grounded behavioural requirement."
+            ],
+            "unsupported_claims": [
+              "types that correctly map",
+              "the actual field data returned",
+              "which trace thread fields are concerned",
+              "which types they now have"
+            ],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "comet-ml-opik-pr-2685",
+      "repository": "comet-ml/opik",
+      "pr_number": 2685,
+      "timestamp": "2025-07-07T10:42:47+00:00",
+      "title": "OPIK-1964: Fix JSON parsing exception in OpenTelemetryMapper",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 2300 caratteri: la valutazione prosegue",
+      "accepted_requirement": "If a value in an OpenTelemetry span looks like JSON but cannot be parsed as valid JSON, then the system shall store that value as plain text instead of raising an exception.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "If a value in an OpenTelemetry span looks like JSON but cannot be parsed as valid JSON, then the system shall store that value as plain text instead of raising an exception.",
+          "refusal_reason": null,
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "ACCEPT",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "comet-ml-opik-pr-2695",
+      "repository": "comet-ml/opik",
+      "pr_number": 2695,
+      "timestamp": "2025-07-08T23:30:14+00:00",
+      "title": "OPIK-1775 Fix issue with race condition and enforce consistent read when closing threads",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 229 caratteri: la valutazione prosegue",
+      "accepted_requirement": "When a thread is closed, the system shall guarantee that subsequent reads of that thread return consistent, up-to-date data reflecting the closure.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When a thread is closed, the system shall guarantee that subsequent reads of that thread return consistent, up-to-date data reflecting the closure.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "9",
+              "source_pr_number": 2685,
+              "statement": "If a value in an OpenTelemetry span looks like JSON but cannot be parsed as valid JSON, then the system shall store that value as plain text instead of raising an exception."
+            }
+          ],
+          "assessment": {
+            "decision": "ACCEPT",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "comet-ml-opik-pr-2714",
+      "repository": "comet-ml/opik",
+      "pr_number": 2714,
+      "timestamp": "2025-07-13T08:13:30+00:00",
+      "title": "[OPIK-2043] Follow-up fixes",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 232 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence only mentions unspecified 'minor fixes' and a 'null change' without describing what problem existed or what observable behaviour the system now guarantees, so no requirement can be grounded without guessing.",
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The evidence refers only to unspecified 'minor fixes', a 'null change' and 'validation changes' from an earlier Pull Request, without stating what input, condition or result is affected or what the system now guarantees.",
+              "Any sentence naming a behaviour would have to invent the nature of the null handling or the validation rule, so the writer is correct that nothing can be grounded."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "comet-ml-opik-pr-2715",
+      "repository": "comet-ml/opik",
+      "pr_number": 2715,
+      "timestamp": "2025-07-13T11:48:52+00:00",
+      "title": "[NA] fix minor comments from PR #2689",
+      "final_status": "NOT_EXTRACTABLE",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 114 caratteri: la valutazione prosegue",
+      "accepted_requirement": null,
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": null,
+          "refusal_reason": "The evidence only says minor comments from a previous PR were addressed, without stating what behaviour changed or what problem was fixed, so no observable requirement can be derived.",
+          "retrieved_requirements": [],
+          "assessment": {
+            "decision": "CONFIRM_NOT_EXTRACTABLE",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [
+              "The evidence states only that minor review comments from an earlier Pull Request were addressed; it names no actor, action, condition or observable result.",
+              "Nothing in the title or body indicates what changes for an observer, so any requirement would have to be invented from outside the evidence."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "comet-ml-opik-pr-2719",
+      "repository": "comet-ml/opik",
+      "pr_number": 2719,
+      "timestamp": "2025-07-14T11:39:03+00:00",
+      "title": "OPIK-1778: Fix read consistency issues",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 255 caratteri: la valutazione prosegue",
+      "accepted_requirement": "If a thread is pending closure, then the system shall complete and publish its closure so that subsequent reads reflect the thread's correct closed state.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "If a thread is pending closure, then the system shall complete and publish its closure so that subsequent reads reflect the thread's correct closed state.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "9",
+              "source_pr_number": 2685,
+              "statement": "If a value in an OpenTelemetry span looks like JSON but cannot be parsed as valid JSON, then the system shall store that value as plain text instead of raising an exception."
+            },
+            {
+              "requirement_id": "10",
+              "source_pr_number": 2695,
+              "statement": "When a thread is closed, the system shall guarantee that subsequent reads of that thread return consistent, up-to-date data reflecting the closure."
+            }
+          ],
+          "assessment": {
+            "decision": "ACCEPT",
+            "tool_rounds": 0,
+            "relations": [
+              {
+                "type": "OVERLAPS",
+                "target_requirement_id": "10",
+                "target_pr_number": 2695,
+                "reason": "Both concern read consistency around thread closure, but the earlier one guarantees consistent reads after closure while the candidate obliges the system to complete and publish closures that are pending."
+              }
+            ],
+            "issues": [
+              "The requirement overlaps with the previously validated requirement from Pull Request #2695, which guarantees consistent, up-to-date reads after a thread is closed; the candidate states the complementary obligation of actually completing and publishing closure for threads pending closure. Neither contains the other, so both are retained; this is recorded as an observation and does not affect the decision.",
+              "The candidate covers only the thread-closure part of the evidence; the null-pointer fix in the Online Scoring subscriber is a separate matter and its omission is not a defect of this sentence."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "comet-ml-opik-pr-2732",
+      "repository": "comet-ml/opik",
+      "pr_number": 2732,
+      "timestamp": "2025-07-15T12:21:27+00:00",
+      "title": "OPIK-1778: Fix issues with read consistency by send entities into events",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 220 caratteri: la valutazione prosegue",
+      "accepted_requirement": "If an entity is created or modified, then the system shall ensure that subsequent reads of that entity return consistent, up-to-date data.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "If an entity is created or modified, then the system shall ensure that subsequent reads of that entity return consistent, up-to-date data.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "9",
+              "source_pr_number": 2685,
+              "statement": "If a value in an OpenTelemetry span looks like JSON but cannot be parsed as valid JSON, then the system shall store that value as plain text instead of raising an exception."
+            },
+            {
+              "requirement_id": "10",
+              "source_pr_number": 2695,
+              "statement": "When a thread is closed, the system shall guarantee that subsequent reads of that thread return consistent, up-to-date data reflecting the closure."
+            },
+            {
+              "requirement_id": "11",
+              "source_pr_number": 2719,
+              "statement": "If a thread is pending closure, then the system shall complete and publish its closure so that subsequent reads reflect the thread's correct closed state."
+            }
+          ],
+          "assessment": {
+            "decision": "ACCEPT",
+            "tool_rounds": 0,
+            "relations": [
+              {
+                "type": "OVERLAPS",
+                "target_requirement_id": "10",
+                "target_pr_number": 2695,
+                "reason": "Both guarantee that subsequent reads return consistent, up-to-date data, the earlier one only for a closed thread and the candidate for any created or modified entity."
+              },
+              {
+                "type": "OVERLAPS",
+                "target_requirement_id": "11",
+                "target_pr_number": 2719,
+                "reason": "Both concern subsequent reads reflecting an entity's current state, the earlier one specifically for threads pending closure."
+              }
+            ],
+            "issues": [
+              "The requirement states, at the general level the evidence supports, the read-consistency guarantee that the Pull Request describes, without naming the event mechanism used to achieve it.",
+              "It overlaps with the read-consistency requirement from Pull Request #2695 (thread closure) and with the one from Pull Request #2719 (pending thread closure): the candidate expresses the same kind of guarantee for entities generally, while those earlier requirements remain narrower and specific to thread closure. This is recorded as an observation and does not affect the decision.",
+              "The evidence also mentions a second, unrelated change (aligning the LLM-as-Judge template with the JSON schema property name); that belongs to a separate requirement and is not a defect of this one."
+            ],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    },
+    {
+      "pr_id": "comet-ml-opik-pr-2757",
+      "repository": "comet-ml/opik",
+      "pr_number": 2757,
+      "timestamp": "2025-07-17T10:09:05+00:00",
+      "title": "[NA] Fix prompt tags update",
+      "final_status": "ACCEPTED",
+      "extractability": "EXTRACTABLE",
+      "extractability_reason": "titolo e corpo contengono 157 caratteri: la valutazione prosegue",
+      "accepted_requirement": "When a user deletes all or the last remaining tag from a prompt, the system shall update the prompt's tags successfully.",
+      "generation_attempts": 1,
+      "iteration_history": [
+        {
+          "attempt": 1,
+          "candidate": "When a user deletes all or the last remaining tag from a prompt, the system shall update the prompt's tags successfully.",
+          "refusal_reason": null,
+          "retrieved_requirements": [
+            {
+              "requirement_id": "9",
+              "source_pr_number": 2685,
+              "statement": "If a value in an OpenTelemetry span looks like JSON but cannot be parsed as valid JSON, then the system shall store that value as plain text instead of raising an exception."
+            },
+            {
+              "requirement_id": "10",
+              "source_pr_number": 2695,
+              "statement": "When a thread is closed, the system shall guarantee that subsequent reads of that thread return consistent, up-to-date data reflecting the closure."
+            },
+            {
+              "requirement_id": "11",
+              "source_pr_number": 2719,
+              "statement": "If a thread is pending closure, then the system shall complete and publish its closure so that subsequent reads reflect the thread's correct closed state."
+            },
+            {
+              "requirement_id": "12",
+              "source_pr_number": 2732,
+              "statement": "If an entity is created or modified, then the system shall ensure that subsequent reads of that entity return consistent, up-to-date data."
+            }
+          ],
+          "assessment": {
+            "decision": "ACCEPT",
+            "tool_rounds": 0,
+            "relations": [],
+            "issues": [],
+            "unsupported_claims": [],
+            "missing_information": [],
+            "revision_instructions": []
+          }
+        }
+      ]
+    }
+  ]
+}

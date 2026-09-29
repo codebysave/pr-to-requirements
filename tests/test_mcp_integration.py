@@ -163,8 +163,8 @@ def test_the_protocol_keeps_the_future_out(sessione):
 
 
 def test_the_protocol_isolates_the_current_run(tmp_path):
-    """Un database che sopravvive a più esecuzioni non deve far partire la
-    seconda avvantaggiata dai requisiti della prima."""
+    """`--memory-scope run`: un database che sopravvive a più esecuzioni non
+    deve far partire la seconda avvantaggiata dai requisiti della prima."""
 
     percorso = tmp_path / "memoria.db"
     with SqliteRequirementRepository(percorso, ALTRA_RUN) as precedente:
@@ -172,7 +172,7 @@ def test_the_protocol_isolates_the_current_run(tmp_path):
             pr(pr_number=9, timestamp="2025-01-01T10:00:00Z"), "Di un'altra esecuzione."
         )
 
-    config = McpMemorySessionConfig(db_path=percorso, run_id=RUN_ID)
+    config = McpMemorySessionConfig(db_path=percorso, run_id=RUN_ID, memory_scope="run")
     with mcp_memory_session(config) as (retriever, _):
         assert retriever.retrieve("x", pr(pr_number=1, timestamp="2025-06-01T10:00:00Z")) == ()
 

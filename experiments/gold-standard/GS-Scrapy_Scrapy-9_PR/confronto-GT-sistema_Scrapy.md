@@ -573,22 +573,6 @@ il sistema sbaglia, ma **come** sbaglia quando sbaglia — e i due casi convergo
 senza ambiguità su un'unica regola. La misura della frequenza spetta al corpus
 OpenHands e alle repliche.
 
----
-
-## Appendice — L'accordo fra noi due annotatori
-
-Si calcola sulle **schede originali**, mai sul Ground Truth: sul Ground Truth
-farebbe 100% per costruzione e non dimostrerebbe nulla. È il dato che stabilisce
-se i criteri della Decisione 3.1 siano applicabili da persone diverse in modo
-indipendente.
-
-| | Valore |
-|---|---|
-| Stessa decisione di estraibilità | **9 / 9** |
-| Corrispondenza semantica fra i due requisiti | 5 `MATCH` · 1 `PARTIAL` · 0 `NO_MATCH` |
-
-L'unico scostamento è su **#6881**, dove uno di noi limitava il requisito alle
-entità esterne e l'altro copriva anche l'esecuzione di codice. L'unificazione ha
-poi stabilito che nessuna delle due letture era sostenuta dall'evidenza: è la
-Pull Request su cui il campione è più fragile, e non è un caso che sia anche
-quella su cui il sistema si spinge più in là.
+> **L'accordo fra i due annotatori** (prima dell'unificazione) è riportato in
+> appendice a `unificazione-GT_Scrapy.md`, non qui: dipende solo dalle due
+> schede originali, non dall'esecuzione del sistema.

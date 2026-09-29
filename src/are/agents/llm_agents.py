@@ -26,6 +26,7 @@ from .prompts import (
     ASSESSMENT_AGENT,
     DEFAULT_PROMPT_VERSION,
     GENERATION_AGENT,
+    GENERATION_PROMPT_VERSION,
     load_prompt,
 )
 from .state import (
@@ -260,9 +261,18 @@ def _format_feedback(feedback: AssessmentFeedback) -> str:
 
 
 class LLMRequirementGenerator:
-    """Requirement Generation Agent (Decisioni 3.1, §11 e 3.5, §4.1)."""
+    """Requirement Generation Agent (Decisioni 3.1, §11 e 3.5, §4.1).
 
-    def __init__(self, client: LLMClient, prompt_version: str = DEFAULT_PROMPT_VERSION) -> None:
+    A differenza del valutatore, il generatore ha un'unica versione di prompt:
+    non esiste una seconda formulazione da selezionare a runtime. Chi vuole
+    provarne una diversa aggiunge un nuovo file in ``prompts/generation/`` e
+    aggiorna ``GENERATION_PROMPT_VERSION``, invece di esporre una scelta da
+    riga di comando che qui non avrebbe nulla fra cui scegliere.
+    """
+
+    def __init__(
+        self, client: LLMClient, prompt_version: str = GENERATION_PROMPT_VERSION
+    ) -> None:
         self._client = client
         self._prompt_version = prompt_version
         self._system = load_prompt(GENERATION_AGENT, prompt_version)

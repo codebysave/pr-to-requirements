@@ -8,23 +8,35 @@ import pytest
 
 from are.agents.prompts import (
     ASSESSMENT_AGENT,
+    DEFAULT_PROMPT_VERSION,
     GENERATION_AGENT,
+    GENERATION_PROMPT_VERSION,
     PromptNotFoundError,
     load_prompt,
 )
 
 AGENTS = (GENERATION_AGENT, ASSESSMENT_AGENT)
 
+# Il generatore ha un'unica versione di prompt; il valutatore ne ha due
+# (deterministico / guidato dall'agente) e qui si testa sempre il suo
+# default. Le versioni non sono la stessa costante per i due agenti da
+# quando la v1 del generatore, identica alla v2, e' stata rimossa.
+_VERSION = {GENERATION_AGENT: GENERATION_PROMPT_VERSION, ASSESSMENT_AGENT: DEFAULT_PROMPT_VERSION}
+
+
+def _load(agent: str) -> str:
+    return load_prompt(agent, _VERSION[agent])
+
 
 def test_repository_prompts_are_available_for_every_agent() -> None:
     for agent in AGENTS:
-        prompt = load_prompt(agent)
+        prompt = _load(agent)
 
         assert prompt.strip()
 
 
 def test_generation_prompt_states_the_project_conventions() -> None:
-    prompt = load_prompt(GENERATION_AGENT)
+    prompt = _load(GENERATION_AGENT)
 
     # I vincoli della Decisione 3.1 devono essere presenti nel prompt.
     assert "shall" in prompt
@@ -41,14 +53,14 @@ def test_both_prompts_forbid_referring_to_the_change_itself() -> None:
     """Il requisito descrive il sistema, non la Pull Request (Decisione 3.1, §8.2)."""
 
     for agent in AGENTS:
-        prompt = load_prompt(agent)
+        prompt = _load(agent)
 
         assert "the remediation" in prompt, agent
         assert "Pull Request" in prompt, agent
 
 
 def test_assessment_prompt_lists_every_decision() -> None:
-    prompt = load_prompt(ASSESSMENT_AGENT)
+    prompt = _load(ASSESSMENT_AGENT)
 
     for decision in ("ACCEPT", "REVISE", "REJECT", "CONFIRM_NOT_EXTRACTABLE"):
         assert decision in prompt
@@ -56,7 +68,7 @@ def test_assessment_prompt_lists_every_decision() -> None:
 
 def test_every_prompt_requires_a_single_json_object() -> None:
     for agent in AGENTS:
-        prompt = load_prompt(agent)
+        prompt = _load(agent)
 
         assert "single JSON object" in prompt, agent
         assert "no markdown code fences" in prompt, agent
@@ -66,7 +78,7 @@ def test_every_prompt_contains_at_least_one_valid_json_example() -> None:
     """Gli esempi guidano i modelli piccoli: devono essere JSON realmente validi."""
 
     for agent in AGENTS:
-        prompt = load_prompt(agent)
+        prompt = _load(agent)
         # Gli esempi compaiono come oggetto dentro <output>, oppure come riga
         # a sé stante. Le righe con il carattere di alternativa descrivono lo
         # schema di risposta, non un esempio concreto.
@@ -124,7 +136,7 @@ def test_prompts_do_not_leak_the_experimental_sample() -> None:
             )
 
     for agent in AGENTS:
-        prompt = load_prompt(agent).lower()
+        prompt = _load(agent).lower()
         trovati = sorted(term for term in identificatori if term in prompt)
 
         assert not trovati, f"il prompt '{agent}' cita il campione: {trovati}"
@@ -144,7 +156,7 @@ def test_all_prompts_share_an_identical_definitions_block() -> None:
     il ciclo di revisione non converge.
     """
 
-    blocchi = {agent: _extract_block(load_prompt(agent), "definitions") for agent in AGENTS}
+    blocchi = {agent: _extract_block(_load(agent), "definitions") for agent in AGENTS}
 
     assert len(set(blocchi.values())) == 1, "le definizioni divergono fra i prompt"
 
@@ -161,15 +173,15 @@ def test_both_prompts_state_that_a_name_is_not_evidence() -> None:
     """
 
     for agent in AGENTS:
-        prompt = load_prompt(agent)
+        prompt = _load(agent)
 
         # Estensione del removal test, nel blocco condiviso.
         assert "added or implemented" in prompt, agent
         assert "equally true of any system" in prompt, agent
 
     # Ciascun agente deve poi sapere che cosa farne.
-    assert "only names an artefact" in load_prompt(GENERATION_AGENT)
-    assert "nothing beneath the name" in load_prompt(ASSESSMENT_AGENT)
+    assert "only names an artefact" in _load(GENERATION_AGENT)
+    assert "nothing beneath the name" in _load(ASSESSMENT_AGENT)
 
 
 def test_assessment_procedure_steps_are_numbered_consecutively() -> None:
@@ -179,7 +191,7 @@ def test_assessment_procedure_steps_are_numbered_consecutively() -> None:
     stesso numero, e il modello non ha più un ordine da seguire.
     """
 
-    procedura = _extract_block(load_prompt(ASSESSMENT_AGENT), "procedure")
+    procedura = _extract_block(_load(ASSESSMENT_AGENT), "procedure")
     numeri = [int(n) for n in re.findall(r"^(\d+)\.", procedura, re.MULTILINE)]
 
     assert numeri == list(range(1, len(numeri) + 1)), numeri
@@ -192,7 +204,7 @@ def test_the_procedure_hooks_the_comparison_with_historical_requirements() -> No
     resta fuori da quell'elenco puo' essere semplicemente ignorata.
     """
 
-    prompt = load_prompt(ASSESSMENT_AGENT)
+    prompt = _load(ASSESSMENT_AGENT)
     procedura = _extract_block(prompt, "procedure")
 
     assert "previously validated requirements were supplied" in procedura
@@ -205,14 +217,14 @@ def test_the_procedure_hooks_the_comparison_with_historical_requirements() -> No
 def test_resembling_an_earlier_requirement_is_not_a_defect() -> None:
     """Due Pull Request diverse possono legittimamente produrre lo stesso comportamento."""
 
-    storici = _extract_block(load_prompt(ASSESSMENT_AGENT), "historical_requirements")
+    storici = _extract_block(_load(ASSESSMENT_AGENT), "historical_requirements")
 
     assert "Never reject or ask for a revision merely because" in storici
 
 
 def test_prompts_use_the_expected_structure() -> None:
     for agent in AGENTS:
-        prompt = load_prompt(agent)
+        prompt = _load(agent)
 
         for tag in ("role", "task", "definitions", "procedure", "examples", "output_format"):
             assert f"<{tag}>" in prompt and f"</{tag}>" in prompt, f"{agent}: manca <{tag}>"
@@ -222,7 +234,7 @@ def test_prompts_provide_several_diverse_examples() -> None:
     """La documentazione ufficiale raccomanda da 3 a 5 esempi variati."""
 
     for agent in AGENTS:
-        esempi = re.findall(r"<example>", load_prompt(agent))
+        esempi = re.findall(r"<example>", _load(agent))
 
         assert len(esempi) >= 4, f"{agent}: solo {len(esempi)} esempi"
 
@@ -237,10 +249,10 @@ def test_a_changed_default_is_not_a_named_artefact() -> None:
     ha rifiutato proprio quel caso applicandovi la regola.
     """
 
-    procedura = _extract_block(load_prompt(ASSESSMENT_AGENT), "procedure")
+    procedura = _extract_block(_load(ASSESSMENT_AGENT), "procedure")
 
     assert "This step does **not** fire when the evidence states that a setting" in procedura
     assert "this setting now has this value" in procedura
 
-    generazione = _extract_block(load_prompt(GENERATION_AGENT), "procedure")
+    generazione = _extract_block(_load(GENERATION_AGENT), "procedure")
     assert "A changed default is not such a case" in generazione

@@ -12,8 +12,6 @@ sperimentali sparirebbe.
 
 from __future__ import annotations
 
-import argparse
-
 from are.__main__ import (
     TOOL_PROMPT_VERSION,
     _build_dependencies,
@@ -50,12 +48,6 @@ def dipendenze(*, assessor_tools: bool, assessment_enabled: bool = True):
         store=repository,
         assessor_tools=assessor_tools,
     )
-
-
-def args(**valori) -> argparse.Namespace:
-    predefiniti = {"assessor_tools": False, "prompt_version": None}
-    predefiniti.update(valori)
-    return argparse.Namespace(**predefiniti)
 
 
 # -- chi recupera -----------------------------------------------------------
@@ -111,27 +103,11 @@ def test_without_an_assessor_there_is_no_tool_to_give():
 
 
 def test_without_the_flag_the_prompt_version_is_untouched():
-    assert _resolve_prompt_version(args()) == DEFAULT_PROMPT_VERSION
+    assert _resolve_prompt_version(False) == DEFAULT_PROMPT_VERSION
 
 
 def test_the_flag_selects_the_prompt_that_describes_the_tool():
     """La v1 non nomina alcun tool: userebbe il modello senza dirgli che può
     cercare."""
 
-    assert _resolve_prompt_version(args(assessor_tools=True)) == TOOL_PROMPT_VERSION
-
-
-def test_an_explicit_version_is_not_overridden():
-    """Una scelta dichiarata dall'utente non va sovrascritta in silenzio:
-    serve a poter provare una formulazione nuova."""
-
-    scelta = args(assessor_tools=True, prompt_version="v3")
-    assert _resolve_prompt_version(scelta) == "v3"
-
-
-def test_asking_for_v1_with_the_flag_is_respected():
-    """Configurazione volutamente scorretta, ma è una scelta esplicita: serve
-    a misurare cosa fa un modello a cui il tool non è stato descritto."""
-
-    scelta = args(assessor_tools=True, prompt_version="v1")
-    assert _resolve_prompt_version(scelta) == "v1"
+    assert _resolve_prompt_version(True) == TOOL_PROMPT_VERSION

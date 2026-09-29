@@ -5,22 +5,24 @@
 # documenta la configurazione usata in ogni esecuzione; le credenziali NON
 # vanno mai qui (la chiave API vive solo in .env / variabili d'ambiente).
 #
-# In fase di sviluppo entrambi gli agenti usano il modello economico della
-# famiglia Claude (fascia Haiku). I parametri per gli esperimenti finali
-# verranno calibrati nella fase sperimentale (Decisione 3.7).
+# Configurazione scelta a chiusura della fase sperimentale: Sonnet per la
+# generazione, Opus per la valutazione. Il divario di capacità fra i due
+# ruoli è deliberato -- è il valutatore a dover essere il più severo dei
+# due, non il generatore, per il rischio di autoconferma discusso nel
+# capitolo sull'architettura multi-agente. Chi vuole tornare al modello
+# economico per una prova rapida usa `--model haiku`.
 #
 # Nota sui parametri di campionamento: `temperature`, `top_p` e `top_k` non
 # esistono più nell'API dei modelli attuali (rimossi dal fornitore). Alcuni
 # modelli accettano al loro posto `effort` (low | medium | high | xhigh |
-# max), che regola profondità del ragionamento e spesa di token. La fascia
-# Haiku non lo supporta, quindi qui non viene impostato.
+# max), che regola profondità del ragionamento e spesa di token.
 
 [generation]
-model = "claude-haiku-4-5"
+model = "claude-sonnet-5"
 max_tokens = 1024
 
 [assessment]
-model = "claude-haiku-4-5"
+model = "claude-opus-5"
 # 8192, alzato due volte per la stessa ragione. A 2048 (2026-08-27) e poi a
 # 4096 (2026-08-30) una risposta di Sonnet è stata troncata e la Pull Request è
 # finita in ERROR. Il valutatore scrive molto più del generatore quando ha
