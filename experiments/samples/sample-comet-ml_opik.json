@@ -1,0 +1,66 @@
+[
+  {
+    "id": "comet-ml-opik-pr-2662",
+    "repository": "comet-ml/opik",
+    "pr_number": 2662,
+    "timestamp": "2025-07-03T20:21:59Z",
+    "title": "NA: Fix thread fields types on OpenAPI spec",
+    "body": "## Details\r\n- This PR fixes the trace thread object spec, allowing Fern to create the proper mapping.\r\n"
+  },
+  {
+    "id": "comet-ml-opik-pr-2685",
+    "repository": "comet-ml/opik",
+    "pr_number": 2685,
+    "timestamp": "2025-07-07T10:42:47Z",
+    "title": "OPIK-1964: Fix JSON parsing exception in OpenTelemetryMapper",
+    "body": "- Add exception handling for invalid JSON strings in extractToJsonColumn method\r\n- Add exception handling for invalid JSON strings in extractUsageField method\r\n- Store invalid JSON as plain text instead of throwing exceptions\r\n- Add comprehensive unit tests for JSON parsing scenarios\r\n- Make extractToJsonColumn method package-private for testing\r\n\r\n## Details\r\n\r\nFixed JSON parsing exception in OpenTelemetryMapper that was causing crashes when processing OpenTelemetry spans with invalid JSON strings. The issue occurred when the mapper tried to parse string values that looked like JSON (starting with `\"`, `[`, or `{`) but were actually malformed (e.g., \"Analyze this text\").\r\n\r\n### Changes Made:\r\n- Added exception handling around JSON parsing in `extractToJsonColumn` method\r\n- Added exception handling around JSON parsing in `extractUsageField` method  \r\n- Modified logic to store invalid JSON as plain text instead of throwing exceptions\r\n- Added comprehensive unit tests covering various JSON parsing scenarios\r\n- Made `extractToJsonColumn` method package-private to enable unit testing\r\n\r\n### Technical Implementation:\r\n- Wrapped `JsonUtils.getJsonNodeFromString()` calls in try-catch blocks\r\n- Added debug logging for failed parsing attempts\r\n- Implemented graceful fallback to store values as plain text\r\n- Maintained backward compatibility for valid JSON parsing\r\n\r\n## Issues\r\n\r\nResolves OPIK-1964\r\n\r\n## Testing\r\n\r\n- ✅ Created comprehensive unit tests (`OpenTelemetryMapperTest`) with 9 test cases\r\n- ✅ Verified invalid JSON strings are handled gracefully without exceptions\r\n- ✅ Confirmed valid JSON is still parsed correctly\r\n- ✅ Ran existing integration tests (`OpenTelemetryResourceTest`) - all passing\r\n- ✅ Tested edge cases: strings that look like JSON but are invalid, plain text, various data types\r\n\r\n### Test Coverage:\r\n- Valid JSON string parsing\r\n- Invalid JSON string handling (e.g., \"Analyze this text\")\r\n- Plain text string handling\r\n- Integer, double, boolean, and array value processing\r\n- Nested JSON parsing scenarios\r\n\r\n## Documentation\r\n\r\n- Added debug logging to track JSON parsing failures\r\n- Updated method visibility for testing purposes\r\n- Code comments explain the fallback behavior for invalid JSON"
+  },
+  {
+    "id": "comet-ml-opik-pr-2695",
+    "repository": "comet-ml/opik",
+    "pr_number": 2695,
+    "timestamp": "2025-07-08T23:30:14Z",
+    "title": "OPIK-1775 Fix issue with race condition and enforce consistent read when closing threads",
+    "body": "## Details\r\n- Fix small race condition issue with sampling \r\n- Fix event publishing logic\r\n- Enforce consistent reading after closing threads\r\n"
+  },
+  {
+    "id": "comet-ml-opik-pr-2714",
+    "repository": "comet-ml/opik",
+    "pr_number": 2714,
+    "timestamp": "2025-07-13T08:13:30Z",
+    "title": "[OPIK-2043] Follow-up fixes",
+    "body": "## Details\r\nThis PR contains a couple of minor fixes from a previous PR #2449.\r\n\r\n## Issues\r\nOPIK-2043\r\n\r\n## Testing\r\nExtended a test to cover the `null` change, the validation changes was already covered.\r\n"
+  },
+  {
+    "id": "comet-ml-opik-pr-2715",
+    "repository": "comet-ml/opik",
+    "pr_number": 2715,
+    "timestamp": "2025-07-13T11:48:52Z",
+    "title": "[NA] fix minor comments from PR #2689",
+    "body": "## Details\r\nThis PR has fixes for some minor comments that were left in #2689 \r\n"
+  },
+  {
+    "id": "comet-ml-opik-pr-2719",
+    "repository": "comet-ml/opik",
+    "pr_number": 2719,
+    "timestamp": "2025-07-14T11:39:03Z",
+    "title": "OPIK-1778: Fix read consistency issues",
+    "body": "## Details\r\n\r\n- Addressing the read consistency issue by streaming threads pending closure, closing, and publishing them\r\n-  Fix the null point caused by the exception without a cause in the Online Scoring subscriber."
+  },
+  {
+    "id": "comet-ml-opik-pr-2732",
+    "repository": "comet-ml/opik",
+    "pr_number": 2732,
+    "timestamp": "2025-07-15T12:21:27Z",
+    "title": "OPIK-1778: Fix issues with read consistency by send entities into events",
+    "body": "## Details\r\n- Fix issues with read consistency by sending entities into events.\r\n- Fix LLM as Judge template to match the JSON schema property name.\r\n"
+  },
+  {
+    "id": "comet-ml-opik-pr-2757",
+    "repository": "comet-ml/opik",
+    "pr_number": 2757,
+    "timestamp": "2025-07-17T10:09:05Z",
+    "title": "[NA] Fix prompt tags update",
+    "body": "## Details\r\nFix prompt tags update. Issue was reproducible if user tries to delete all/latest tag\r\n\r\n## Testing\r\nIntegration tests"
+  }
+]
